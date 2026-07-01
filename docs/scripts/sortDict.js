@@ -1,26 +1,39 @@
 const fs = require("fs");
 
+// Ensure we are operating relative to the script's directory
 process.chdir(__dirname);
 
-console.log("Reading dictionary.txt");
-let dictionary = fs.readFileSync("../dictionary/dictionary.txt", { encoding: "UTF8" })
-                    .replace("\r", "").split("\n");
+const dictPath = "../dictionary/dictionary.txt";
+const ocPath = "../dictionary/opencorekeys.txt";
 
-let ocDictionary = fs.readFileSync("../dictionary/opencorekeys.txt", { encoding: "UTF8" })
-                     .replace("\r", "").split("\n");
+console.log("Wörterbücher lesen...");
+console.log("Reading dictionaries...");
 
-dictionary = dictionary.filter(string => string != "");
-ocDictionary = ocDictionary.filter(string => string != "");
+// Helper to read file, split by newline, and filter empty lines
+const readToSet = (filePath) => {
+    const content = fs.readFileSync(filePath, { encoding: "utf8" });
+    return new Set(content.split("\n").filter(line => line !== ""));
+};
 
-dictionary = dictionary.filter((string, index) => dictionary.indexOf(string) == index);
-ocDictionary = ocDictionary.filter((string, index) => ocDictionary.indexOf(string) == index);
+// Loading data directly into Sets instantly deduplicates it
+const dictSet = readToSet(dictPath);
+const ocSet = readToSet(ocPath);
 
-dictionary = dictionary.filter(string => !ocDictionary.includes(string));
+console.log("Filtern und Aussortierung...");
+console.log("Filtering and Sorting...");
 
-console.log("Sorting...");
-dictionary.sort();
-ocDictionary.sort();
+// High-speed subtraction: Instantly drop OpenCore keys from main dictionary
+for (const key of ocSet) {
+    dictSet.delete(key);
+}
 
-console.log("Writing dictionary.txt");
-fs.writeFileSync("../dictionary/dictionary.txt", dictionary.join("\n"));
-fs.writeFileSync("../dictionary/opencorekeys.txt", ocDictionary.join("\n"));
+// Convert back to arrays and sort alphabetically (Standard ASCII/UTF-16 order)
+const sortedDict = Array.from(dictSet).sort();
+const sortedOc = Array.from(ocSet).sort();
+
+console.log("Dateien schreiben...");
+console.log("Writing files...");
+fs.writeFileSync(dictPath, sortedDict.join("\n"));
+fs.writeFileSync(ocPath, sortedOc.join("\n"));
+
+console.log("Done!");

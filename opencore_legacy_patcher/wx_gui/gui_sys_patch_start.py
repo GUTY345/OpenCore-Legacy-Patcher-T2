@@ -33,7 +33,6 @@ from ..wx_gui import (
 from ..sys_patch.patchsets import HardwarePatchsetDetection, HardwarePatchsetSettings
 
 
-
 class SysPatchStartFrame(wx.Frame):
     """
     Create a frame for root patching
@@ -341,7 +340,11 @@ class SysPatchStartFrame(wx.Frame):
         except:
             logging.error("An internal error occurred while running the Root Patcher:\n")
             logging.error(traceback.format_exc())
-        logger.removeHandler(logger.handlers[2])
+            
+        # FIX: Sicheres Entfernen des spezifischen ThreadHandlers
+        for handler in logger.handlers[:]:
+            if isinstance(handler, gui_support.ThreadHandler):
+                logger.removeHandler(handler)
 
 
     def revert_root_patching(self):
@@ -367,7 +370,11 @@ class SysPatchStartFrame(wx.Frame):
         except:
             logging.error("An internal error occurred while running the Root Patcher:\n")
             logging.error(traceback.format_exc())
-        logger.removeHandler(logger.handlers[2])
+            
+        # FIX: Sicheres Entfernen des spezifischen ThreadHandlers
+        for handler in logger.handlers[:]:
+            if isinstance(handler, gui_support.ThreadHandler):
+                logger.removeHandler(handler)
 
 
     def on_return_to_main_menu(self, event: wx.Event = None):
