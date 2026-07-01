@@ -1,5 +1,5 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungslog
-## 4.0.0 alpha 15.4 (about to be released)
+## 4.0.0 alpha 15.4
 This version:
 - improves performance across the entire OpenCore Legacy Patcher T2 app by 50%
 - fixes a bug where when attempting to download macOS, when the packet is dropped instead of received, the application crashed
