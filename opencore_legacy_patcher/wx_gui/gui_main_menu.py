@@ -16,9 +16,6 @@ from pathlib import Path
 from packaging import version
 
 from .. import constants
-from . import support
-from ..support import utilities # könnte ins Futur benutzt sein
-from ..detections import device_probe # nicht sicher, ob es nötig ist oder nicht
 
 from ..support import (
     global_settings,
@@ -27,9 +24,6 @@ from ..support import (
 from ..datasets import (
     os_data,
     css_data
-    model_array,
-    smbios_data,
-    os_data
 )
 from ..wx_gui import (
     gui_build,
@@ -232,7 +226,6 @@ class MainFrame(wx.Frame):
 
         threading.Thread(target=self._check_for_updates).start()
 
-
     def _check_for_updates(self):
         if self.constants.has_checked_updates is True:
             return
@@ -289,6 +282,7 @@ class MainFrame(wx.Frame):
             logging.exception("Stack Trace:")
             logging.info("Bitte versuchen Sie später erneut.")
             logging.info("Please try again later.")
+
 
     def on_post_install_root_patch(self, event: wx.Event = None):
         try:

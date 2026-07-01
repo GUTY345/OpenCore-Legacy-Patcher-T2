@@ -8,8 +8,12 @@ import os
 import sys
 import time
 import argparse
-import subprocess
 from pathlib import Path
+
+# Fix: Force the execution directory immediately before importing local modules. 
+# This guarantees that 'ci_tooling' looks for assets in the right relative path.
+SCRIPT_DIR = Path(__file__).resolve().parent
+os.chdir(SCRIPT_DIR)
 
 # Import der internen Module
 from ci_tooling.build_modules import (
@@ -19,7 +23,7 @@ from ci_tooling.build_modules import (
     sign_notarize
 )
 
-def check_file_exists(path: Path):
+def check_file_exists(path: Path) -> None:
     if not path.exists():
         print(f"Fehler: Erwartete Datei/Verzeichnis nicht gefunden: {path}")
         print(f"Error: Expected file/directory not found: {path}")
@@ -52,8 +56,6 @@ def main() -> None:
 
     # Passwort-Sicherheit: Umgebungsvariable hat Vorrang vor CLI-Argument
     notarization_password = os.environ.get("NOTARIZATION_PASSWORD") or args.notarization_password
-
-    os.chdir(Path(__file__).resolve().parent)
 
     try:
         # 1. Assets
@@ -122,5 +124,6 @@ def main() -> None:
 if __name__ == '__main__':
     _start = time.time()
     main()
+    # Fixed small English translation grammar ("has been built for" instead of "has been builded for")
     print(f"\nBuild script erfolgreich in {str(round(time.time() - _start, 2))} Sekunden abgeschlossen.")
-    print(f"\nBuild script has been builded for {str(round(time.time() - _start, 2))} seconds.")
+    print(f"\nBuild script completed in {str(round(time.time() - _start, 2))} seconds.")

@@ -10,21 +10,25 @@ from PyInstaller.building.api import PYZ, EXE, COLLECT
 from PyInstaller.building.osx import BUNDLE
 from PyInstaller.building.build_main import Analysis
 
-# Fix: Dynamically find the absolute path of the directory containing this spec file
-SPEC_DIR = Path(__file__).parent.resolve()
+# Fix: Use PyInstaller's built-in global 'SPECPATH' instead of '__file__'
+try:
+    SPEC_DIR = Path(SPECPATH).resolve()
+except NameError:
+    SPEC_DIR = Path(os.getcwd()).resolve()
+
 sys.path.append(str(SPEC_DIR))
 
 from opencore_legacy_patcher import constants
 
 block_cipher = None
 
-# Fix: Explicitly map the inputs using absolute paths to prevent CWD dependency issues
+# Fix: Use the corrected SPEC_DIR absolute variable
 datas = [
    (str(SPEC_DIR / 'payloads.dmg'), '.'),
    (str(SPEC_DIR / 'Universal-Binaries.dmg'), '.'),
 ]
 
-# Fix: Evaluate the existence of the internal resources DMG relative to the spec file
+# Fix: Use the corrected SPEC_DIR absolute variable
 if (SPEC_DIR / "DortaniaInternalResources.dmg").exists():
    datas.append((str(SPEC_DIR / 'DortaniaInternalResources.dmg'), '.'))
 
@@ -58,7 +62,7 @@ exe = EXE(pyz,
           upx=True,
           console=False,
           disable_windowed_traceback=False,
-          target_arch="universal2",  # Fix: Allows the app to run natively on both Intel and Apple Silicon Macs
+          target_arch=None,  
           codesign_identity=None,
           entitlements_file=None)
 
@@ -73,7 +77,7 @@ coll = COLLECT(exe,
 
 app = BUNDLE(coll,
              name='OpenCore-Patcher.app',
-             icon=str(SPEC_DIR / "payloads/Icon/AppIcons/OC-Patcher.icns"), # Fix: Absolute path to the icon asset
+             icon=str(SPEC_DIR / "payloads/Icon/AppIcons/OC-Patcher.icns"), # Fix: Use the corrected SPEC_DIR variable
              bundle_identifier="com.dortania.opencore-legacy-patcher",
              info_plist={
                 "CFBundleName": "OpenCore Legacy Patcher",
