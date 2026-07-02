@@ -1,4 +1,15 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungslog
+## 4.0.0 pre-alpha 1 for alpha 16 / 4.0.0 Voralpha 1 für Alpha 16
+This release:
+- now tells users if they have enabled optional patches or not
+- fixes byte lenghts for SEP OOL constraints patch, in the next pre-alpha and alpha releases will be rolled out to all patches
+
+Diese Version:
+
+- zeigt Benutzern nun an, ob optionale Patches aktiviert sind oder nicht.
+
+- korrigiert die Byte-Längen für den SEP OOL Constraints-Patch. Die Korrektur wird in den nächsten Pre-Alpha- und Alpha-Versionen für alle Patches ausgerollt.
+
 ## 4.0.0 alpha 15.4.1:
 This release adds a check for T2 patches if the Find and Replace length is the same and if not, it will abort patching. However, for fork developers, they need to read the sichere Injizierung von Patches für T2 Macs.txt (in German, you may need to translate using Google Translate or AI if you don't understand) to implement these checks properly.
 
