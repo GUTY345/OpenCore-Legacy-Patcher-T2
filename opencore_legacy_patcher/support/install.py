@@ -140,11 +140,13 @@ class tui_disk_installation:
                 subprocess_wrapper.run_as_root(["/bin/rm", "-rf", mount_path / "EFI/OC"])
 
             if (mount_path / "System").exists():
-                logging.info("Entferne existierenden System Ordner")
+                logging.info("Existierenden System Ordner wird entfernt")
+                logging.info("Removing existing System folder")
                 subprocess_wrapper.run_as_root(["/bin/rm", "-rf", mount_path / "System"])
 
             if (mount_path / "boot.efi").exists():
-                logging.info("Entferne existierende boot.efi")
+                logging.info("Existierende boot.efi wird entfernt")
+                logging.info("Removing existing boot.efi")
                 subprocess_wrapper.run_as_root(["/bin/rm", mount_path / "boot.efi"])
 
             logging.info("Die EFI-Volume mounten")
@@ -172,8 +174,10 @@ class tui_disk_installation:
                 
         except Exception as e:
             logging.error(f"Dateioperation während der Installation fehlgeschlagen: {e}")
+            logging.error(f"File operation failed during installation: {e}")
             logging.exception("Stack Trace:") 
             logging.info("Bitte versuche es später erneut.")
+            logging.info("Please try again later.")
             # FIX 3: sys.exit(3) muss VOR dem return stehen, sonst ist es "Dead Code"
             sys.exit(3)
 
@@ -210,5 +214,5 @@ class tui_disk_installation:
 
         # FIX 5: Die Erfolgsmeldung wird NUR ausgegeben, wenn wir bis hierhin nicht abgebrochen haben!
         logging.info("OpenCore Transfer abgeschlossen")
-        logging.info("OpenCore Transfer completed")
+        logging.info("OpenCore Transfer complete")
         return True
