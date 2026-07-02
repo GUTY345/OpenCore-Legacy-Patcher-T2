@@ -24,4 +24,3 @@ Falls Sie KI verwenden, Sie müssen auch darauf achten, dass die Bytes von Find 
                     logging.info("- Hardcode SEP OOL Max Send Pages Limit patch injizieren")
                     logging.info("- Injecting Hardcode SEP OOL Max Send Pages Limit patch")
                     kernel_patches.append(new_patch)
-        ... [Integration für alle weiteren Patches analog] ...
