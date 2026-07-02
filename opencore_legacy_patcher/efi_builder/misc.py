@@ -442,6 +442,17 @@ class BuildMiscellaneous:
         builder = support.BuildSupport(self.model, self.constants, self.config)
         self.config.setdefault("Kernel", {}).setdefault("Patch", [])
 
+        if enable_experimental_patches==False:
+            logging.info("Das Injizieren von optionale Patches sind nicht aktiviert. Das ist Standard-Verhalten.")
+            logging.info("Injecting optional patches are not enabled. That's the standard behavior.")
+        elif enable_experimental_patches==True:
+            logging.info("ACHTUNG! Injizieren von optionale Patches sind aktiviert. Diese Patches sind noch nicht getestet und können Fehler enthalten, wie z.B Kernel Panics verursachen.")
+            logging.info("ATTENTION! Injecting optional patches are enabled. These patches haven't been tested yet and may have bugs, which could lead to for example kernel panics.")
+        else:
+            logging.error("Wir könnten nicht bestimmen, ob das Injizieren von optionale Patches eingeschaltet sind oder nicht, aber normalerweise sollte das ausgeschaltet sein, falls den Variable nicht auf True gesetzt sein.")
+            logging.error("We couldn't verify if injecting optional patcges are enabled or not, but they must be disabled if the variable is not set to True.")
+        
+        
         # Prerequisite kext checks
         for kext, ver, path in [
             ("WhateverGreen.kext", self.constants.whatevergreen_version, self.constants.whatevergreen_path),
