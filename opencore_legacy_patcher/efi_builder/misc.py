@@ -160,7 +160,7 @@ class BuildMiscellaneous:
             re_block_args.append("media")
 
         return re_block_args
-
+    
     def _re_generate_patch_arguments(self) -> list:
         """Generate RestrictEvents patch arguments."""
         re_patch_args = []
@@ -409,6 +409,21 @@ class BuildMiscellaneous:
             logging.info("Please try again later.")
             sys.exit(3)
 
+    def _validate_patch(self, patch_dict):
+        """
+        Loggt eine Fehlermeldung, falls Find und Replace unterschiedlich sind.
+        """
+        find_bytes = patch_dict.get("Find")
+        replace_bytes = patch_dict.get("Replace")
+    
+        # Wenn sie unterschiedlich sind, loggen wir den Fehler
+        if find_bytes != replace_bytes:
+            logging.error(f"Patch-Fehler: 'Find' und 'Replace' sind NICHT identisch für '{patch_dict.get('Comment')}'.")
+            # Hier wird NICHT False zurückgegeben, da du sagtest, bei identisch sei alles gut.
+            # Falls du den Patch trotz Fehler trotzdem hinzufügen willst, lass es so stehen.
+        
+        return True
+    
     def _t2_handling(self) -> None:
         """T2 Security Chip Handler."""
         if not self._is_t2_mac():
