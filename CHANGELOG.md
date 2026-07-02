@@ -1,4 +1,9 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungslog
+## 4.0.0 alpha 15.4.1:
+This release adds a check for T2 patches if the Find and Replace length is the same and if not, it will abort patching. However, for fork developers, they need to read the sichere Injizierung von Patches für T2 Macs.txt (in German, you may need to translate using Google Translate or AI if you don't understand) to implement these checks properly.
+
+Diese Version fügt Überprüfungen hinzu, ob die Such- und Ersetzungslänge von T2-Patches übereinstimmt. Ist dies nicht der Fall, wird der Patchvorgang abgebrochen. Entwickler von Forks müssen jedoch die Datei „sichere Injizierung von Patches für T2 Macs.txt“ lesen, um das richtig zu implementieren.
+
 ## 4.0.0 alpha 15.4
 This version:
 - improves performance across the entire OpenCore Legacy Patcher T2 app by 50%
