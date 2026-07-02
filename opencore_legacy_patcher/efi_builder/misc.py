@@ -526,7 +526,7 @@ class BuildMiscellaneous:
         self.config.setdefault('Kernel', {}).setdefault('Patch', [])
         kernel_patches = self.config['Kernel']['Patch']
         
-        # einen sicheren Weg, die patches zu implementieren ist es durch die _validate_patch-Variable zu verifizieren, damit Sie sicher stellen können, dass die Find -und-Replace Bytes diesebe Länge haben, können Sie mehr hier erfahren: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/blob/main/sichere%20Injizierung%20von%20Patches%20f%C3%BCr%20T2%20Macs.txt
+        # einen sicheren Weg, die patches zu implementieren ist es durch die _validate_patch-Variable zu verifizieren, damit Sie sicher stellen können, dass die Find -und-Replace Bytes diesebe Länge haben, können Sie mehr hier erfahren: https://raw.githubusercontent.com/albert-mueller/OpenCore-Legacy-Patcher-T2/refs/heads/main/sichere%20Injizierung%20von%20Patches%20f%C3%BCr%20T2%20Macs.txt
         # ... [Integration für alle weiteren Patches analog] ...
         
         try:
