@@ -420,8 +420,10 @@ class BuildMiscellaneous:
         if find_bytes != replace_bytes:
             logging.error(f"Patch-Fehler: 'Find' und 'Replace' bytes sind NICHT identisch für '{patch_dict.get('Comment')}'.")
             logging.error(f"Patch failure: Find and replace bytes aren't identical for '{patch_dict.get('Comment')}'.")
-            logging.info("Bitte aktualisieren Sie den App falls eine neuere Version vorhanden ist.")
-            logging.info("Please update the app if a newer version is available")
+            logging.info("Bitte aktualisieren Sie den App falls eine neuere Version vorhanden ist. Falls nicht, Sie müssen das Problem sofort melden.")
+            logging.info("Please update the app if a newer version is available. If not, you should report this issue.")
+            logging.info("Manchmal, Forks von diesen Projekt setzen auf veraltete Versionen. Falls Sie einen Fork von dieser Projekt verwenden, Sie müssen den Fork-Programmmierer fragen, den Fork zu aktualisieren.")
+            logging.info("Sometimes, forks of this project may still use outdated version. If you are using a fork of this project and that's the case, you should ask the fork developer to update.")
             sys.exit(3)
             # Hier wird NICHT False zurückgegeben, da du sagtest, bei identisch sei alles gut.
             # Falls du den Patch trotz Fehler trotzdem hinzufügen willst, lass es so stehen.
