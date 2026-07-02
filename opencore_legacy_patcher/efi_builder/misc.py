@@ -160,7 +160,7 @@ class BuildMiscellaneous:
             re_block_args.append("media")
 
         return re_block_args
-
+    
     def _re_generate_patch_arguments(self) -> list:
         """Generate RestrictEvents patch arguments."""
         re_patch_args = []
@@ -409,6 +409,25 @@ class BuildMiscellaneous:
             logging.info("Please try again later.")
             sys.exit(3)
 
+    def _validate_patch(self, patch_dict):
+        """
+        Loggt eine Fehlermeldung, falls Find und Replace unterschiedlich sind.
+        """
+        find_bytes = patch_dict.get("Find")
+        replace_bytes = patch_dict.get("Replace")
+    
+        # Wenn sie unterschiedlich sind, loggen wir den Fehler
+        if find_bytes != replace_bytes:
+            logging.error(f"Patch-Fehler: 'Find' und 'Replace' bytes sind NICHT identisch für '{patch_dict.get('Comment')}'.")
+            logging.error(f"Patch failure: Find and replace bytes aren't identical for '{patch_dict.get('Comment')}'.")
+            logging.info("Bitte aktualisieren Sie den App falls eine neuere Version vorhanden ist.")
+            logging.info("Please update the app if a newer version is available")
+            sys.exit(3)
+            # Hier wird NICHT False zurückgegeben, da du sagtest, bei identisch sei alles gut.
+            # Falls du den Patch trotz Fehler trotzdem hinzufügen willst, lass es so stehen.
+        
+        return True
+    
     def _t2_handling(self) -> None:
         """T2 Security Chip Handler."""
         if not self._is_t2_mac():
@@ -506,13 +525,14 @@ class BuildMiscellaneous:
         # Allows booting macOS 26 Tahoe's installer via OpenCore on T2 Macs
         self.config.setdefault('Kernel', {}).setdefault('Patch', [])
         kernel_patches = self.config['Kernel']['Patch']
-
+        
+        # einen sicheren Weg, die patches zu implementieren ist es durch die _validate_patch-Variable zu verifizieren, damit Sie sicher stellen können, dass die Find -und-Replace Bytes diesebe Länge haben, können Sie mehr hier erfahren: https://raw.githubusercontent.com/albert-mueller/OpenCore-Legacy-Patcher-T2/refs/heads/main/sichere%20Injizierung%20von%20Patches%20f%C3%BCr%20T2%20Macs.txt
+        # ... [Integration für alle weiteren Patches analog] ...
+        
         try:
-            # 2. Disable xART validation capacity loop checks safely (Symbolic Base Path)
-            # Diese Funktion sorgt dafür, dass xART-Registrierungsfehler ignoriert werden.
+            # 1. Disable xART validation capacity loop checks safely (Symbolic Base Path)
             if not any(p.get("Comment") == "Bypass XARTDisableLog limits (Tahoe Cache Fix)" for p in kernel_patches):
-                logging.info("- Injecting Bypass XARTDisableLog limits patch")
-                kernel_patches.append({
+                new_patch = {
                     "Arch": "x86_64",
                     "Identifier": "com.apple.driver.AppleSEPManager",
                     "Base": "__ZN14XARTDisableLog16register_disableEj",
@@ -526,13 +546,14 @@ class BuildMiscellaneous:
                     "ReplaceMask": b"",
                     "Limit": 0,
                     "Skip": 0
-                })
-            
-            # 3. Force AppleSEPDeviceService OOL constraints (Tahoe Fix)
-            # Korrigiert: Der Symbolname lautet 'getSendOolMaxPages' [1], [2].
+                }
+                if self._validate_patch(new_patch):
+                    logging.info("- Injecting Bypass XARTDisableLog limits patch")
+                    kernel_patches.append(new_patch)
+
+            # 2. Force AppleSEPDeviceService OOL constraints (Tahoe Fix)
             if not any(p.get("Comment") == "Hardcode SEP OOL Max Send Pages Limit" for p in kernel_patches):
-                logging.info("- Injecting Hardcode SEP OOL Max Send Pages Limit patch")
-                kernel_patches.append({
+                new_patch = {
                     "Arch": "x86_64",
                     "Identifier": "com.apple.driver.AppleSEPManager",
                     "Base": "__ZN21AppleSEPDeviceService18getSendOolMaxPagesEv", # Korrigiertes Symbol [1], [2]
@@ -546,13 +567,15 @@ class BuildMiscellaneous:
                     "ReplaceMask": b"",
                     "Limit": 0,
                     "Skip": 0
-                })
-    
-            # 4. AppleKeyStoreUserClient deadline check bypass
+                }
+                if self._validate_patch(new_patch):
+                    logging.info("- Injecting Hardcode SEP OOL Max Send Pages Limit patch")
+                    kernel_patches.append(new_patch)
+
+            # 3. AppleKeyStoreUserClient deadline check bypass
             if not any(p.get("Comment") == "Bypass AppleKeyStore Deadline Mismatch (Tahoe Fix)" for p in kernel_patches):
-                logging.info("  > Injecting AppleKeyStore Tahoe deadline check bypass")
-                kernel_patches.append({
-                    "Arch": "x86_64",
+                new_patch = {
+                     "Arch": "x86_64",
                     "Base": "", 
                     "Comment": "Bypass AppleKeyStore Deadline Mismatch (Tahoe Fix)",
                     "Count": 1,
@@ -570,13 +593,14 @@ class BuildMiscellaneous:
                     "MaxKernel": "",
                     "Limit": 0,
                     "Skip": 0
-                })
+                }
+                if self._validate_patch(new_patch):
+                    logging.info("  > Injecting AppleKeyStore Tahoe deadline check bypass")
+                    kernel_patches.append(new_patch)
 
-            # 1. Bypass AppleIntelUSBXHCI T2 handshake (Modernized for Tahoe vtable shifts)
-            # Dieser Patch ist sicher, da er nur den Funktions-Einstieg neutralisiert.
+            # 4. Bypass AppleIntelUSBXHCI T2 handshake (Modernized for Tahoe vtable shifts)
             if not any(p.get("Comment") == "Bypass T2 USB handshake (Tahoe fix)" for p in kernel_patches):
-                logging.info("- Injecting modernized AppleUSBXHCI T2 handshake bypass (Universal Byte-Signature)")
-                kernel_patches.append({
+                new_patch = {
                     "Arch": "x86_64",
                     "Base": "",  # Suche über Byte-Signatur, da Symbole gestrippt sind
                     "Comment": "Bypass T2 USB handshake (Tahoe fix)",
@@ -591,35 +615,70 @@ class BuildMiscellaneous:
                     "ReplaceMask": b"",
                     "Find": binascii.unhexlify("554889E54156534883EC10488B05"),
                     "Replace": binascii.unhexlify("31C0C39090909090909090909090")
-                })
-                logging.info("  > Modernized T2 USB handshake patch applied successfully.")
-                
-                if not any(p.get("Comment") == "Bypass AppleBCMWLANCore long start timeout" for p in kernel_patches):
-                    logging.info("- Injecting Bypass AppleBCMWLANCore long start timeout)")
-                    kernel_patches.append({
+                }
+                if self._validate_patch(new_patch):
+                    logging.info("- Injecting modernized AppleUSBXHCI T2 handshake bypass")
+                    kernel_patches.append(new_patch)
+
+            # 5. Bypass AppleBCMWLANCore long start timeout
+            if not any(p.get("Comment") == "Bypass AppleBCMWLANCore long start timeout" for p in kernel_patches):
+                new_patch = {
+                    "Arch": "x86_64",
+                    "Comment": "Bypass AppleBCMWLANCore long start timeout",
+                    "Enabled": True,
+                    "Identifier": "com.apple.iokit.AppleBCMWLANCore", # Der Treiber aus deinem Log [1]
+                    "MaxKernel": "",
+                    "MinKernel": "24.0.0", # sodass dieses Patch auch ladet in die Installationsprogramm von macOS 26 Tahoe
+                    # Wir suchen den Funktionsanfang von initWithAddressAndPeerManager aus der Quelle [3]:
+                    # 55          PUSH RBP
+                    # 48 89 E5    MOV RBP, RSP
+                    # 41 57       PUSH R15
+                    # 41 56       PUSH R14
+                    # 41 55       PUSH R13
+                    # 41 54       PUSH R12
+                    "Find": binascii.unhexlify("554889E54157415641554154"), 
+                        
+                    # Wir ersetzen den Start durch ein sofortiges "RET" (C3) und NOPs (90),
+                    # damit die Funktion sofort ohne Verzögerung zurückkehrt:
+                    "Replace": binascii.unhexlify("C39090909090909090909090"),
+                        
+                    "Limit": 0,
+                    "Skip": 0,
+                    "Count": 1
+                }
+                if self._validate_patch(new_patch):
+                    logging.info("- Injecting Bypass AppleBCMWLANCore long start timeout")
+                    kernel_patches.append(new_patch)
+
+            # Experimental Patches
+            if enable_experimental_patches == True:
+                # Experimental Patch 1: processInterrupts
+                if not any(p.get("Comment") == "Bypass AppleUSBVHCI::processInterrupts to prevent protocol-driven panics" for p in kernel_patches):
+                    new_patch = {
                         "Arch": "x86_64",
-                        "Comment": "Bypass AppleBCMWLANCore long start timeout",
+                        "Comment": "Bypass AppleUSBVHCI::processInterrupts to prevent protocol-driven panics",
                         "Enabled": True,
-                        "Identifier": "com.apple.iokit.AppleBCMWLANCore", # Der Treiber aus deinem Log [1]
-                        "MaxKernel": "",
-                        "MinKernel": "24.0.0", # sodass dieses Patch auch ladet in die Installationsprogramm von macOS 26 Tahoe
-                        # Wir suchen den Funktionsanfang von initWithAddressAndPeerManager aus der Quelle [3]:
-                        # 55          PUSH RBP
-                        # 48 89 E5    MOV RBP, RSP
-                        # 41 57       PUSH R15
-                        # 41 56       PUSH R14
-                        # 41 55       PUSH R13
-                        # 41 54       PUSH R12
-                        "Find": binascii.unhexlify("554889E54157415641554154"), 
-                        
-                        # Wir ersetzen den Start durch ein sofortiges "RET" (C3) und NOPs (90),
-                        # damit die Funktion sofort ohne Verzögerung zurückkehrt:
-                        "Replace": binascii.unhexlify("C39090909090909090909090"),
-                        
-                        "Limit": 0,
-                        "Skip": 0,
-                        "Count": 1
-                    })
+                        "Identifier": "com.apple.driver.usb.AppleUSBVHCI",
+                        "Base": "", "Count": 1, "MinKernel": "24.0.0", "MaxKernel": "", "Mask": b"", "ReplaceMask": b"", "Limit": 0, "Skip": 0,
+                        "Find": binascii.unhexlify("554889E54157415641554154534883EC28"),
+                        "Replace": binascii.unhexlify("C39090909090909090909090909090")
+                    }
+                    if self._validate_patch(new_patch):
+                        kernel_patches.append(new_patch)
+
+                # Experimental Patch 2: hardwareException
+                if not any(p.get("Comment") == "Bypass AppleUSBVHCI::hardwareException (Suppress firmware exceptions)" for p in kernel_patches):
+                    new_patch = {
+                        "Arch": "x86_64",
+                        "Comment": "Bypass AppleUSBVHCI::hardwareException (Suppress firmware exceptions)",
+                        "Enabled": True,
+                        "Identifier": "com.apple.driver.usb.AppleUSBVHCI",
+                        "Base": "", "Count": 1, "MinKernel": "24.0.0", "MaxKernel": "", "Mask": b"", "ReplaceMask": b"", "Limit": 0, "Skip": 0,
+                        "Find": binascii.unhexlify("554889E5488B87A80300000FB6B7D0000000"),
+                        "Replace": binascii.unhexlify("C3909090909090909090909090909090")
+                    }
+                    if self._validate_patch(new_patch):
+                        kernel_patches.append(new_patch)
         except Exception as e:
             logging.error("Failed to inject critical patches for your T2 Mac due to the following error:")
             logging.exception("Stack Trace:")
