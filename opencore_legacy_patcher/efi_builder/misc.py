@@ -526,29 +526,7 @@ class BuildMiscellaneous:
         self.config.setdefault('Kernel', {}).setdefault('Patch', [])
         kernel_patches = self.config['Kernel']['Patch']
         
-        # einen sicheren Weg, die patches zu implementieren ist es durch die _validate_patch-Variable zu verifizieren, damit Sie sicher stellen können, dass die Find -und-Replace Bytes diesebe Länge haben, wie z.B:
-        # auch besonders wenn Sie KI verwenden, um Patches zu generieren, was ist überhaupt nicht empfohlen und stattdessen das KI nur zu verwenden, um für Reverse Engineering zu helfen und dann davon aus einen Patch zu generieren oder Sie selbst zu generieren
-        # Beispiel für die Integration bei den Tahoe-Patches:
-        # if not any(p.get("Comment") == "Bypass XARTDisableLog limits (Tahoe Cache Fix)" for p in kernel_patches):
-            # logging.info("- Injecting Bypass XARTDisableLog limits patch")
-            # new_patch = {
-                # "Arch": "x86_64",
-                # "Identifier": "com.apple.driver.AppleSEPManager",
-                # "Base": "__ZN14XARTDisableLog16register_disableEj",
-                # "Comment": "Bypass XARTDisableLog limits (Tahoe Cache Fix)",
-                # "Count": 1,
-                # "Enabled": True,
-                # "MinKernel": "24.0.0",
-                # "Find": binascii.unhexlify("554889E5"),
-                # "Replace": binascii.unhexlify("31C0C390"),
-                # "Mask": b"",
-                # "ReplaceMask": b"",
-                # "Limit": 0,
-                # "Skip": 0
-            }
-            # if self._validate_patch(new_patch):
-                # kernel_patches.append(new_patch)
-
+        # einen sicheren Weg, die patches zu implementieren ist es durch die _validate_patch-Variable zu verifizieren, damit Sie sicher stellen können, dass die Find -und-Replace Bytes diesebe Länge haben, können Sie mehr hier erfahren: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/blob/main/sichere%20Injizierung%20von%20Patches%20f%C3%BCr%20T2%20Macs.txt
         # ... [Integration für alle weiteren Patches analog] ...
         
         try:
