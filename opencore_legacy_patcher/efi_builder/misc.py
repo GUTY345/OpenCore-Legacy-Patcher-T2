@@ -551,24 +551,26 @@ class BuildMiscellaneous:
                     logging.info("- Injecting Bypass XARTDisableLog limits patch")
                     kernel_patches.append(new_patch)
 
-            # 2. Force AppleSEPDeviceService OOL constraints (Tahoe Fix)
+            # 3. Force AppleSEPDeviceService OOL constraints (Tahoe Fix)
+            # Behebt einen Fehler, indem die Bytes-Länge zwischen Find und Replace nicht gleich lang sind
             if not any(p.get("Comment") == "Hardcode SEP OOL Max Send Pages Limit" for p in kernel_patches):
                 new_patch = {
                     "Arch": "x86_64",
                     "Identifier": "com.apple.driver.AppleSEPManager",
-                    "Base": "__ZN21AppleSEPDeviceService18getSendOolMaxPagesEv", # Korrigiertes Symbol [1], [2]
+                    "Base": "__ZN21AppleSEPDeviceService18getSendOolMaxPagesEv",
                     "Comment": "Hardcode SEP OOL Max Send Pages Limit",
                     "Count": 1,
                     "Enabled": True,
                     "MinKernel": "24.0.0",
-                    "Find": binascii.unhexlify("554889E5"),        # Standard Funktions-Prolog [4]
-                    "Replace": binascii.unhexlify("B840000000C3"), # mov eax, 0x40 (64 pages); ret
+                    "Find": binascii.unhexlify("554889E5488B"),        # 6 Bytes: Prolog + Start von MOV RAX [1, 2]
+                    "Replace": binascii.unhexlify("B840000000C3"),     # 6 Bytes: mov eax, 0x40; ret
                     "Mask": b"",
                     "ReplaceMask": b"",
                     "Limit": 0,
                     "Skip": 0
                 }
                 if self._validate_patch(new_patch):
+                    logging.info("- Hardcode SEP OOL Max Send Pages Limit patch injizieren")
                     logging.info("- Injecting Hardcode SEP OOL Max Send Pages Limit patch")
                     kernel_patches.append(new_patch)
 
