@@ -2,20 +2,26 @@ Einen sicheren Weg, die patches zu implementieren ist es durch die _validate_pat
 Auch besonders wenn Sie KI verwenden, um Patches zu generieren, was ist überhaupt nicht empfohlen und stattdessen das KI nur zu verwenden, um für Reverse Engineering zu helfen und dann davon aus einen Patch zu generieren oder Sie selbst zu generieren.
 Falls Sie KI verwenden, Sie müssen auch darauf achten, dass die Bytes von Find und Replace gleich lang sind, sonst schlägt es fehl, Patches in OpenCore zu injizieren, wird benachbaren Speicher überschreiben und/oder schon Kernel Panics verursachen.
         Beispiel für die Integration bei den Tahoe-Patches:
-        3. AppleKeyStoreUserClient deadline check bypass
-            if not any(p.get("Comment") == "Bypass AppleKeyStore Deadline Mismatch (Tahoe Fix)" for p in kernel_patches):
+        # 3. Force AppleSEPDeviceService OOL constraints (Tahoe Fix)
+            # Behebt einen Fehler, indem die Bytes-Länge zwischen Find und Replace nicht gleich lang sind
+            if not any(p.get("Comment") == "Hardcode SEP OOL Max Send Pages Limit" for p in kernel_patches):
                 new_patch = {
                     "Arch": "x86_64",
-                    "Base": "", 
-                    "Comment": "Bypass AppleKeyStore Deadline Mismatch (Tahoe Fix)",
+                    "Identifier": "com.apple.driver.AppleSEPManager",
+                    "Base": "__ZN21AppleSEPDeviceService18getSendOolMaxPagesEv",
+                    "Comment": "Hardcode SEP OOL Max Send Pages Limit",
                     "Count": 1,
                     "Enabled": True,
-                    "Identifier": "com.apple.driver.AppleKeyStore",
-                    "MinKernel": "24.0.0", "MaxKernel": "", "Limit": 0, "Skip": 0, "Mask": b"", "ReplaceMask": b"",
-                    "Find": binascii.unhexlify("554889E5415741565350"),
-                    "Replace": binascii.unhexlify("31C0C3909090")
+                    "MinKernel": "24.0.0",
+                    "Find": binascii.unhexlify("554889E5488B"),        # 6 Bytes: Prolog + Start von MOV RAX [1, 2]
+                    "Replace": binascii.unhexlify("B840000000C3"),     # 6 Bytes: mov eax, 0x40; ret
+                    "Mask": b"",
+                    "ReplaceMask": b"",
+                    "Limit": 0,
+                    "Skip": 0
                 }
                 if self._validate_patch(new_patch):
-                    logging.info("  > Injecting AppleKeyStore Tahoe deadline check bypass")
+                    logging.info("- Hardcode SEP OOL Max Send Pages Limit patch injizieren")
+                    logging.info("- Injecting Hardcode SEP OOL Max Send Pages Limit patch")
                     kernel_patches.append(new_patch)
         ... [Integration für alle weiteren Patches analog] ...
