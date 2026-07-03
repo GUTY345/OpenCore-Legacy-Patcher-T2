@@ -411,23 +411,33 @@ class BuildMiscellaneous:
 
     def _validate_patch(self, patch_dict):
         """
-        Loggt eine Fehlermeldung, falls Find und Replace unterschiedlich sind.
+        Überprüft, ob die Byte-Längen von Find und Replace identisch sind.
         """
         find_bytes = patch_dict.get("Find")
         replace_bytes = patch_dict.get("Replace")
+        comment = patch_dict.get("Comment", "Unbekannter Patch")
     
-        # Wenn sie unterschiedlich sind, loggen wir den Fehler
-        if find_bytes != replace_bytes:
-            logging.error(f"Patch-Fehler: 'Find' und 'Replace' bytes sind NICHT identisch für '{patch_dict.get('Comment')}'.")
-            logging.error(f"Patch failure: Find and replace bytes aren't identical for '{patch_dict.get('Comment')}'.")
-            logging.info("Bitte aktualisieren Sie den App falls eine neuere Version vorhanden ist. Falls nicht, Sie müssen das Problem sofort melden.")
-            logging.info("Please update the app if a newer version is available. If not, you should report this issue.")
-            logging.info("Manchmal, Forks von diesen Projekt setzen auf veraltete Versionen. Falls Sie einen Fork von dieser Projekt verwenden, Sie müssen den Fork-Programmmierer fragen, den Fork zu aktualisieren.")
-            logging.info("Sometimes, forks of this project may still use outdated version. If you are using a fork of this project and that's the case, you should ask the fork developer to update.")
+        # 1. Sicherstellen, dass die Keys überhaupt existieren
+        if find_bytes is None or replace_bytes is None:
+            logging.error(f"Fehler: 'Find' oder 'Replace' fehlt im Patch '{comment}'.")
+            return False
+    
+        # 2. Die entscheidende Prüfung: Die LÄNGE muss gleich sein
+        if len(find_bytes) != len(replace_bytes):
+            logging.error(f"Patch-Fehler: 'Find' ({len(find_bytes)} Bytes) und "
+                          f"'Replace' ({len(replace_bytes)} Bytes) haben unterschiedliche Längen "
+                          f"für '{comment}'.")
+            
+            logging.info("Bitte aktualisieren Sie die App, falls eine neuere Version vorhanden ist.")
+            logging.info("Please update the app if a newer version is available.")
+            
+            # Patchen beenden beenden, da ungleiche Längen zu Speicherfehlern/Kernel Panics führen
             sys.exit(3)
-            # Hier wird NICHT False zurückgegeben, da du sagtest, bei identisch sei alles gut.
-            # Falls du den Patch trotz Fehler trotzdem hinzufügen willst, lass es so stehen.
-        
+    
+        # 3. Optional: Warnung, wenn Find und Replace identisch sind (No-Op Patch)
+        if find_bytes == replace_bytes:
+            logging.warning(f"Warnung: 'Find' und 'Replace' sind identisch für '{comment}'. Der Patch hat keine Auswirkung.")
+    
         return True
     
     def _t2_handling(self) -> None:
