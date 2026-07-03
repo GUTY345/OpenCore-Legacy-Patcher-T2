@@ -556,8 +556,12 @@ class BuildMiscellaneous:
                     "Skip": 0
                 }
                 if self._validate_patch(new_patch):
+                    logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                     logging.info("- Injecting Bypass XARTDisableLog limits patch")
                     kernel_patches.append(new_patch)
+                else:
+                    logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                    sys.exit(3)
 
             # 3. Force AppleSEPDeviceService OOL constraints (Tahoe Fix)
             # Behebt einen Fehler, indem die Bytes-Länge zwischen Find und Replace nicht gleich lang sind
@@ -578,9 +582,13 @@ class BuildMiscellaneous:
                     "Skip": 0
                 }
                 if self._validate_patch(new_patch):
+                    logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                     logging.info("- Hardcode SEP OOL Max Send Pages Limit patch injizieren")
                     logging.info("- Injecting Hardcode SEP OOL Max Send Pages Limit patch")
                     kernel_patches.append(new_patch)
+                else:
+                    logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                    sys.exit(3)
 
             # 3. AppleKeyStoreUserClient deadline check bypass
             if not any(p.get("Comment") == "Bypass AppleKeyStore Deadline Mismatch (Tahoe Fix)" for p in kernel_patches):
@@ -605,8 +613,12 @@ class BuildMiscellaneous:
                     "Skip": 0
                 }
                 if self._validate_patch(new_patch):
+                    logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                     logging.info("  > Injecting AppleKeyStore Tahoe deadline check bypass")
                     kernel_patches.append(new_patch)
+                else:
+                    logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                    sys.exit(3)
 
             # 4. Bypass AppleIntelUSBXHCI T2 handshake (Modernized for Tahoe vtable shifts)
             if not any(p.get("Comment") == "Bypass T2 USB handshake (Tahoe fix)" for p in kernel_patches):
@@ -627,8 +639,12 @@ class BuildMiscellaneous:
                     "Replace": binascii.unhexlify("31C0C39090909090909090909090")
                 }
                 if self._validate_patch(new_patch):
+                    logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                     logging.info("- Injecting modernized AppleUSBXHCI T2 handshake bypass")
                     kernel_patches.append(new_patch)
+                else:
+                    logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                    sys.exit(3)
 
             # 5. Bypass AppleBCMWLANCore long start timeout
             if not any(p.get("Comment") == "Bypass AppleBCMWLANCore long start timeout" for p in kernel_patches):
@@ -657,8 +673,12 @@ class BuildMiscellaneous:
                     "Count": 1
                 }
                 if self._validate_patch(new_patch):
+                    logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                     logging.info("- Injecting Bypass AppleBCMWLANCore long start timeout")
                     kernel_patches.append(new_patch)
+                else:
+                    logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                    sys.exit(3)
 
             # Experimental Patches
             if enable_experimental_patches == True:
@@ -674,7 +694,11 @@ class BuildMiscellaneous:
                         "Replace": binascii.unhexlify("C39090909090909090909090909090")
                     }
                     if self._validate_patch(new_patch):
+                        logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                         kernel_patches.append(new_patch)
+                    else:
+                        logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                        sys.exit(3)
 
                 # Experimental Patch 2: hardwareException
                 if not any(p.get("Comment") == "Bypass AppleUSBVHCI::hardwareException (Suppress firmware exceptions)" for p in kernel_patches):
@@ -688,7 +712,11 @@ class BuildMiscellaneous:
                         "Replace": binascii.unhexlify("C3909090909090909090909090909090")
                     }
                     if self._validate_patch(new_patch):
+                        logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                         kernel_patches.append(new_patch)
+                    else:
+                        logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                        sys.exit(3)
         except Exception as e:
             logging.error("Failed to inject critical patches for your T2 Mac due to the following error:")
             logging.exception("Stack Trace:")
