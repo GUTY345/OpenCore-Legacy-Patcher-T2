@@ -646,40 +646,6 @@ class BuildMiscellaneous:
                     logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
                     sys.exit(3)
 
-            # 5. Bypass AppleBCMWLANCore long start timeout
-            if not any(p.get("Comment") == "Bypass AppleBCMWLANCore long start timeout" for p in kernel_patches):
-                new_patch = {
-                    "Arch": "x86_64",
-                    "Comment": "Bypass AppleBCMWLANCore long start timeout",
-                    "Enabled": True,
-                    "Identifier": "com.apple.iokit.AppleBCMWLANCore", # Der Treiber aus deinem Log [1]
-                    "MaxKernel": "",
-                    "MinKernel": "24.0.0", # sodass dieses Patch auch ladet in die Installationsprogramm von macOS 26 Tahoe
-                    # Wir suchen den Funktionsanfang von initWithAddressAndPeerManager aus der Quelle [3]:
-                    # 55          PUSH RBP
-                    # 48 89 E5    MOV RBP, RSP
-                    # 41 57       PUSH R15
-                    # 41 56       PUSH R14
-                    # 41 55       PUSH R13
-                    # 41 54       PUSH R12
-                    "Find": binascii.unhexlify("554889E54157415641554154"), 
-                        
-                    # Wir ersetzen den Start durch ein sofortiges "RET" (C3) und NOPs (90),
-                    # damit die Funktion sofort ohne Verzögerung zurückkehrt:
-                    "Replace": binascii.unhexlify("C39090909090909090909090"),
-                        
-                    "Limit": 0,
-                    "Skip": 0,
-                    "Count": 1
-                }
-                if self._validate_patch(new_patch):
-                    logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
-                    logging.info("- Injecting Bypass AppleBCMWLANCore long start timeout")
-                    kernel_patches.append(new_patch)
-                else:
-                    logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
-                    sys.exit(3)
-
             # Experimental Patches
             if enable_experimental_patches == True:
                 # Experimental Patch 1: processInterrupts
@@ -743,6 +709,40 @@ class BuildMiscellaneous:
             # Patch-Konfiguration für AppleUSBVHCI auf macOS Tahoe (Kernel 24.x)
             # Ziel: Verhindern von Panics bei T2-Kommunikationsfehlern
             try:
+                 # 5. Bypass AppleBCMWLANCore long start timeout #dieser Patch wahrscheinlich verursacht Hangen beim Apple-Logo
+                if not any(p.get("Comment") == "Bypass AppleBCMWLANCore long start timeout" for p in kernel_patches):
+                    new_patch = {
+                        "Arch": "x86_64",
+                        "Comment": "Bypass AppleBCMWLANCore long start timeout",
+                        "Enabled": True,
+                        "Identifier": "com.apple.iokit.AppleBCMWLANCore", # Der Treiber aus deinem Log [1]
+                        "MaxKernel": "",
+                        "MinKernel": "24.0.0", # sodass dieses Patch auch ladet in die Installationsprogramm von macOS 26 Tahoe
+                        # Wir suchen den Funktionsanfang von initWithAddressAndPeerManager aus der Quelle [3]:
+                        # 55          PUSH RBP
+                        # 48 89 E5    MOV RBP, RSP
+                        # 41 57       PUSH R15
+                        # 41 56       PUSH R14
+                        # 41 55       PUSH R13
+                        # 41 54       PUSH R12
+                        "Find": binascii.unhexlify("554889E54157415641554154"), 
+                            
+                        # Wir ersetzen den Start durch ein sofortiges "RET" (C3) und NOPs (90),
+                        # damit die Funktion sofort ohne Verzögerung zurückkehrt:
+                        "Replace": binascii.unhexlify("C39090909090909090909090"),
+                            
+                        "Limit": 0,
+                        "Skip": 0,
+                        "Count": 1
+                    }
+                    if self._validate_patch(new_patch):
+                        logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
+                        logging.info("- Injecting Bypass AppleBCMWLANCore long start timeout")
+                        kernel_patches.append(new_patch)
+                    else:
+                        logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                        sys.exit(3)
+                
                 if not any(p.get("Comment") == "Bypass AppleUSBVHCI::processInterrupts to prevent protocol-driven panics" for p in kernel_patches): #von NotebookLLM-generierten Patch
                     logging.info("Aktivierung von AppleUSBVHCI process interrupts patches")
                     logging.info("Enabling AppleUSBVHCI process interrupts patches")
