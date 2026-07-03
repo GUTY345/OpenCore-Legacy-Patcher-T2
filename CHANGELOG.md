@@ -1,4 +1,23 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungslog
+## 4.0.0 pre-alpha 2 for alpha 16 / 4.0.0 Voralpha 2 für Alpha 16:
+This release:
+- fixes a bug where it may have not been looking for byte length difference between Find and Replace
+- fixes a bug where on the Tahoe Cache Fix patch, the byte length between Find and Replace is different
+- removes Bypass AppleBCMWLANCore timeout patch as it causes hangs at Apple logo
+
+But this hasn't been fixed yet:
+- Bugs in WhateverGreen (even the latest version by Dortania) causes gray screen on T2 Macs: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues/104
+
+Diese Version:
+- Behebt einen Fehler, bei dem möglicherweise nicht nach Byte-Längenunterschieden zwischen Suchen und Ersetzen gesucht wurde.
+
+- Behebt einen Fehler, bei dem die Byte-Länge zwischen Suchen und Ersetzen im Tahoe Cache Fix-Patch unterschiedlich war.
+
+- Entfernt den Bypass AppleBCMWLANCore-Timeout-Patch, da dieser zu Hängern beim Apple-Logo führte.
+
+Folgendes ist jedoch noch nicht behoben:
+- Fehler in WhateverGreen (auch in der neuesten Version von Dortania) verursachen einen grauen Bildschirm auf T2-Macs: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues/104
+
 ## 4.0.0 pre-alpha 1 for alpha 16 / 4.0.0 Voralpha 1 für Alpha 16
 This release:
 - now tells users if they have enabled optional patches or not
