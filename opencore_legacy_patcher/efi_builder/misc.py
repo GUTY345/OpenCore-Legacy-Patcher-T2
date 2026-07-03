@@ -410,35 +410,20 @@ class BuildMiscellaneous:
             sys.exit(3)
 
     def _validate_patch(self, patch_dict):
-        """
-        Überprüft, ob die Byte-Längen von Find und Replace identisch sind.
-        """
-        find_bytes = patch_dict.get("Find")
-        replace_bytes = patch_dict.get("Replace")
-        comment = patch_dict.get("Comment", "Unbekannter Patch")
-    
-        # 1. Sicherstellen, dass die Keys überhaupt existieren
-        if find_bytes is None or replace_bytes is None:
-            logging.error(f"Fehler: 'Find' oder 'Replace' fehlt im Patch '{comment}'.")
-            return False
-    
-        # 2. Die entscheidende Prüfung: Die LÄNGE muss gleich sein
-        if len(find_bytes) != len(replace_bytes):
-            logging.error(f"Patch-Fehler: 'Find' ({len(find_bytes)} Bytes) und "
-                          f"'Replace' ({len(replace_bytes)} Bytes) haben unterschiedliche Längen "
-                          f"für '{comment}'.")
+        try:
+            find_bytes = patch_dict.get("Find")
+            replace_bytes = patch_dict.get("Replace")
             
-            logging.info("Bitte aktualisieren Sie die App, falls eine neuere Version vorhanden ist.")
-            logging.info("Please update the app if a newer version is available.")
-            
-            # Patchen beenden beenden, da ungleiche Längen zu Speicherfehlern/Kernel Panics führen
+            # Längenvergleich
+            if len(find_bytes) != len(replace_bytes):
+                logging.error(f"LÄNGENFEHLER in '{patch_dict.get('Comment')}': "
+                              f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
+                sys.exit(3)
+                return False
+            return True
+        except Exception as e:
+            logging.error("Wir haben einen Problem, die Bytes-Länge zu vergleichen")
             sys.exit(3)
-    
-        # 3. Optional: Warnung, wenn Find und Replace identisch sind (No-Op Patch)
-        if find_bytes == replace_bytes:
-            logging.warning(f"Warnung: 'Find' und 'Replace' sind identisch für '{comment}'. Der Patch hat keine Auswirkung.")
-    
-        return True
     
     def _t2_handling(self) -> None:
         """T2 Security Chip Handler."""
