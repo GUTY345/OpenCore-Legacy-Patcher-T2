@@ -553,8 +553,8 @@ class BuildMiscellaneous:
                     "Count": 1,
                     "Enabled": True,
                     "MinKernel": "24.0.0",
-                    "Find": binascii.unhexlify("554889E5"),        # push rbp; mov rbp, rsp [3]
-                    "Replace": binascii.unhexlify("31C0C390"),     # xor eax, eax; ret; nop
+                    "Find": binascii.unhexlify("554889E5488B"),        # 6 Bytes: Prolog + Start von MOV RCX [1]
+                    "Replace": binascii.unhexlify("B800000000C3"),     # 6 Bytes: mov eax, 0; ret
                     "Mask": b"",
                     "ReplaceMask": b"",
                     "Limit": 0,
