@@ -135,7 +135,7 @@ class MainFrame(wx.Frame):
         copy_label.Centre(wx.HORIZONTAL)
         self.SetSize((-1, copy_label.GetPosition()[1] + 60))
 
-    def _preflight_checks((self)):
+    def _preflight_checks(self):
         """ [13-17] """
         try:
             if self.constants.computer.build_model is None:
