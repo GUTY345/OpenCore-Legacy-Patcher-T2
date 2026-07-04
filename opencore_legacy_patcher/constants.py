@@ -24,6 +24,7 @@ class Constants:
         # URLs
         self.url_patcher_support_pkg:         str = "https://github.com/dortania/PatcherSupportPkg/releases/download/"
         self.repo_link:                       str = "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"
+        self.guide_link:                      str = "https://dortania.github.io/OpenCore-Legacy-Patcher/"
         self.installer_pkg_url:               str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
 
         # OpenCore Versioning
