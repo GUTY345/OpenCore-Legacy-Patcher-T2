@@ -159,13 +159,14 @@ class MainFrame(wx.Frame):
             logging.info("Suchen nach Updates ist erfolgreich")
             return
         else:
-            logging.error("Es hat fehlgeschlagen, nach Updates zu suchen wegen das folgende Fehler:")
-            logging.exception("Stack Trace:")
-            logging.info("Bitte probieren Sie später noch einmal.")
+            logging.info("Keine neue Updates verfügbar. Falls einen Update ist verfügbar aber zeigt es nicht, sollen Sie das Problem sofort melden und auch einen Fix vorschlagen.")
+        
         try:
             if global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates"):
+                logging.info("Updates sind von Benutzer ausgeschaltet. Falls dies nicht der Fall ist, sollten Sie das Problem sofort melden und einen Fix vorschlagen.")
                 self.constants.ignore_updates = True
                 return
+            logging.info("Nach Updates suchen...")
             self.constants.has_checked_updates = True
             update_dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
             if update_dict:
@@ -176,10 +177,13 @@ class MainFrame(wx.Frame):
                     changelog = response.get("body", "").split("## Asset Information")
                 except:
                     changelog = "## Unable to fetch changelog\nPlease check GitHub."
+                    logging.info("Wir haben einen Problem, den Changelog zu fetchen. Bitte, suchen Sie den Changelog in GitHub nach.")
                 
                 wx.CallAfter(self.on_update, update_dict["Link"], update_dict["Version"], update_dict["Github Link"], changelog)
         except Exception as e:
             logging.error(f"Suche nach Updates fehlgeschlagen: {e}")
+            logging.exception("Stack Trace:")
+            logging.info("Falls dieses Problem ist noch vorhanden, Sie müssen dringend das Problem melden und/oder einen Fix vorschlagen.")
 
     def on_update(self, oclp_url, oclp_version, oclp_github_url, changelog):
         """ Zeigt das Update-Fenster an [20-25] """
