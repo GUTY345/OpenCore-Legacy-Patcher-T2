@@ -228,73 +228,49 @@ class MainFrame(wx.Frame):
     def _check_for_updates(self):
         if self.constants.has_checked_updates is True:
             return
-    
+
         ignore_updates = global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates")
         if ignore_updates is True:
             self.constants.ignore_updates = True
             return
-    
+
         self.constants.ignore_updates = False
         self.constants.has_checked_updates = True
-        
-        update_dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
-        if not update_dict:
-            return
-    
-        remote_version_str = update_dict["Version"]
-        local_version_str = self.constants.patcher_version
-    
-        try:
-            remote_v = version.parse(str(remote_version_str))
-            local_v = version.parse(local_version_str)
-    
-            if remote_v <= local_v:
-                logging.info(f"{self.constants.patcher_name} is up to date. (Local: {local_v} >= Remote: {remote_v})")
-                return
-    
-        except version.InvalidVersion:
-            if remote_version_str == local_version_str:
-                return
-    
-        if getattr(self, 'exiting_app', False):
+        dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
+        if not dict:
             return
 
-        logging.info(f"Newer version detected: {remote_version_str}")
+        version = dict["Version"]
+        logging.info(f"New version: {version}")
+
+        wx.CallAfter(self.on_update, dict["Link"], version, dict["Github Link"])
         
+    def on_update(self, oclp_url: str, oclp_version: str, oclp_github_url: str):
+
+        ID_GITHUB = wx.NewId()
+        ID_UPDATE = wx.NewId()
+
         url = "https://api.github.com/repos/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/latest"
-        changelog = """## Unable to fetch changelog\n\nPlease check the Github page for more information."""
+        response = requests.get(url).json()
         try:
-            response = requests.get(url, headers={"User-Agent": "OpenCore-Legacy-Patcher-T2"}, timeout=10).json()
-            if "body" in response:
-                changelog = response["body"].split("## Asset Information")[0]
-        except Exception as e:
-            logging.error(f"Failed to fetch changelog text: {e}")
-            logging.error(f"Es hat fehlgeschlagen, den Changelog-Text anzuzeigen: {e}")
+            changelog = response["body"].split("## Asset Information")[0]
+        except: #if user constantly checks for updates, github will rate limit them
+            changelog = """## Unable to fetch changelog
 
-        if not getattr(self, 'exiting_app', False):
-            wx.CallAfter(self.on_update, update_dict["Link"], remote_version_str, update_dict["Github Link"], changelog)
-        
-    def on_update(self, oclp_url: str, oclp_version: str, oclp_github_url: str, changelog_text: str):
-        if not self:
-            return
+Please check the Github page for more information about this release."""
 
-        ID_GITHUB = wx.NewIdRef() if hasattr(wx, "NewIdRef") else wx.NewId()
-        ID_UPDATE = wx.NewIdRef() if hasattr(wx, "NewIdRef") else wx.NewId()
-
-        html_markdown = markdown2.markdown(changelog_text, extras=["tables"])
+        html_markdown = markdown2.markdown(changelog, extras=["tables"])
         html_css = css_data.updater_css
-        
-        # Parent auf self gesetzt zur sauberen Speicherhierarchie
-        frame = wx.Dialog(self, -1, title="", size=(650, 500))
+        frame = wx.Dialog(None, -1, title="", size=(650, 500))
         frame.SetMinSize((650, 500))
         frame.SetWindowStyle(wx.STAY_ON_TOP)
         panel = wx.Panel(frame)
-        
-        self.title_text = wx.StaticText(panel, label=f"A new version of {self.constants.patcher_name} is available!")
-        self.description = wx.StaticText(panel, label=f"{self.constants.patcher_name} {oclp_version} is now available - You have {self.constants.patcher_version_label}. Would you like to update?")
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.AddSpacer(10)
+        self.title_text = wx.StaticText(panel, label="A new version of OpenCore Legacy Patcher is available!")
+        self.description = wx.StaticText(panel, label=f"OpenCore Legacy Patcher {oclp_version} is now available - You have {self.constants.patcher_version}{' (Nightly)' if not self.constants.commit_info[0].startswith('refs/tags') else ''}. Would you like to update?")
         self.title_text.SetFont(gui_support.font_factory(19, wx.FONTWEIGHT_BOLD))
         self.description.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-        
         self.web_view = wx.html2.WebView.New(panel, style=wx.BORDER_SUNKEN)
         html_code = f'''
 <html>
@@ -311,7 +287,6 @@ class MainFrame(wx.Frame):
         self.web_view.SetPage(html_code, "")
         self.web_view.Bind(wx.html2.EVT_WEBVIEW_NEWWINDOW, self._onWebviewNav)
         self.web_view.EnableContextMenu(False)
-        
         self.close_button = wx.Button(panel, label="Dismiss")
         self.close_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(wx.ID_CANCEL))
         self.view_button = wx.Button(panel, ID_GITHUB, label="View on GitHub")
@@ -324,7 +299,6 @@ class MainFrame(wx.Frame):
         buttonsizer.Add(self.close_button, 0, wx.ALIGN_CENTRE | wx.RIGHT, 5)
         buttonsizer.Add(self.view_button, 0, wx.ALIGN_CENTRE | wx.LEFT|wx.RIGHT, 5)
         buttonsizer.Add(self.install_button, 0, wx.ALIGN_CENTRE | wx.LEFT, 5)
-        
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.title_text, 0, wx.ALIGN_CENTRE | wx.TOP, 20)
         sizer.Add(self.description, 0, wx.ALIGN_CENTRE | wx.BOTTOM, 20)
@@ -335,17 +309,18 @@ class MainFrame(wx.Frame):
 
         result = frame.ShowModal()
 
+
         if result == ID_GITHUB:
             webbrowser.open(oclp_github_url)
         elif result == ID_UPDATE:
             gui_update.UpdateFrame(
-                parent=self,
-                title=self.title,
-                global_constants=self.constants,
-                screen_location=self.GetPosition(),
-                url=oclp_url,
-                version_label=oclp_version
-            )
+            parent=self,
+            title=self.title,
+            global_constants=self.constants,
+            screen_location=self.GetPosition(),
+            url=oclp_url,
+            version_label=oclp_version
+        )
 
         frame.Destroy()
 
