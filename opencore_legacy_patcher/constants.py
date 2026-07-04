@@ -13,6 +13,7 @@ from .detections import device_probe
 class Constants:
     def __init__(self) -> None:
         # Patcher Versioning
+        # Falls die Version mit s endet, das heißt, es ist noch nicht fertig
         self.patcher_version:                 str = "4.0.0prea-316s"  # OpenCore-Legacy-Patcher
         self.patcher_version_label=self.patcher_version
         self.patcher_support_pkg_version:     str = "1.9.6"  # PatcherSupportPkg
