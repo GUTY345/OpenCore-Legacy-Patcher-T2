@@ -164,6 +164,7 @@ class MainFrame(wx.Frame):
         try:
             if global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates"):
                 logging.info("Updates sind von Benutzer ausgeschaltet. Falls dies nicht der Fall ist, sollten Sie das Problem sofort melden und einen Fix vorschlagen.")
+                logging.info("Das Deaktivieren von Updates bringt Sicherheitsrisiko, weil gepatche Sicherheitslücken noch immer auf das System ungepatcht bleiben")
                 self.constants.ignore_updates = True
                 return
             logging.info("Nach Updates suchen...")
