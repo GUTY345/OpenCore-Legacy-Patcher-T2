@@ -336,6 +336,7 @@ Please check the Github page for more information about this release."""
         import webview # Import here to avoid slowing down OCLP startup
         try:
             self._check_for_updates
+            logging.info("Suchen nach Updates hat gestartet")
         except Exception as e:
             logging.error("Wir haben fehlgeschlagen, nach Updates zu suchen wegen das folgende Fehler:")
             logging.exception("Stack Trace:")
