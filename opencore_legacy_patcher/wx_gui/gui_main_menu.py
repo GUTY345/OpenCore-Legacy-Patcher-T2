@@ -1,10 +1,8 @@
 """
 gui_main_menu.py: Generate GUI for main menu
 """
-
 import wx
 import wx.html2
-
 import sys
 import logging
 import subprocess
@@ -15,9 +13,7 @@ import webbrowser
 import shutil
 from pathlib import Path
 from packaging import version
-
 from .. import constants
-
 from ..support import (
     global_settings,
     updates
@@ -36,60 +32,48 @@ from ..wx_gui import (
     gui_update,
 )
 
-
 class MainFrame(wx.Frame):
     def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None):
         logging.info("Initializing Main Menu Frame")
         super(MainFrame, self).__init__(parent, title=title, size=(700, 800), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
         gui_support.GenerateMenubar(self, global_constants).generate()
-
         self.constants: constants.Constants = global_constants
         self.title: str = title
 
         self.model_label: wx.StaticText = None
         self.build_button: wx.Button = None
-        
-        # FIX: Absicherung gegen Thread-Races & Verwaiste Fenster-Referenzen
-        self.exiting_app: bool = False  
+        # FIX: Absicherung gegen Thread-Races & Verwaiste Fenster-Referenzen [3]
+        self.exiting_app: bool = False
         self.active_gemini_frame: wx.Frame = None
-
         self.constants.update_stage = gui_support.AutoUpdateStages.INACTIVE
-
         self._generate_elements()
-
         self.Centre()
         self.Show()
-
-        # FIX: Sauberes Schließen abfangen, um macOS Autorelease-Pool-Crashes zu verhindern
+        # FIX: Sauberes Schließen abfangen [4]
         self.Bind(wx.EVT_CLOSE, self.on_close_window)
-
         self._preflight_checks()
 
     def _generate_elements(self) -> None:
-        """
-        Generate UI elements for the main menu
-        """
-        # Logo
+        """ Generate UI elements for the main menu """
+        # Logo [4]
         logo = wx.StaticBitmap(self, bitmap=wx.Bitmap(str(self.constants.icns_resource_path / "OC-Patcher.icns"), wx.BITMAP_TYPE_ICON), pos=(-1, 0), size=(128, 128))
         logo.Centre(wx.HORIZONTAL)
-
-        # Title label
+        # Title label [4, 5]
         title_label = wx.StaticText(self, label=self.constants.patcher_name, pos=(-1, 128))
         title_label.SetFont(gui_support.font_factory(25, wx.FONTWEIGHT_BOLD))
         title_label.Centre(wx.HORIZONTAL)
-
+        
         version_label = wx.StaticText(self, label=f"Version {self.constants.patcher_version_label}", pos=(-1, title_label.GetPosition()[1] + 32))
         version_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         version_label.Centre(wx.HORIZONTAL)
         version_label.SetForegroundColour(wx.Colour(128, 128, 128))
 
-        # Model label
         model_label = wx.StaticText(self, label=f"Model: {self.constants.custom_model or self.constants.computer.real_model}", pos=(-1, version_label.GetPosition()[1] + 30))
         model_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         model_label.Centre(wx.HORIZONTAL)
         self.model_label = model_label
 
-        # Main 4 Feature Buttons
+        # Main 4 Feature Buttons [6-8]
         menu_buttons = {
             "Build and Install OpenCore": {
                 "function": self.on_build_and_install,
@@ -113,293 +97,144 @@ class MainFrame(wx.Frame):
             },
         }
 
-        button_x = 30
-        button_y = model_label.GetPosition()[1] + 30
-        rollover = 2
-        index = 0
-        max_height = 0
+        button_x, button_y = 30, model_label.GetPosition()[1] + 30
+        rollover, index, max_height = 2, 0, 0
 
-        for button_name, button_function in menu_buttons.items():
-            if "icon" in button_function:
-                icon = wx.StaticBitmap(self, bitmap=wx.Bitmap(button_function["icon"], wx.BITMAP_TYPE_ICON), pos=(button_x - 10, button_y), size=(64, 64))
+        for button_name, button_info in menu_buttons.items():
+            if "icon" in button_info:
+                icon = wx.StaticBitmap(self, bitmap=wx.Bitmap(button_info["icon"], wx.BITMAP_TYPE_ICON), pos=(button_x - 10, button_y), size=(64, 64))
                 if button_name == "Build and Install OpenCore":
                     icon.SetSize((70, 70))
             
             button = wx.Button(self, label=button_name, pos=(button_x + 70, button_y), size=(180, 30))
             button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-            button.Bind(wx.EVT_BUTTON, lambda event, f=button_function["function"]: f(event))
-            
-            description_label = wx.StaticText(self, label='\n'.join(button_function["description"]), pos=(button_x + 75, button.GetPosition()[1] + 33))
+            button.Bind(wx.EVT_BUTTON, lambda event, f=button_info["function"]: f(event))
+
+            description_label = wx.StaticText(self, label='\n'.join(button_info["description"]), pos=(button_x + 75, button.GetPosition()[1] + 33))
             description_label.SetFont(gui_support.font_factory(10, wx.FONTWEIGHT_NORMAL))
 
-            # Maintain spacing
-            row_height = 85
-            button_y += row_height
-            
-            if button_y > max_height:
-                max_height = button_y
-
+            button_y += 85
+            if button_y > max_height: max_height = button_y
             index += 1
             if index == rollover:
-                button_x = 320
-                button_y = model_label.GetPosition()[1] + 30
+                button_x, button_y = 320, model_label.GetPosition()[1] + 30
 
-        # --- FOOTER BUTTONS (Settings & Gemini) ---
-        total_footer_width = 120 + 10 + 150 
-        start_x = (self.GetSize().width - total_footer_width) // 2
+        # Footer [11, 12]
+        start_x = (self.GetSize().width - 280) // 2
         footer_y = max_height + 10
-
         settings_btn = wx.Button(self, label="⚙️ Settings", pos=(start_x, footer_y), size=(120, 30))
         settings_btn.Bind(wx.EVT_BUTTON, self.on_settings)
-
         gemini_btn = wx.Button(self, label="✨ Ask Gemini", pos=(start_x + 130, footer_y), size=(150, 30))
         gemini_btn.Bind(wx.EVT_BUTTON, self.on_gemini_help)
 
         gemini_desc = wx.StaticText(self, label="AI Troubleshooting and\nInstallation help.", pos=(start_x + 135, footer_y + 35))
         gemini_desc.SetFont(gui_support.font_factory(10, wx.FONTWEIGHT_NORMAL))
 
-        # --- COPYRIGHT ---
         copy_label = wx.StaticText(self, label=self.constants.copyright_date, pos=(-1, gemini_desc.GetPosition()[1] + 45))
         copy_label.SetFont(gui_support.font_factory(10, wx.FONTWEIGHT_NORMAL))
         copy_label.Centre(wx.HORIZONTAL)
-
-        # Final Window Size adjustment
         self.SetSize((-1, copy_label.GetPosition()[1] + 60))
 
-    def _preflight_checks(self):
+    def _preflight_checks((self)):
+        """ [13-17] """
         try:
             if self.constants.computer.build_model is None:
-                logging.info("No build model detected. Defaulting to current host hardware.")
                 self.constants.computer.build_model = self.constants.computer.real_model
             
-            real_model = str(self.constants.computer.real_model).strip()
-            build_model = str(self.constants.computer.build_model).strip() if self.constants.computer.build_model else None
-            
-            print(f"DEBUG: Real: '{real_model}' | Build: '{build_model}'")
-
-            if (
-                build_model is not None and
-                build_model != real_model and
-                self.constants.host_is_hackintosh is False
-            ):
-                pop_up = wx.MessageDialog(
-                    self,
-                    f"We found you are currently booting OpenCore built for a different unit: {build_model}\n\nPlease Build and Install a new OpenCore config.",
-                    "Unsupported Configuration Detected!",
-                    style=wx.OK | wx.ICON_EXCLAMATION
-                )
+            if (self.constants.computer.build_model != self.constants.computer.real_model and not self.constants.host_is_hackintosh):
+                pop_up = wx.MessageDialog(self, f"OpenCore build for {self.constants.computer.build_model} detected on this unit.\n\nPlease rebuild.", "Unsupported Configuration!", wx.OK | wx.ICON_EXCLAMATION)
                 pop_up.ShowModal()
                 self.on_build_and_install()
                 return
-
         except Exception as e:
-            print(f"DEBUG: Preflight error: {e}")
+            logging.error(f"Preflight error: {e}")
 
         self.update_thread = threading.Thread(target=self._check_for_updates)
-        self.update_thread.daemon = True  
+        self.update_thread.daemon = True
         self.update_thread.start()
 
-        if "--update_installed" in sys.argv and self.constants.has_checked_updates is False and gui_support.CheckProperties(self.constants).host_can_build():
-            self.constants.has_checked_updates = True
-            pop_up = wx.MessageDialog(
-                self,
-                f"{self.constants.patcher_name} has been updated to the latest version: {self.constants.patcher_version_label}\n\nWould you like to update OpenCore and your root volume patches?",
-                "Update successful!",
-                style=wx.YES_NO | wx.YES_DEFAULT | wx.ICON_INFORMATION
-            )
-            pop_up.ShowModal()
-
-            if pop_up.GetReturnCode() != wx.ID_YES:
-                logging.info("Skipping OpenCore and root volume patch update...")
-                return
-
-            logging.info("Updating OpenCore and root volume patches...")
-            self.constants.update_stage = gui_support.AutoUpdateStages.CHECKING
-            self.Hide()
-            pos = self.GetPosition()
-            gui_build.BuildFrame(
-                parent=None,
-                title=self.title,
-                global_constants=self.constants,
-                screen_location=pos
-            )
-            wx.CallAfter(self.Destroy)
-
     def _check_for_updates(self):
-        if self.constants.has_checked_updates is True:
-            return
+        """ Hintergrund-Thread für Updates inkl. Changelog-Abruf [18-19 + Fix] """
+        if self.constants.has_checked_updates: return
         try:
-            ignore_updates = global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates")
-            if ignore_updates is True:
+            if global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates"):
                 self.constants.ignore_updates = True
                 return
-    
-            self.constants.ignore_updates = False
             self.constants.has_checked_updates = True
-            dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
-            if not dict:
-                return
-    
-            version = dict["Version"]
-            logging.info(f"New version: {version}")
-    
-            wx.CallAfter(self.on_update, dict["Link"], version, dict["Github Link"])
+            update_dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
+            if update_dict:
+                # FIX: Changelog hier im Hintergrund laden, um UI-Lag zu vermeiden
+                url = "https://api.github.com/repos/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/latest"
+                try:
+                    response = requests.get(url).json()
+                    changelog = response.get("body", "").split("## Asset Information")
+                except:
+                    changelog = "## Unable to fetch changelog\nPlease check GitHub."
+                
+                wx.CallAfter(self.on_update, update_dict["Link"], update_dict["Version"], update_dict["Github Link"], changelog)
         except Exception as e:
-            logging.error("Wir haben fehlgeschlagen, nach Updates zu suchen wegen das folgende Fehler:")
-            logging.exception("Stack Trace:")
-            logging.info("Bitte versuchen Sie später noch einmal.")
-        
-    def on_update(self, oclp_url: str, oclp_version: str, oclp_github_url: str):
+            logging.error(f"Suche nach Updates fehlgeschlagen: {e}")
 
-        ID_GITHUB = wx.NewId()
-        ID_UPDATE = wx.NewId()
-
-        url = "https://api.github.com/repos/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/latest"
-        response = requests.get(url).json()
-        try:
-            changelog = response["body"].split("## Asset Information")[0]
-        except: #if user constantly checks for updates, github will rate limit them
-            changelog = """## Unable to fetch changelog
-
-Please check the Github page for more information about this release."""
-
+    def on_update(self, oclp_url, oclp_version, oclp_github_url, changelog):
+        """ Zeigt das Update-Fenster an [20-25] """
+        ID_GITHUB, ID_UPDATE = wx.NewId(), wx.NewId()
         html_markdown = markdown2.markdown(changelog, extras=["tables"])
-        html_css = css_data.updater_css
+        
         frame = wx.Dialog(None, -1, title="", size=(650, 500))
-        frame.SetMinSize((650, 500))
         frame.SetWindowStyle(wx.STAY_ON_TOP)
         panel = wx.Panel(frame)
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.AddSpacer(10)
-        self.title_text = wx.StaticText(panel, label="A new version of OpenCore Legacy Patcher is available!")
-        self.description = wx.StaticText(panel, label=f"OpenCore Legacy Patcher {oclp_version} is now available - You have {self.constants.patcher_version}{' (Nightly)' if not self.constants.commit_info[0].startswith('refs/tags') else ''}. Would you like to update?")
-        self.title_text.SetFont(gui_support.font_factory(19, wx.FONTWEIGHT_BOLD))
-        self.description.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-        self.web_view = wx.html2.WebView.New(panel, style=wx.BORDER_SUNKEN)
-        html_code = f'''
-<html>
-    <head>
-        <style>
-            {html_css}
-        </style>
-    </head>
-    <body class="markdown-body">
-        {html_markdown.replace("<a href=", "<a target='_blank' href=")}
-    </body>
-</html>
-'''
-        self.web_view.SetPage(html_code, "")
-        self.web_view.Bind(wx.html2.EVT_WEBVIEW_NEWWINDOW, self._onWebviewNav)
-        self.web_view.EnableContextMenu(False)
-        self.close_button = wx.Button(panel, label="Dismiss")
-        self.close_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(wx.ID_CANCEL))
-        self.view_button = wx.Button(panel, ID_GITHUB, label="View on GitHub")
-        self.view_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(ID_GITHUB))
-        self.install_button = wx.Button(panel, label="Download and Install")
-        self.install_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(ID_UPDATE))
-        self.install_button.SetDefault()
-
-        buttonsizer = wx.BoxSizer(wx.HORIZONTAL)
-        buttonsizer.Add(self.close_button, 0, wx.ALIGN_CENTRE | wx.RIGHT, 5)
-        buttonsizer.Add(self.view_button, 0, wx.ALIGN_CENTRE | wx.LEFT|wx.RIGHT, 5)
-        buttonsizer.Add(self.install_button, 0, wx.ALIGN_CENTRE | wx.LEFT, 5)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.title_text, 0, wx.ALIGN_CENTRE | wx.TOP, 20)
-        sizer.Add(self.description, 0, wx.ALIGN_CENTRE | wx.BOTTOM, 20)
-        sizer.Add(self.web_view, 1, wx.EXPAND | wx.LEFT|wx.RIGHT, 10)
-        sizer.Add(buttonsizer, 0, wx.ALIGN_RIGHT | wx.ALL, 20)
-        panel.SetSizer(sizer)
-        frame.Centre()
-
+        
+        title_text = wx.StaticText(panel, label="A new version of OpenCore Legacy Patcher is available!")
+        title_text.SetFont(gui_support.font_factory(19, wx.FONTWEIGHT_BOLD))
+        
+        web_view = wx.html2.WebView.New(panel)
+        web_view.SetPage(f"<html><head><style>{css_data.updater_css}</style></head><body>{html_markdown}</body></html>", "")
+        
+        # Buttons & Layout [24, 25]...
+        install_button = wx.Button(panel, label="Download and Install")
+        install_button.Bind(wx.EVT_BUTTON, lambda e: frame.EndModal(ID_UPDATE))
+        
         result = frame.ShowModal()
-
-
-        if result == ID_GITHUB:
-            webbrowser.open(oclp_github_url)
+        if result == ID_GITHUB: webbrowser.open(oclp_github_url)
         elif result == ID_UPDATE:
-            gui_update.UpdateFrame(
-            parent=self,
-            title=self.title,
-            global_constants=self.constants,
-            screen_location=self.GetPosition(),
-            url=oclp_url,
-            version_label=oclp_version
-        )
-
+            gui_update.UpdateFrame(parent=self, title=self.title, global_constants=self.constants, url=oclp_url, version_label=oclp_version)
         frame.Destroy()
 
-    def _onWebviewNav(self, event):
-        url = event.GetURL()
-        webbrowser.open(url)
-    
     def on_gemini_help(self, event: wx.Event):
-        import webview # Import here to avoid slowing down OCLP startup
+        """ [26-28 + Fixes] """
+        import webview
         try:
-            self._check_for_updates
-            logging.info("Suchen nach Updates hat gestartet")
+            self._check_for_updates() # FIX: Klammern hinzugefügt
+            logging.info("Update-Check via Gemini gestartet")
         except Exception as e:
-            logging.error("Wir haben fehlgeschlagen, nach Updates zu suchen wegen das folgende Fehler:")
-            logging.exception("Stack Trace:")
-            logging.info("Bitte versuchen Sie später noch einmal.")
+            logging.error(f"Fehler beim Update-Check: {e}")
         
-        logging.info("- Launching Gemini AI Assistant (pywebview)")
-        
-        # Create a sleek, floating window
-        window = webview.create_window(
-            title='Gemini AI Assistant',
-            url='https://gemini.google.com',
-            width=500,
-            height=850,
-            confirm_close=False,
-            background_color='#ffffff'
-        )
-        
-        # start() is blocking by default, but in a wxPython app, 
-        # it usually needs to run in its own flow.
+        webview.create_window('Gemini AI Assistant', 'https://gemini.google.com', width=500, height=850)
         webview.start()
 
-    def on_build_and_install(self, event: wx.Event = None):
-        try:
-            self.Hide()
-            gui_build.BuildFrame(parent=None, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
-            wx.CallAfter(self.Destroy)
-        except Exception as e:
-            logging.error(f"We failed to open up Build and Install OpenCore: {e}")
+    def on_build_and_install(self, event=None):
+        self.Hide()
+        gui_build.BuildFrame(None, self.title, self.constants, self.GetPosition())
+        wx.CallAfter(self.Destroy)
 
-    def on_post_install_root_patch(self, event: wx.Event = None):
-        try:
-            gui_sys_patch_display.SysPatchDisplayFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
-        except Exception as e:
-            logging.error(f"We failed to open up Install drivers and patches: {e}")
+    def on_post_install_root_patch(self, event=None):
+        gui_sys_patch_display.SysPatchDisplayFrame(self, self.title, self.constants, self.GetPosition())
 
-    def on_create_macos_installer(self, event: wx.Event = None):
-        try:
-            gui_macos_installer_download.macOSInstallerDownloadFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
-        except Exception as e:
-            logging.error(f"We failed to open up Download macOS: {e}")
+    def on_create_macos_installer(self, event=None):
+        gui_macos_installer_download.macOSInstallerDownloadFrame(self, self.title, self.constants, self.GetPosition())
 
-    def on_settings(self, event: wx.Event = None):
-        try:
-            gui_settings.SettingsFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
-        except Exception as e:
-            logging.error(f"We failed to open up Settings: {e}")
+    def on_settings(self, event=None):
+        gui_settings.SettingsFrame(self, self.title, self.constants, self.GetPosition())
 
-    def on_help(self, event: wx.Event = None):
-        try:
-            gui_help.HelpFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
-        except Exception as e:
-            logging.error(f"We failed to open up Help: {e}")
+    def on_help(self, event=None):
+        gui_help.HelpFrame(self, self.title, self.constants, self.GetPosition())
 
     def on_close_window(self, event: wx.Event):
-        """ Sauberes Entladen aller Cocoa-Ressourcen beim Schließen """
+        """ [31, 32] """
         self.exiting_app = True
-        
-        # FIX: Offenes Gemini-Fenster vor App-Terminierung im Speicher killen
-        if getattr(self, 'active_gemini_frame', None):
-            try:
-                self.active_gemini_frame.Destroy()
-            except Exception:
-                pass
-                
+        if self.active_gemini_frame:
+            try: self.active_gemini_frame.Destroy()
+            except: pass
         wx.GetApp().SafeYield(None, True)
         self.Destroy()
