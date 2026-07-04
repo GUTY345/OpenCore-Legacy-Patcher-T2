@@ -155,7 +155,8 @@ class MainFrame(wx.Frame):
 
     def _check_for_updates(self):
         """ Hintergrund-Thread für Updates inkl. Changelog-Abruf [18-19 + Fix] """
-        if self.constants.has_checked_updates: 
+        if self.constants.has_checked_updates:
+            logging.info("Suchen nach Updates ist erfolgreich")
             return
         else:
             logging.error("Es hat fehlgeschlagen, nach Updates zu suchen wegen das folgende Fehler:")
