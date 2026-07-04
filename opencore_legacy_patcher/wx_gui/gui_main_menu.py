@@ -334,7 +334,7 @@ Please check the Github page for more information about this release."""
     
     def on_gemini_help(self, event: wx.Event):
         import webview # Import here to avoid slowing down OCLP startup
-        
+        self._check_for_updates
         logging.info("- Launching Gemini AI Assistant (pywebview)")
         
         # Create a sleek, floating window
