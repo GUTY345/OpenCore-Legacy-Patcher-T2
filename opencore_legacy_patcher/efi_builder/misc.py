@@ -512,19 +512,11 @@ class BuildMiscellaneous:
                 sys.exit(3)
             
         # Structure guarding for OpenCore NVRAM delete layout
-        try:
-            self.config.setdefault("NVRAM", {}).setdefault("Delete", {})
-            if APPLE_NVRAM_UUID not in self.config["NVRAM"]["Delete"]:
-                self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID] = []
-            if "boot-args" not in self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID]:
-                self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID].append("boot-args")
-        except Exception as e:
-            logging.error("Die Schutzstruktur für das OpenCore-Löschlayout konnte nicht erstellt werden, daher kann OpenCore nicht sicher kompiliert werden. Die Fehlermeldung lautet wie folgt::")
-            logging.error("Guarding structure for OpenCore delete layout failed, so it can't proceed with building OpenCore safely. The error is the following:")
-            logging.exception("Stack Trace:")
-            logging.info("Bitte probieren Sie später noch einmal.")
-            logging.info("Please try again later.")
-            sys.exit(3)
+        self.config.setdefault("NVRAM", {}).setdefault("Delete", {})
+        if APPLE_NVRAM_UUID not in self.config["NVRAM"]["Delete"]:
+            self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID] = []
+        if "boot-args" not in self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID]:
+            self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID].append("boot-args")
 
         # Injizieren von bypass für library validation enforcement auf T2 hardware übersprungen, um frühe Kernel Panics zu vermeiden, bevor die Betriebssystem überhaupt startet
 
