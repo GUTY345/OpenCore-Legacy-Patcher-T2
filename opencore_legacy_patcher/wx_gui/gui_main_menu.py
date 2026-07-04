@@ -155,7 +155,12 @@ class MainFrame(wx.Frame):
 
     def _check_for_updates(self):
         """ Hintergrund-Thread für Updates inkl. Changelog-Abruf [18-19 + Fix] """
-        if self.constants.has_checked_updates: return
+        if self.constants.has_checked_updates: 
+            return
+        else:
+            logging.error("Es hat fehlgeschlagen, nach Updates zu suchen wegen das folgende Fehler:")
+            logging.exception("Stack Trace:")
+            logging.info("Bitte probieren Sie später noch einmal.")
         try:
             if global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates"):
                 self.constants.ignore_updates = True
