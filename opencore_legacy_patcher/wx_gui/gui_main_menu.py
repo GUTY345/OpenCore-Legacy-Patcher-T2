@@ -228,22 +228,26 @@ class MainFrame(wx.Frame):
     def _check_for_updates(self):
         if self.constants.has_checked_updates is True:
             return
-
-        ignore_updates = global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates")
-        if ignore_updates is True:
-            self.constants.ignore_updates = True
-            return
-
-        self.constants.ignore_updates = False
-        self.constants.has_checked_updates = True
-        dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
-        if not dict:
-            return
-
-        version = dict["Version"]
-        logging.info(f"New version: {version}")
-
-        wx.CallAfter(self.on_update, dict["Link"], version, dict["Github Link"])
+        try:
+            ignore_updates = global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates")
+            if ignore_updates is True:
+                self.constants.ignore_updates = True
+                return
+    
+            self.constants.ignore_updates = False
+            self.constants.has_checked_updates = True
+            dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
+            if not dict:
+                return
+    
+            version = dict["Version"]
+            logging.info(f"New version: {version}")
+    
+            wx.CallAfter(self.on_update, dict["Link"], version, dict["Github Link"])
+        except Exception as e:
+            logging.error("Wir haben fehlgeschlagen, nach Updates zu suchen wegen das folgende Fehler:")
+            logging.exception("Stack Trace:")
+            logging.info("Bitte versuchen Sie später noch einmal.")
         
     def on_update(self, oclp_url: str, oclp_version: str, oclp_github_url: str):
 
