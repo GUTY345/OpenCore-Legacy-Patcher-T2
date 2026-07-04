@@ -512,21 +512,31 @@ class BuildMiscellaneous:
                 sys.exit(3)
             
         # Structure guarding for OpenCore NVRAM delete layout
-        self.config.setdefault("NVRAM", {}).setdefault("Delete", {})
-        if APPLE_NVRAM_UUID not in self.config["NVRAM"]["Delete"]:
-            self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID] = []
-        if "boot-args" not in self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID]:
-            self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID].append("boot-args")
+        try:
+            self.config.setdefault("NVRAM", {}).setdefault("Delete", {})
+            if APPLE_NVRAM_UUID not in self.config["NVRAM"]["Delete"]:
+                self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID] = []
+            if "boot-args" not in self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID]:
+                self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID].append("boot-args")
+        except Exception as e:
+            logging.error("Die Schutzstruktur für das OpenCore-Löschlayout konnte nicht erstellt werden, daher kann OpenCore nicht sicher kompiliert werden. Die Fehlermeldung lautet wie folgt::")
+            logging.error("Guarding structure for OpenCore delete layout failed, so it can't proceed with building OpenCore safely. The error is the following:")
+            logging.exception("Stack Trace:")
+            logging.info("Bitte probieren Sie später noch einmal.")
+            logging.info("Please try again later.")
+            sys.exit(3)
 
-        # Bypass library validation enforcement on T2 hardware to prevent early kernel panics
-        logging.info("- Bypassing Library Validation Enforcement hook patches for T2 core integrity protection.")
+        # Injizieren von bypass für library validation enforcement auf T2 hardware übersprungen, um frühe Kernel Panics zu vermeiden, bevor die Betriebssystem überhaupt startet
 
         try:
+            logging.info("- SIP auf 0x803 einstellen")
             logging.info("- Set SIP to 0x803")
             self._set_nvram_value(APPLE_NVRAM_UUID, "csr-active-config", binascii.unhexlify("03080000"), overwrite=True)
         except Exception as e:
+            logging.error("Einstellen von SIP auf 0x803 schlägt fehl wegen das folgende Fehler:")
             logging.error("Setting SIP to 0x803 failed due to the following error:")
             logging.exception("Stack Trace:")
+            logging.info("Bitte versuchen Sie später noch einmal.")
             logging.info("Please try again later.")
             sys.exit(3)
         
@@ -535,7 +545,6 @@ class BuildMiscellaneous:
         kernel_patches = self.config['Kernel']['Patch']
         
         # einen sicheren Weg, die patches zu implementieren ist es durch die _validate_patch-Variable zu verifizieren, damit Sie sicher stellen können, dass die Find -und-Replace Bytes diesebe Länge haben, können Sie mehr hier erfahren: https://raw.githubusercontent.com/albert-mueller/OpenCore-Legacy-Patcher-T2/refs/heads/main/sichere%20Injizierung%20von%20Patches%20f%C3%BCr%20T2%20Macs.txt
-        # ... [Integration für alle weiteren Patches analog] ...
         
         try:
             # 1. Disable xART validation capacity loop checks safely (Symbolic Base Path)
@@ -557,10 +566,12 @@ class BuildMiscellaneous:
                 }
                 if self._validate_patch(new_patch):
                     logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
+                    logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
                     logging.info("- Injecting Bypass XARTDisableLog limits patch")
                     kernel_patches.append(new_patch)
                 else:
                     logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                    logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                     sys.exit(3)
 
             # 3. Force AppleSEPDeviceService OOL constraints (Tahoe Fix)
@@ -583,11 +594,13 @@ class BuildMiscellaneous:
                 }
                 if self._validate_patch(new_patch):
                     logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
+                    logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
                     logging.info("- Hardcode SEP OOL Max Send Pages Limit patch injizieren")
                     logging.info("- Injecting Hardcode SEP OOL Max Send Pages Limit patch")
                     kernel_patches.append(new_patch)
                 else:
                     logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                    logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                     sys.exit(3)
 
             # 3. AppleKeyStoreUserClient deadline check bypass
@@ -614,10 +627,12 @@ class BuildMiscellaneous:
                 }
                 if self._validate_patch(new_patch):
                     logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
+                    logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
                     logging.info("  > Injecting AppleKeyStore Tahoe deadline check bypass")
                     kernel_patches.append(new_patch)
                 else:
                     logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                    logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                     sys.exit(3)
 
             # 4. Bypass AppleIntelUSBXHCI T2 handshake (Modernized for Tahoe vtable shifts)
@@ -640,10 +655,12 @@ class BuildMiscellaneous:
                 }
                 if self._validate_patch(new_patch):
                     logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
+                    logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
                     logging.info("- Injecting modernized AppleUSBXHCI T2 handshake bypass")
                     kernel_patches.append(new_patch)
                 else:
                     logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                    logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                     sys.exit(3)
 
             # Experimental Patches
@@ -661,9 +678,11 @@ class BuildMiscellaneous:
                     }
                     if self._validate_patch(new_patch):
                         logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
+                        logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
                         kernel_patches.append(new_patch)
                     else:
                         logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                        logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                         sys.exit(3)
 
                 # Experimental Patch 2: hardwareException
@@ -679,9 +698,11 @@ class BuildMiscellaneous:
                     }
                     if self._validate_patch(new_patch):
                         logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
+                        logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
                         kernel_patches.append(new_patch)
                     else:
                         logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                        logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                         sys.exit(3)
         except Exception as e:
             logging.error("Failed to inject critical patches for your T2 Mac due to the following error:")
