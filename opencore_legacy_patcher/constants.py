@@ -37,13 +37,13 @@ class Constants:
         self.whatevergreen_version:      str = "1.7.0"  #      WhateverGreen
         self.whatevergreen_navi_version: str = "1.6.9-Navi"  # WhateverGreen (Navi Patch)
         self.airportbcrmfixup_version:   str = "2.2.0"  #      AirPortBrcmFixup
-        self.nvmefix_version:            str = "1.1.2"  #      NVMeFix
+        self.nvmefix_version:            str = "1.1.3"  #      NVMeFix
         self.applealc_version:           str = "1.6.7"  #      AppleALC
         self.restrictevents_version:     str = "1.1.6"  #      RestrictEvents
         self.featureunlock_version:      str = "1.1.8"  #      FeatureUnlock
         self.debugenhancer_version:      str = "1.1.0"  #      DebugEnhancer
         self.cpufriend_version:          str = "1.3.0"  #      CPUFriend
-        self.bluetool_version:           str = "2.6.9"  #      BlueToolFixup (BrcmPatchRAM)
+        self.bluetool_version:           str = "2.7.2"  #      BlueToolFixup (BrcmPatchRAM)
         self.cslvfixup_version:          str = "2.6.1"  #      CSLVFixup
         self.autopkg_version:            str = "1.0.4"  #      AutoPkgInstaller
         self.cryptexfixup_version:       str = "1.0.5"  #      CryptexFixup
