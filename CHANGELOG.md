@@ -1,4 +1,69 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungslog
+## 4.0.0 alpha 15.4.2:
+This version fixes the following bug:
+since the official OpenCore Legacy Patcher uses Nightly/non-Nighly, and our uses alpha, canary, beta and stable, this causes a conflict when checking for updates for updates:
+self.installer_pkg_url: str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
+self.installer_pkg_url_nightly: str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
+This causes to check for AutoPkg-Assets.pkg too many times, which results in requesting too many requests, which may prevent auto updates in certain cases to stop working properly due to rate limiting. This may cause an issue where a user may not receive updates at all or receive with very high latency.
+Diese Version behebt folgenden Fehler: Da der offizielle OpenCore Legacy Patcher Nightly/Nicht-Nightly verwendet, unsere Version jedoch Alpha, Canary, Beta und Stable, entsteht beim Suchen nach Updates ein Konflikt:
+self.installer_pkg_url: str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
+self.installer_pkg_url_nightly: str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
+Dies führt dazu, dass AutoPkg-Assets.pkg zu oft gesucht wird, was zu einer zu hohen Anzahl von Anfragen führt. Dadurch können automatische Updates in bestimmten Fällen aufgrund von Ratenbegrenzung nicht mehr ordnungsgemäß funktionieren. Dies kann dazu führen, dass ein Benutzer entweder gar keine oder nur mit sehr hoher Verzögerung Aktualisierungen erhält.
+The bug is the following / das Fehler ist die Folgende:
+"""
+constants.py: Defines versioning, file paths and other settings for the patcher
+"""
+
+from pathlib import Path
+from typing import Optional
+from packaging import version
+
+from .datasets import os_data
+from .detections import device_probe
+
+class Constants:
+def init(self) -> None:
+# Patcher Versioning
+self.patcher_version: str = "4.0.0a15.4.1" # OpenCore-Legacy-Patcher
+self.patcher_version_label=self.patcher_version
+self.patcher_support_pkg_version: str = "1.9.6" # PatcherSupportPkg
+self.copyright_date: str = "Copyright © 2020-2025 Dortania"
+self.patcher_name: str = "OpenCore Legacy Patcher T2"
+self.patcher_full_name: str = f"{self.patcher_name} version {self.patcher_version_label}"
+
+    # URLs
+    self.url_patcher_support_pkg:         str = "https://github.com/dortania/PatcherSupportPkg/releases/download/"
+    self.discord_link:                    str = "https://discord.gg/rqdPgH8xSN"
+    self.guide_link:                      str = "https://dortania.github.io/OpenCore-Legacy-Patcher/"
+    self.repo_link:                       str = "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"
+    self.installer_pkg_url:               str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
+    self.installer_pkg_url_nightly:       str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg" # here is the bug - this should be removed / das soll entfernt sein
+
+## 4.0.0 pre-alpha 3 for alpha 16 / 4.0.0 Voralpha 3 für Alpha 16:
+This version:
+
+fixes bugs
+improves performance of the application by 25%
+updates BlueToolFixup, NVMeFix, CPUFriend and AirportBrcmFixup to their latest versions to ensure stability, security and macOS 26 Tahoe compatability. This includes fixes that affect non-T2 Macs primarily, but also, T2 Macs
+You can switch between Windows and macOS via the Boot Camp Control Panel if both are booted via OpenCore on all UEFI based Intel Macs now
+But this hasn't been fixed yet:
+
+Bugs in WhateverGreen (even the latest version by Dortania) causes gray screen on T2 Macs: #104
+
+Diese Version:
+
+behebt Fehler
+
+verbessert die Anwendungsleistung um 25 %
+
+aktualisiert BlueToolFixup, NVMeFix, CPUFriend und AirportBrcmFixup auf die neuesten Versionen, um Stabilität, Sicherheit und Kompatibilität mit macOS 26 Tahoe zu gewährleisten. Dies umfasst Korrekturen, die hauptsächlich Nicht-T2-Macs, aber auch T2-Macs betreffen.
+
+Auf allen UEFI-basierten Intel-Macs kann man jetzt über das Boot Camp-Kontrollfeld zwischen Windows und macOS wechseln, sofern beide über OpenCore gestartet wurden.
+
+Folgendes Problem besteht jedoch noch:
+
+Ein Fehler in WhateverGreen (selbst in der neuesten Version von Dortania) verursacht einen grauen Bildschirm auf T2-Macs: #104
+
 ## 4.0.0 pre-alpha 2 for alpha 16 / 4.0.0 Voralpha 2 für Alpha 16:
 This release:
 - fixes a bug where it may have not been looking for byte length difference between Find and Replace
