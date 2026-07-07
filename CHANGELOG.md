@@ -1,4 +1,4 @@
-## OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+# OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
 ## 4.0.0 alpha 15.4.2:
 This version fixes the following bug:
 since the official OpenCore Legacy Patcher uses Nightly/non-Nighly, and our uses alpha, canary, beta and stable, this causes a conflict when checking for updates for updates:
