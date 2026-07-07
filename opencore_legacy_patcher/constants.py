@@ -17,16 +17,14 @@ class Constants:
         self.patcher_version_label=self.patcher_version
         self.patcher_support_pkg_version:     str = "1.9.6"  # PatcherSupportPkg
         self.copyright_date:                  str = "Copyright © 2020-2025 Dortania"
-        self.patcher_name:                    str = "Opencore Legacy Patcher T2"
+        self.patcher_name:                    str = "OpenCore Legacy Patcher T2"
         self.patcher_full_name:               str = f"{self.patcher_name} version {self.patcher_version_label}"
 
         # URLs
         self.url_patcher_support_pkg:         str = "https://github.com/dortania/PatcherSupportPkg/releases/download/"
-        self.discord_link:                    str = "https://discord.gg/rqdPgH8xSN"
         self.guide_link:                      str = "https://dortania.github.io/OpenCore-Legacy-Patcher/"
         self.repo_link:                       str = "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"
         self.installer_pkg_url:               str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
-        self.installer_pkg_url_nightly:       str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
 
         # OpenCore Versioning
         # https://github.com/acidanthera/OpenCorePkg
