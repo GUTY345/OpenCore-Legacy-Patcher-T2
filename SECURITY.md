@@ -1,7 +1,10 @@
 # Security Policy
 
 ## Fork and project naming (doesn't apply to forks forked directly through the GitHub interface)
-Forks when naming their projects, they shouldn't put misleading names such as OCLP-T2, OpenCоrе-Legacy-Patcher-T2 (with cyrillic o and e) or OpenCore-Legacy-Patcher-2-2. This is considered typosquatting. If typosquatted, one of the following actions may take place:
+Forks when naming their projects, they shouldn't put misleading names such as OCLP-T2, OpenCоrе-Legacy-Patcher-T2 (with cyrillic o and e) or OpenCore-Legacy-Patcher-2-2. This is an example of typosquatting:
+<img width="1712" height="910" alt="image" src="https://github.com/user-attachments/assets/cce043f6-90bd-478a-a4dd-edab048cb79e" />
+
+This is considered typosquatting. If typosquatted, one of the following actions may take place:
 1. Scan the fork for malware (e.g looking for malware in the source code, test it inside a virtual machine or sandbox) by the developer of the main project (Albert Müller)
 2. If none is found, the developer of the main project (Albert Müller) may open up an issue requesting to rename the project
 3. If the project is confirmed malicious, the main developer (Albert Müller) may report directly to GitHub
