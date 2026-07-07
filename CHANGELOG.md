@@ -1,4 +1,16 @@
-# OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungslog
+# OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0 Voralpha 5 für alpha 16 / 4.0.0 pre-alpha 5 for alpha 16:
+This release:
+
+fixes an error where it thinks that certain kexts are running on older versions
+Diese Version:
+
+Behebt einen Fehler, der dazu führte, dass bestimmte Kernel-Erweiterungen (kexts) fälschlicherweise als ältere Versionen erkannt wurden.
+
+## 4.0.0 Voralpha 4 für alpha 16 / 4.0.0 pre-alpha 4 for alpha 16:
+This release fixes a kernel panic on T2 Macs where certain NVRAM variables aren't set up properly. A bug that was available in the previous pre-alpha. This happened while I was trying to fix a vulnerability.
+Diese Version behebt einen Kernel-Panic auf T2-Macs, bei dem bestimmte NVRAM-Variablen nicht korrekt konfiguriert waren. Dieser Fehler war bereits in der vorherigen Pre-Alpha-Version vorhanden. Das passierte, während ich versuchte, eine Sicherheitslücke zu beheben.
+
 ## 4.0.0 alpha 15.4.2 (outside the development branch):
 This version fixes the following bug:
 since the official OpenCore Legacy Patcher uses Nightly/non-Nighly, and our uses alpha, canary, beta and stable, this causes a conflict when checking for updates for updates:
