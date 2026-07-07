@@ -11,20 +11,20 @@ from .detections import device_probe
 
 
 class Constants:
-    def __init__(self) -> None:
+   def __init__(self) -> None:
         # Patcher Versioning
-        # Falls die Version mit s endet, das heißt, es ist noch nicht fertig
-        self.patcher_version:                 str = "4.0.0prea-316"  # OpenCore-Legacy-Patcher
+        # Wenn einen Release mit s endet, es heißt, dass sie noch nicht fertig ist.
+        self.patcher_version:                 str = "4.0.0prea416s"  # OpenCore-Legacy-Patcher
         self.patcher_version_label=self.patcher_version
         self.patcher_support_pkg_version:     str = "1.9.6"  # PatcherSupportPkg
         self.copyright_date:                  str = "Copyright © 2020-2025 Dortania"
-        self.patcher_name:                    str = "Opencore Legacy Patcher T2"
+        self.patcher_name:                    str = "OpenCore Legacy Patcher T2"
         self.patcher_full_name:               str = f"{self.patcher_name} version {self.patcher_version_label}"
 
         # URLs
         self.url_patcher_support_pkg:         str = "https://github.com/dortania/PatcherSupportPkg/releases/download/"
-        self.repo_link:                       str = "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"
         self.guide_link:                      str = "https://dortania.github.io/OpenCore-Legacy-Patcher/"
+        self.repo_link:                       str = "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"
         self.installer_pkg_url:               str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
 
         # OpenCore Versioning
