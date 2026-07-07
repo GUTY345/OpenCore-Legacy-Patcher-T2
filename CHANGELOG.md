@@ -4,6 +4,51 @@ This release adds a check for T2 patches if the Find and Replace length is the s
 
 Diese Version fügt Überprüfungen hinzu, ob die Such- und Ersetzungslänge von T2-Patches übereinstimmt. Ist dies nicht der Fall, wird der Patchvorgang abgebrochen. Entwickler von Forks müssen jedoch die Datei „sichere Injizierung von Patches für T2 Macs.txt“ lesen, um das richtig zu implementieren.
 
+## 4.0.0 alpha 15.4.2:
+This version fixes the following bug:
+since the official OpenCore Legacy Patcher uses Nightly/non-Nighly, and our uses alpha, canary, beta and stable, this causes a conflict when checking for updates for updates:
+self.installer_pkg_url: str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
+self.installer_pkg_url_nightly: str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
+This causes to check for AutoPkg-Assets.pkg too many times, which results in requesting too many requests, which may prevent auto updates in certain cases to stop working properly due to rate limiting. This may cause an issue where a user may not receive updates at all or receive with very high latency.
+Diese Version behebt folgenden Fehler: Da der offizielle OpenCore Legacy Patcher Nightly/Nicht-Nightly verwendet, unsere Version jedoch Alpha, Canary, Beta und Stable, entsteht beim Suchen nach Updates ein Konflikt:
+self.installer_pkg_url: str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
+self.installer_pkg_url_nightly: str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
+Dies führt dazu, dass AutoPkg-Assets.pkg zu oft gesucht wird, was zu einer zu hohen Anzahl von Anfragen führt. Dadurch können automatische Updates in bestimmten Fällen aufgrund von Ratenbegrenzung nicht mehr ordnungsgemäß funktionieren. Dies kann dazu führen, dass ein Benutzer entweder gar keine oder nur mit sehr hoher Verzögerung Aktualisierungen erhält.
+The bug is the following / das Fehler ist die Folgende:
+"""
+constants.py: Defines versioning, file paths and other settings for the patcher
+"""
+
+from pathlib import Path
+from typing import Optional
+from packaging import version
+
+from .datasets import os_data
+from .detections import device_probe
+
+class Constants:
+def init(self) -> None:
+# Patcher Versioning
+self.patcher_version: str = "4.0.0a15.4.1" # OpenCore-Legacy-Patcher
+self.patcher_version_label=self.patcher_version
+self.patcher_support_pkg_version: str = "1.9.6" # PatcherSupportPkg
+self.copyright_date: str = "Copyright © 2020-2025 Dortania"
+self.patcher_name: str = "OpenCore Legacy Patcher T2"
+self.patcher_full_name: str = f"{self.patcher_name} version {self.patcher_version_label}"
+
+    # URLs
+    self.url_patcher_support_pkg:         str = "https://github.com/dortania/PatcherSupportPkg/releases/download/"
+    self.discord_link:                    str = "https://discord.gg/rqdPgH8xSN"
+    self.guide_link:                      str = "https://dortania.github.io/OpenCore-Legacy-Patcher/"
+    self.repo_link:                       str = "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"
+    self.installer_pkg_url:               str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
+    self.installer_pkg_url_nightly:       str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg" # here is the bug - this should be removed / das soll entfernt sein
+
+## 4.0.0 alpha 15.4.1:
+This release adds a check for T2 patches if the Find and Replace length is the same and if not, it will abort patching. However, for fork developers, they need to read the sichere Injizierung von Patches für T2 Macs.txt (in German, you may need to translate using Google Translate or AI if you don't understand) to implement these checks properly.
+
+Diese Version fügt Überprüfungen hinzu, ob die Such- und Ersetzungslänge von T2-Patches übereinstimmt. Ist dies nicht der Fall, wird der Patchvorgang abgebrochen. Entwickler von Forks müssen jedoch die Datei „sichere Injizierung von Patches für T2 Macs.txt“ lesen, um das richtig zu implementieren.
+
 ## 4.0.0 alpha 15.4
 This version:
 - improves performance across the entire OpenCore Legacy Patcher T2 app by 50%
