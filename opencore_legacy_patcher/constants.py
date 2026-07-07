@@ -256,630 +256,630 @@ class Constants:
        @property
        def special_build(self):
            """
-           Special builds are used for testing. They do not get updates through the updater
+           Special builds are used for testing. They do not get updates through the updater.
+           An 's' suffix indicates an unfinished build.
            """
-   
-           try:
-               version.parse(self.patcher_version)
-               return False
-           except version.InvalidVersion:
+           # Check for your custom 's' suffix indicator
+           if self.patcher_version.endswith("s"):
                return True
-   
-       # Payload Location
-   
-       # Support Disk Images
-       @property
-       def payload_path_dmg(self):
-           return self.original_path / Path("payloads.dmg")
-   
-       @property
-       def payload_local_binaries_root_path_dmg(self):
-           return self.original_path / Path("Universal-Binaries.dmg")
-   
-       @property
-       def overlay_psp_path_dmg(self):
-           return self.original_path / Path("DortaniaInternalResources.dmg")
-   
-       # OpenCore
-       @property
-       def opencore_zip_source(self):
-           return self.payload_path / Path(f"OpenCore/OpenCore-{'DEBUG' if self.opencore_debug is True else 'RELEASE'}.zip")
-   
-       @property
-       def plist_template(self):
-           return self.payload_path / Path("Config/config.plist")
-   
-       # Launch Services
-       @property
-       def launch_services_path(self):
-           return self.payload_path / Path("Launch Services")
-   
-       @property
-       def auto_patch_launch_agent_path(self):
-           return self.launch_services_path / Path("com.dortania.opencore-legacy-patcher.auto-patch.plist")
-   
-       @property
-       def rsr_monitor_launch_daemon_path(self):
-           return self.launch_services_path / Path("com.dortania.opencore-legacy-patcher.rsr-monitor.plist")
-   
-       @property
-       def update_launch_daemon_path(self):
-           return self.launch_services_path / Path("com.dortania.opencore-legacy-patcher.macos-update.plist")
-   
-       @property
-       def kdk_launch_daemon_path(self):
-           return self.launch_services_path / Path("com.dortania.opencore-legacy-patcher.os-caching.plist")
-   
-       # ACPI
-       @property
-       def pci_ssdt_path(self):
-           return self.payload_path / Path("ACPI/SSDT-CPBG.aml")
-   
-       @property
-       def windows_ssdt_path(self):
-           return self.payload_path / Path("ACPI/SSDT-PCI.aml")
-   
-       @property
-       def demux_ssdt_path(self):
-           return self.payload_path / Path("ACPI/SSDT-DGPU.aml")
-   
-       # Drivers
-       @property
-       def sequoia_apfs_driver_path(self):
-           return self.payload_path / Path("Drivers/apfs_aligned.efi")
-   
-       @property
-       def nvme_driver_path(self):
-           return self.payload_path / Path("Drivers/NvmExpressDxe.efi")
-   
-       @property
-       def exfat_legacy_driver_path(self):
-           return self.payload_path / Path("Drivers/ExFatDxeLegacy.efi")
-   
-       @property
-       def amd_gop_driver_path(self):
-           return self.payload_path / Path("Drivers/AMDGOP.efi")
-   
-       @property
-       def nvidia_kepler_gop_driver_path(self):
-           return self.payload_path / Path("Drivers/NVGOP_GK.efi")
-   
-       @property
-       def xhci_driver_path(self):
-           return self.payload_path / Path("Drivers/XhciDxe.efi")
-   
-       @property
-       def usb_bus_driver_path(self):
-           return self.payload_path / Path("Drivers/UsbBusDxe.efi")
-   
-       @property
-       def diags_launcher_path(self):
-           return self.payload_path / Path("Drivers/diags.efi")
-   
-       @property
-       def link_rate_driver_path(self):
-           return self.payload_path / Path("Drivers/FixPCIeLinkRate.efi")
-   
-       @property
-       def installer_sh_path(self):
-           return self.payload_path / Path("Installer.sh")
-   
-       # Kexts
-       @property
-       def payload_kexts_path(self):
-           return self.payload_path / Path("Kexts")
-   
-       @property
-       def lilu_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/Lilu-v{self.lilu_version}-{self.kext_variant}.zip")
-   
-       @property
-       def whatevergreen_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/WhateverGreen-v{self.whatevergreen_version}-{self.kext_variant}.zip")
-   
-       @property
-       def whatevergreen_navi_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/WhateverGreen-v{self.whatevergreen_navi_version}-{self.kext_variant}.zip")
-   
-       @property
-       def airportbcrmfixup_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/AirportBrcmFixup-v{self.airportbcrmfixup_version}-{self.kext_variant}.zip")
-   
-       @property
-       def restrictevents_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/RestrictEvents-v{self.restrictevents_version}-{self.kext_variant}.zip")
-   
-       @property
-       def efi_disabler_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/EFICheckDisabler.zip")
-   
-       @property
-       def bcm570_path(self):
-           return self.payload_kexts_path / Path(f"Ethernet/CatalinaBCM5701Ethernet-v{self.bcm570_version}.zip")
-   
-       @property
-       def aquantia_path(self):
-           return self.payload_kexts_path / Path(f"Ethernet/AppleEthernetAbuantiaAqtion-v{self.aquantia_version}.zip")
-   
-       @property
-       def i210_path(self):
-           return self.payload_kexts_path / Path(f"Ethernet/CatalinaIntelI210Ethernet-v{self.i210_version}.zip")
-   
-       @property
-       def marvel_path(self):
-           return self.payload_kexts_path / Path(f"Ethernet/MarvelYukonEthernet-v{self.marvel_version}.zip")
-   
-       @property
-       def nforce_path(self):
-           return self.payload_kexts_path / Path(f"Ethernet/nForceEthernet-v{self.nforce_version}.zip")
-   
-       @property
-       def intel_82574l_path(self):
-           return self.payload_kexts_path / Path(f"Ethernet/Intel82574L-v{self.intel_82574l_version}.zip")
-   
-       @property
-       def intel_8254x_path(self):
-           return self.payload_kexts_path / Path(f"Ethernet/AppleIntel8254XEthernet-v{self.intel_8254x_version}.zip")
-   
-       @property
-       def apple_usb_11_injector_path(self):
-           return self.payload_kexts_path / Path(f"USB/USB1.1-Injector-v{self.apple_usb_11_injector}.zip")
-   
-       @property
-       def aicpupm_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleIntelCPUPowerManagement-v{self.aicpupm_version}.zip")
-   
-       @property
-       def aicpupm_client_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleIntelCPUPowerManagementClient-v{self.aicpupm_version}.zip")
-   
-       @property
-       def mce_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleMCEReporterDisabler-v{self.mce_version}.zip")
-   
-       @property
-       def bigsursdxc_path(self):
-           return self.payload_kexts_path / Path(f"Misc/BigSurSDXC-v{self.bigsursdxc_version}.zip")
-   
-       @property
-       def monterey_ahci_path(self):
-           return self.payload_kexts_path / Path(f"Misc/MonteAHCIPort-v{self.monterey_ahci_version}.zip")
-   
-       @property
-       def apfs_zlib_path(self):
-           return self.payload_kexts_path / Path(f"Misc/NoAVXFSCompressionTypeZlib-v{self.apfs_zlib_version}.zip")
-   
-       @property
-       def apfs_zlib_v2_path(self):
-           return self.payload_kexts_path / Path(f"Misc/NoAVXFSCompressionTypeZlib-AVXpel-v{self.apfs_zlib_v2_version}.zip")
-   
-       @property
-       def multitouch_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleUSBMultitouch-v{self.multitouch_version}.zip")
-   
-       @property
-       def top_case_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleUSBTopCase-v{self.topcase_version}.zip")
-   
-       @property
-       def top_case_inj_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleTopCaseInjector-v{self.topcase_inj_version}.zip")
-   
-       @property
-       def t1_key_store_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleKeyStore-v{self.t1_key_store_version}.zip")
-   
-       @property
-       def t1_credential_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleCredentialManager-v{self.t1_credential_version}.zip")
-   
-       @property
-       def t1_sse_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleSSE-v{self.t1_sse_version}.zip")
-   
-       @property
-       def t1_corecrypto_path(self):
-           return self.payload_kexts_path / Path(f"Misc/corecrypto_T1-v{self.t1_corecrypto_version}.zip")
-   
-       @property
-       def apple_spi_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleHSSPISupport-v{self.apple_spi_version}.zip")
-   
-       @property
-       def apple_spi_hid_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleHSSPIHIDDriver-v{self.apple_spi_hid_version}.zip")
-   
-       @property
-       def kernel_relay_path(self):
-           return self.payload_kexts_path / Path(f"Misc/KernelRelayHost-v{self.kernel_relay_version}.zip")
-   
-       @property
-       def mousse_path(self):
-           return self.payload_kexts_path / Path(f"SSE/AAAMouSSE-v{self.mousse_version}.zip")
-   
-       @property
-       def telemetrap_path(self):
-           return self.payload_kexts_path / Path(f"SSE/telemetrap-v{self.telemetrap_version}.zip")
-   
-       @property
-       def corecaptureelcap_path(self):
-           return self.payload_kexts_path / Path(f"Wifi/corecaptureElCap-v{self.corecaptureelcap_version}.zip")
-   
-       @property
-       def io80211elcap_path(self):
-           return self.payload_kexts_path / Path(f"Wifi/IO80211ElCap-v{self.io80211elcap_version}.zip")
-   
-       @property
-       def io80211legacy_path(self):
-           return self.payload_kexts_path / Path(f"Wifi/IO80211FamilyLegacy-v{self.io80211legacy_version}.zip")
-   
-       @property
-       def ioskywalk_path(self):
-           return self.payload_kexts_path / Path(f"Wifi/IOSkywalkFamily-v{self.ioskywalk_version}.zip")
-   
-       @property
-       def applealc_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/AppleALC-v{self.applealc_version}-{self.kext_variant}.zip")
-   
-       @property
-       def piixata_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleIntelPIIXATA-v{self.piixata_version}.zip")
-   
-       @property
-       def backlight_injector_path(self):
-           return self.payload_kexts_path / Path(f"Misc/BacklightInjector-v{self.backlight_injector_version}.zip")
-   
-       @property
-       def backlight_injectorA_path(self):
-           return self.payload_kexts_path / Path(f"Misc/BacklightInjectorA-v{self.backlight_injectorA_version}.zip")
-   
-       @property
-       def cpufriend_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/CPUFriend-v{self.cpufriend_version}-{self.kext_variant}.zip")
-   
-       @property
-       def smcspoof_path(self):
-           return self.payload_kexts_path / Path(f"Misc/SMC-Spoof-v{self.smcspoof_version}.zip")
-   
-       @property
-       def btspoof_path(self):
-           return self.payload_kexts_path / Path(f"Misc/Bluetooth-Spoof-v{self.btspoof_version}.zip")
-   
-       @property
-       def aspp_override_path(self):
-           return self.payload_kexts_path / Path(f"Misc/ASPP-Override-v{self.aspp_override_version}.zip")
-   
-       @property
-       def ecm_override_path(self):
-           return self.payload_kexts_path / Path(f"Misc/ECM-Override-v{self.ecm_override_version}.zip")
-   
-       @property
-       def nvmefix_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/NVMeFix-v{self.nvmefix_version}-{self.kext_variant}.zip")
-   
-       @property
-       def featureunlock_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/FeatureUnlock-v{self.featureunlock_version}-{self.kext_variant}.zip")
-   
-       @property
-       def debugenhancer_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/DebugEnhancer-v{self.debugenhancer_version}-{self.kext_variant}.zip")
-   
-       @property
-       def bluetool_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/BlueToolFixup-v{self.bluetool_version}-{self.kext_variant}.zip")
-   
-       @property
-       def cslvfixup_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/CSLVFixup-v{self.cslvfixup_version}.zip")
-   
-       @property
-       def autopkg_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/AutoPkgInstaller-v{self.autopkg_version}-{self.kext_variant}.zip")
-   
-       @property
-       def cryptexfixup_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/CryptexFixup-v{self.cryptexfixup_version}-{self.kext_variant}.zip")
-   
-       @property
-       def rsrhelper_path(self):
-           return self.payload_kexts_path / Path(f"Acidanthera/RSRHelper-v{self.rsrhelper_version}-{self.kext_variant}.zip")
-   
-       @property
-       def amfipass_path(self):
-           # AMFIPass is release only
-           return self.payload_kexts_path / Path(f"Acidanthera/AMFIPass-v{self.amfipass_version}-RELEASE.zip")
-   
-       @property
-       def innie_path(self):
-           return self.payload_kexts_path / Path(f"Misc/Innie-v{self.innie_version}-{self.kext_variant}.zip")
-   
-       @property
-       def simplemsr_path(self):
-           return self.payload_kexts_path / Path(f"Misc/SimpleMSR-v{self.simplemsr_version}.zip")
-   
-       @property
-       def gpu_wake_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AMDGPUWakeHandler-v{self.gpu_wake_version}.zip")
-   
-       @property
-       def apple_trackpad_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleUSBTrackpad-v{self.apple_trackpad}.zip")
-   
-       @property
-       def apple_isight_path(self):
-           return self.payload_kexts_path / Path(f"Misc/LegacyUSBVideoSupport-v{self.apple_isight_version}.zip")
-   
-       @property
-       def legacy_keyboard_path(self):
-           return self.payload_kexts_path / Path(f"Misc/LegacyKeyboardInjector-v{self.legacy_keyboard}.zip")
-   
-       @property
-       def apple_raid_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleRAIDCard-v{self.apple_raid_version}.zip")
-   
-       @property
-       def kdkless_path(self):
-           return self.payload_kexts_path / Path(f"Misc/KDKlessWorkaround-v{self.kdkless_version}-{self.kext_variant}.zip")
-   
-       @property
-       def s3x_nvme_path(self):
-           return self.payload_kexts_path / Path(f"Misc/IOS3XeFamily-v{self.s3x_nvme_version}.zip")
-   
-       @property
-       def apple_camera_path(self):
-           return self.payload_kexts_path / Path(f"Misc/AppleCameraInterface-v{self.apple_camera_version}.zip")
-   
-       @property
-       def plist_folder_path(self):
-           return self.payload_kexts_path / Path("Plists")
-   
-       @property
-       def platform_plugin_plist_path(self):
-           return self.plist_folder_path / Path("PlatformPlugin")
-   
-       @property
-       def fw_family_path(self):
-           return self.payload_kexts_path / Path(f"FireWire/IOFireWireFamily-v{self.fw_kext}.zip")
-   
-       @property
-       def fw_sbp2_path(self):
-           return self.payload_kexts_path / Path(f"FireWire/IOFireWireSBP2-v{self.fw_kext}.zip")
-   
-       @property
-       def fw_bus_path(self):
-           return self.payload_kexts_path / Path(f"FireWire/IOFireWireSerialBusProtocolTransport-v{self.fw_kext}.zip")
-   
-       # Build Location
-       @property
-       def build_path(self):
-           return self.current_path / Path("Build-Folder/")
-   
-       @property
-       def opencore_release_folder(self):
-           return self.build_path / Path(f"OpenCore-Build")
-   
-       @property
-       def opencore_zip_copied(self):
-           return self.build_path / Path(f"OpenCore-{'DEBUG' if self.opencore_debug is True else 'RELEASE'}.zip")
-   
-       @property
-       def oc_folder(self):
-           return self.opencore_release_folder / Path("EFI/OC/")
-   
-       @property
-       def plist_path(self):
-           return self.oc_folder / Path("config.plist")
-   
-       @property
-       def acpi_path(self):
-           return self.oc_folder / Path("ACPI")
-   
-       @property
-       def drivers_path(self):
-           return self.oc_folder / Path("Drivers")
-   
-       @property
-       def kexts_path(self):
-           return self.oc_folder / Path("Kexts")
-   
-       @property
-       def resources_path(self):
-           return self.oc_folder / Path("Resources")
-   
-       @property
-       def map_kext_folder(self):
-           return self.kexts_path / Path("USB-Map.kext")
-   
-       @property
-       def map_kext_folder_tahoe(self):
-           return self.kexts_path / Path("USB-Map-Tahoe.kext")
-   
-       @property
-       def map_contents_folder(self):
-           return self.map_kext_folder / Path("Contents")
-   
-       @property
-       def map_contents_folder_tahoe(self):
-           return self.map_kext_folder_tahoe / Path("Contents")
-   
-       @property
-       def pp_kext_folder(self):
-           return self.kexts_path / Path("CPUFriendDataProvider.kext")
-   
-       @property
-       def pp_contents_folder(self):
-           return self.pp_kext_folder / Path("Contents")
-   
-       @property
-       def agdp_kext_folder(self):
-           return self.kexts_path / Path("AGDP-Override.kext")
-   
-       @property
-       def agdp_contents_folder(self):
-           return self.agdp_kext_folder / Path("Contents")
-   
-       @property
-       def agpm_kext_folder(self):
-           return self.kexts_path / Path("AGPM-Override.kext")
-   
-       @property
-       def agpm_contents_folder(self):
-           return self.agpm_kext_folder / Path("Contents")
-   
-       @property
-       def amc_kext_folder(self):
-           return self.kexts_path / Path("AMC-Override.kext")
-   
-       @property
-       def amc_contents_folder(self):
-           return self.amc_kext_folder / Path("Contents")
-   
-       # Tools
-       @property
-       def macserial_path(self):
-           return self.payload_path / Path("OpenCore/macserial")
-   
-       @property
-       def vault_path(self):
-           return self.payload_path / Path("Tools/CreateVault/sign.command")
-   
-       @property
-       def ocvalidate_path(self):
-           return self.payload_path / Path(f"OpenCore/ocvalidate")
-   
-       @property
-       def oclp_helper_path(self):
-           return self.payload_path / Path("Tools/OpenCore-Patcher.app/Contents/MacOS/OpenCore-Patcher")
-   
-       @property
-       def rsrrepair_userspace_path(self):
-           return self.payload_path / Path("Tools/RSRRepair")
-   
-       # Icons
-       @property
-       def icns_resource_path(self):
-           if self.launcher_script:
-               return self.payload_path / Path("Icon/AppIcons")
-           return Path(self.launcher_binary).parent.parent / Path("Resources")
-   
-   
-       @property
-       def app_icon_path(self):
-           return self.payload_path / Path("Icon/AppIcons/OC-Patcher.icns")
-   
-       @property
-       def icon_path_external(self):
-           return self.payload_path / Path("Icon/DriveIcons/External/.VolumeIcon.icns")
-   
-       @property
-       def icon_path_internal(self):
-           return self.payload_path / Path("Icon/DriveIcons/Internal/.VolumeIcon.icns")
-   
-       @property
-       def icon_path_sd(self):
-           return self.payload_path / Path("Icon/DriveIcons/SD-Card/.VolumeIcon.icns")
-   
-       @property
-       def icon_path_ssd(self):
-           return self.payload_path / Path("Icon/DriveIcons/SSD/.VolumeIcon.icns")
-   
-       @property
-       def icon_path_macos_generic(self):
-           return self.icns_resource_path / Path("Generic.icns")
-   
-       @property
-       def icon_path_macos_big_sur(self):
-           return self.icns_resource_path / Path("BigSur.icns")
-   
-       @property
-       def icon_path_macos_monterey(self):
-           return self.icns_resource_path / Path("Monterey.icns")
-   
-       @property
-       def icon_path_macos_ventura(self):
-           return self.icns_resource_path / Path("Ventura.icns")
-   
-       @property
-       def icon_path_macos_sonoma(self):
-           return self.icns_resource_path / Path("Sonoma.icns")
-   
-       @property
-       def icon_path_macos_sequoia(self):
-           return self.icns_resource_path / Path("Sequoia.icns")
-   
-       @property
-       def icon_path_macos_tahoe(self):
-           return self.icns_resource_path / Path("Tahoe.icns")
-   
-       @property
-       def gui_path(self):
-           return self.payload_path / Path("Icon/Resources.zip")
-   
-       @property
-       def installer_pkg_path(self):
-           return self.payload_path / Path("AutoPkg-Assets.pkg")
-   
-       @property
-       def installer_pkg_zip_path(self):
-           return self.payload_path / Path("AutoPkg-Assets.pkg.zip")
-   
-       # Apple Payloads Paths
-       @property
-       def payload_local_binaries_root_path(self):
-           return self.payload_path / Path("Universal-Binaries")
-   
-       @property
-       def kdk_download_path(self):
-           return self.payload_path / Path("KDK.dmg")
-   
-       @property
-       def metallib_download_path(self):
-           return self.payload_path / Path("MetallibSupportPkg.pkg")
-   
-       @property
-       def icons_path(self):
-           return [
-               str(self.icon_path_macos_generic),
-               str(self.icon_path_macos_big_sur),
-               str(self.icon_path_macos_monterey),
-               str(self.icon_path_macos_ventura),
-               str(self.icon_path_macos_sonoma),
-               str(self.icon_path_macos_sequoia),
-               str(self.icon_path_macos_tahoe),
-           ]
-   
-       sbm_values = [
-           "j137ap",  #  iMacPro1,1
-           "j680ap",  #  MacBookPro15,1
-           "j132ap",  #  MacBookPro15,2
-           "j174ap",  #  Macmini8,1
-           "j140kap",  # MacBookAir8,1
-           "j780ap",  #  MacBookPro15,3
-           "j213ap",  #  MacBookPro15,4
-           "j140aap",  # MacBookAir8,2
-           "j152fap",  # MacBookPro16,1
-           "j160ap",  #  MacPro7,1
-           "j230kap",  # MacBookAir9,1
-           "j214kap",  # MacBookPro16,2
-           "j223ap",  #  MacBookPro16,3
-           "j215ap",  #  MacBookPro16,4
-           "j185ap",  #  iMac20,1
-           "j185fap",  # iMac20,2
-           # "x86legacy",  # non-T2 Macs/VMs, Monterey's boot.efi enforces this on all Macs
-       ]
-   
-       sandy_board_id_stock = [
-           "Mac-94245B3640C91C81",  # MacBookPro8,1
-           "Mac-94245A3940C91C80",  # MacBookPro8,2
-           "Mac-942459F5819B171B",  # MacBookPro8,3
-           "Mac-C08A6BB70A942AC2",  # MacBookAir4,1
-           "Mac-742912EFDBEE19B3",  # MacBookAir4,2
-           "Mac-8ED6AF5B48C039E1",  # Macmini5,1
-           "Mac-4BC72D62AD45599E",  # Macmini5,2
-           "Mac-7BA5B2794B2CDB12",  # Macmini5,3
-           "Mac-942B5BF58194151B",  # iMac12,1
-           "Mac-942B59F58194171B",  # iMac12,2
-           "Mac-94245AF5819B141B",  # AppleInternal MacBookPro8,3
-           "Mac-942B5B3A40C91381",  # AppleInternal iMac12,2
-       ]
+           else:
+              return False
+      
+          # Payload Location
+      
+          # Support Disk Images
+          @property
+          def payload_path_dmg(self):
+              return self.original_path / Path("payloads.dmg")
+      
+          @property
+          def payload_local_binaries_root_path_dmg(self):
+              return self.original_path / Path("Universal-Binaries.dmg")
+      
+          @property
+          def overlay_psp_path_dmg(self):
+              return self.original_path / Path("DortaniaInternalResources.dmg")
+      
+          # OpenCore
+          @property
+          def opencore_zip_source(self):
+              return self.payload_path / Path(f"OpenCore/OpenCore-{'DEBUG' if self.opencore_debug is True else 'RELEASE'}.zip")
+      
+          @property
+          def plist_template(self):
+              return self.payload_path / Path("Config/config.plist")
+      
+          # Launch Services
+          @property
+          def launch_services_path(self):
+              return self.payload_path / Path("Launch Services")
+      
+          @property
+          def auto_patch_launch_agent_path(self):
+              return self.launch_services_path / Path("com.dortania.opencore-legacy-patcher.auto-patch.plist")
+      
+          @property
+          def rsr_monitor_launch_daemon_path(self):
+              return self.launch_services_path / Path("com.dortania.opencore-legacy-patcher.rsr-monitor.plist")
+      
+          @property
+          def update_launch_daemon_path(self):
+              return self.launch_services_path / Path("com.dortania.opencore-legacy-patcher.macos-update.plist")
+      
+          @property
+          def kdk_launch_daemon_path(self):
+              return self.launch_services_path / Path("com.dortania.opencore-legacy-patcher.os-caching.plist")
+      
+          # ACPI
+          @property
+          def pci_ssdt_path(self):
+              return self.payload_path / Path("ACPI/SSDT-CPBG.aml")
+      
+          @property
+          def windows_ssdt_path(self):
+              return self.payload_path / Path("ACPI/SSDT-PCI.aml")
+      
+          @property
+          def demux_ssdt_path(self):
+              return self.payload_path / Path("ACPI/SSDT-DGPU.aml")
+      
+          # Drivers
+          @property
+          def sequoia_apfs_driver_path(self):
+              return self.payload_path / Path("Drivers/apfs_aligned.efi")
+      
+          @property
+          def nvme_driver_path(self):
+              return self.payload_path / Path("Drivers/NvmExpressDxe.efi")
+      
+          @property
+          def exfat_legacy_driver_path(self):
+              return self.payload_path / Path("Drivers/ExFatDxeLegacy.efi")
+      
+          @property
+          def amd_gop_driver_path(self):
+              return self.payload_path / Path("Drivers/AMDGOP.efi")
+      
+          @property
+          def nvidia_kepler_gop_driver_path(self):
+              return self.payload_path / Path("Drivers/NVGOP_GK.efi")
+      
+          @property
+          def xhci_driver_path(self):
+              return self.payload_path / Path("Drivers/XhciDxe.efi")
+      
+          @property
+          def usb_bus_driver_path(self):
+              return self.payload_path / Path("Drivers/UsbBusDxe.efi")
+      
+          @property
+          def diags_launcher_path(self):
+              return self.payload_path / Path("Drivers/diags.efi")
+      
+          @property
+          def link_rate_driver_path(self):
+              return self.payload_path / Path("Drivers/FixPCIeLinkRate.efi")
+      
+          @property
+          def installer_sh_path(self):
+              return self.payload_path / Path("Installer.sh")
+      
+          # Kexts
+          @property
+          def payload_kexts_path(self):
+              return self.payload_path / Path("Kexts")
+      
+          @property
+          def lilu_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/Lilu-v{self.lilu_version}-{self.kext_variant}.zip")
+      
+          @property
+          def whatevergreen_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/WhateverGreen-v{self.whatevergreen_version}-{self.kext_variant}.zip")
+      
+          @property
+          def whatevergreen_navi_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/WhateverGreen-v{self.whatevergreen_navi_version}-{self.kext_variant}.zip")
+      
+          @property
+          def airportbcrmfixup_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/AirportBrcmFixup-v{self.airportbcrmfixup_version}-{self.kext_variant}.zip")
+      
+          @property
+          def restrictevents_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/RestrictEvents-v{self.restrictevents_version}-{self.kext_variant}.zip")
+      
+          @property
+          def efi_disabler_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/EFICheckDisabler.zip")
+      
+          @property
+          def bcm570_path(self):
+              return self.payload_kexts_path / Path(f"Ethernet/CatalinaBCM5701Ethernet-v{self.bcm570_version}.zip")
+      
+          @property
+          def aquantia_path(self):
+              return self.payload_kexts_path / Path(f"Ethernet/AppleEthernetAbuantiaAqtion-v{self.aquantia_version}.zip")
+      
+          @property
+          def i210_path(self):
+              return self.payload_kexts_path / Path(f"Ethernet/CatalinaIntelI210Ethernet-v{self.i210_version}.zip")
+      
+          @property
+          def marvel_path(self):
+              return self.payload_kexts_path / Path(f"Ethernet/MarvelYukonEthernet-v{self.marvel_version}.zip")
+      
+          @property
+          def nforce_path(self):
+              return self.payload_kexts_path / Path(f"Ethernet/nForceEthernet-v{self.nforce_version}.zip")
+      
+          @property
+          def intel_82574l_path(self):
+              return self.payload_kexts_path / Path(f"Ethernet/Intel82574L-v{self.intel_82574l_version}.zip")
+      
+          @property
+          def intel_8254x_path(self):
+              return self.payload_kexts_path / Path(f"Ethernet/AppleIntel8254XEthernet-v{self.intel_8254x_version}.zip")
+      
+          @property
+          def apple_usb_11_injector_path(self):
+              return self.payload_kexts_path / Path(f"USB/USB1.1-Injector-v{self.apple_usb_11_injector}.zip")
+      
+          @property
+          def aicpupm_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleIntelCPUPowerManagement-v{self.aicpupm_version}.zip")
+      
+          @property
+          def aicpupm_client_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleIntelCPUPowerManagementClient-v{self.aicpupm_version}.zip")
+      
+          @property
+          def mce_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleMCEReporterDisabler-v{self.mce_version}.zip")
+      
+          @property
+          def bigsursdxc_path(self):
+              return self.payload_kexts_path / Path(f"Misc/BigSurSDXC-v{self.bigsursdxc_version}.zip")
+      
+          @property
+          def monterey_ahci_path(self):
+              return self.payload_kexts_path / Path(f"Misc/MonteAHCIPort-v{self.monterey_ahci_version}.zip")
+      
+          @property
+          def apfs_zlib_path(self):
+              return self.payload_kexts_path / Path(f"Misc/NoAVXFSCompressionTypeZlib-v{self.apfs_zlib_version}.zip")
+      
+          @property
+          def apfs_zlib_v2_path(self):
+              return self.payload_kexts_path / Path(f"Misc/NoAVXFSCompressionTypeZlib-AVXpel-v{self.apfs_zlib_v2_version}.zip")
+      
+          @property
+          def multitouch_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleUSBMultitouch-v{self.multitouch_version}.zip")
+      
+          @property
+          def top_case_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleUSBTopCase-v{self.topcase_version}.zip")
+      
+          @property
+          def top_case_inj_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleTopCaseInjector-v{self.topcase_inj_version}.zip")
+      
+          @property
+          def t1_key_store_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleKeyStore-v{self.t1_key_store_version}.zip")
+      
+          @property
+          def t1_credential_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleCredentialManager-v{self.t1_credential_version}.zip")
+      
+          @property
+          def t1_sse_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleSSE-v{self.t1_sse_version}.zip")
+      
+          @property
+          def t1_corecrypto_path(self):
+              return self.payload_kexts_path / Path(f"Misc/corecrypto_T1-v{self.t1_corecrypto_version}.zip")
+      
+          @property
+          def apple_spi_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleHSSPISupport-v{self.apple_spi_version}.zip")
+      
+          @property
+          def apple_spi_hid_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleHSSPIHIDDriver-v{self.apple_spi_hid_version}.zip")
+      
+          @property
+          def kernel_relay_path(self):
+              return self.payload_kexts_path / Path(f"Misc/KernelRelayHost-v{self.kernel_relay_version}.zip")
+      
+          @property
+          def mousse_path(self):
+              return self.payload_kexts_path / Path(f"SSE/AAAMouSSE-v{self.mousse_version}.zip")
+      
+          @property
+          def telemetrap_path(self):
+              return self.payload_kexts_path / Path(f"SSE/telemetrap-v{self.telemetrap_version}.zip")
+      
+          @property
+          def corecaptureelcap_path(self):
+              return self.payload_kexts_path / Path(f"Wifi/corecaptureElCap-v{self.corecaptureelcap_version}.zip")
+      
+          @property
+          def io80211elcap_path(self):
+              return self.payload_kexts_path / Path(f"Wifi/IO80211ElCap-v{self.io80211elcap_version}.zip")
+      
+          @property
+          def io80211legacy_path(self):
+              return self.payload_kexts_path / Path(f"Wifi/IO80211FamilyLegacy-v{self.io80211legacy_version}.zip")
+      
+          @property
+          def ioskywalk_path(self):
+              return self.payload_kexts_path / Path(f"Wifi/IOSkywalkFamily-v{self.ioskywalk_version}.zip")
+      
+          @property
+          def applealc_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/AppleALC-v{self.applealc_version}-{self.kext_variant}.zip")
+      
+          @property
+          def piixata_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleIntelPIIXATA-v{self.piixata_version}.zip")
+      
+          @property
+          def backlight_injector_path(self):
+              return self.payload_kexts_path / Path(f"Misc/BacklightInjector-v{self.backlight_injector_version}.zip")
+      
+          @property
+          def backlight_injectorA_path(self):
+              return self.payload_kexts_path / Path(f"Misc/BacklightInjectorA-v{self.backlight_injectorA_version}.zip")
+      
+          @property
+          def cpufriend_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/CPUFriend-v{self.cpufriend_version}-{self.kext_variant}.zip")
+      
+          @property
+          def smcspoof_path(self):
+              return self.payload_kexts_path / Path(f"Misc/SMC-Spoof-v{self.smcspoof_version}.zip")
+      
+          @property
+          def btspoof_path(self):
+              return self.payload_kexts_path / Path(f"Misc/Bluetooth-Spoof-v{self.btspoof_version}.zip")
+      
+          @property
+          def aspp_override_path(self):
+              return self.payload_kexts_path / Path(f"Misc/ASPP-Override-v{self.aspp_override_version}.zip")
+      
+          @property
+          def ecm_override_path(self):
+              return self.payload_kexts_path / Path(f"Misc/ECM-Override-v{self.ecm_override_version}.zip")
+      
+          @property
+          def nvmefix_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/NVMeFix-v{self.nvmefix_version}-{self.kext_variant}.zip")
+      
+          @property
+          def featureunlock_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/FeatureUnlock-v{self.featureunlock_version}-{self.kext_variant}.zip")
+      
+          @property
+          def debugenhancer_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/DebugEnhancer-v{self.debugenhancer_version}-{self.kext_variant}.zip")
+      
+          @property
+          def bluetool_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/BlueToolFixup-v{self.bluetool_version}-{self.kext_variant}.zip")
+      
+          @property
+          def cslvfixup_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/CSLVFixup-v{self.cslvfixup_version}.zip")
+      
+          @property
+          def autopkg_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/AutoPkgInstaller-v{self.autopkg_version}-{self.kext_variant}.zip")
+      
+          @property
+          def cryptexfixup_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/CryptexFixup-v{self.cryptexfixup_version}-{self.kext_variant}.zip")
+      
+          @property
+          def rsrhelper_path(self):
+              return self.payload_kexts_path / Path(f"Acidanthera/RSRHelper-v{self.rsrhelper_version}-{self.kext_variant}.zip")
+      
+          @property
+          def amfipass_path(self):
+              # AMFIPass is release only
+              return self.payload_kexts_path / Path(f"Acidanthera/AMFIPass-v{self.amfipass_version}-RELEASE.zip")
+      
+          @property
+          def innie_path(self):
+              return self.payload_kexts_path / Path(f"Misc/Innie-v{self.innie_version}-{self.kext_variant}.zip")
+      
+          @property
+          def simplemsr_path(self):
+              return self.payload_kexts_path / Path(f"Misc/SimpleMSR-v{self.simplemsr_version}.zip")
+      
+          @property
+          def gpu_wake_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AMDGPUWakeHandler-v{self.gpu_wake_version}.zip")
+      
+          @property
+          def apple_trackpad_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleUSBTrackpad-v{self.apple_trackpad}.zip")
+      
+          @property
+          def apple_isight_path(self):
+              return self.payload_kexts_path / Path(f"Misc/LegacyUSBVideoSupport-v{self.apple_isight_version}.zip")
+      
+          @property
+          def legacy_keyboard_path(self):
+              return self.payload_kexts_path / Path(f"Misc/LegacyKeyboardInjector-v{self.legacy_keyboard}.zip")
+      
+          @property
+          def apple_raid_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleRAIDCard-v{self.apple_raid_version}.zip")
+      
+          @property
+          def kdkless_path(self):
+              return self.payload_kexts_path / Path(f"Misc/KDKlessWorkaround-v{self.kdkless_version}-{self.kext_variant}.zip")
+      
+          @property
+          def s3x_nvme_path(self):
+              return self.payload_kexts_path / Path(f"Misc/IOS3XeFamily-v{self.s3x_nvme_version}.zip")
+      
+          @property
+          def apple_camera_path(self):
+              return self.payload_kexts_path / Path(f"Misc/AppleCameraInterface-v{self.apple_camera_version}.zip")
+      
+          @property
+          def plist_folder_path(self):
+              return self.payload_kexts_path / Path("Plists")
+      
+          @property
+          def platform_plugin_plist_path(self):
+              return self.plist_folder_path / Path("PlatformPlugin")
+      
+          @property
+          def fw_family_path(self):
+              return self.payload_kexts_path / Path(f"FireWire/IOFireWireFamily-v{self.fw_kext}.zip")
+      
+          @property
+          def fw_sbp2_path(self):
+              return self.payload_kexts_path / Path(f"FireWire/IOFireWireSBP2-v{self.fw_kext}.zip")
+      
+          @property
+          def fw_bus_path(self):
+              return self.payload_kexts_path / Path(f"FireWire/IOFireWireSerialBusProtocolTransport-v{self.fw_kext}.zip")
+      
+          # Build Location
+          @property
+          def build_path(self):
+              return self.current_path / Path("Build-Folder/")
+      
+          @property
+          def opencore_release_folder(self):
+              return self.build_path / Path(f"OpenCore-Build")
+      
+          @property
+          def opencore_zip_copied(self):
+              return self.build_path / Path(f"OpenCore-{'DEBUG' if self.opencore_debug is True else 'RELEASE'}.zip")
+      
+          @property
+          def oc_folder(self):
+              return self.opencore_release_folder / Path("EFI/OC/")
+      
+          @property
+          def plist_path(self):
+              return self.oc_folder / Path("config.plist")
+      
+          @property
+          def acpi_path(self):
+              return self.oc_folder / Path("ACPI")
+      
+          @property
+          def drivers_path(self):
+              return self.oc_folder / Path("Drivers")
+      
+          @property
+          def kexts_path(self):
+              return self.oc_folder / Path("Kexts")
+      
+          @property
+          def resources_path(self):
+              return self.oc_folder / Path("Resources")
+      
+          @property
+          def map_kext_folder(self):
+              return self.kexts_path / Path("USB-Map.kext")
+      
+          @property
+          def map_kext_folder_tahoe(self):
+              return self.kexts_path / Path("USB-Map-Tahoe.kext")
+      
+          @property
+          def map_contents_folder(self):
+              return self.map_kext_folder / Path("Contents")
+      
+          @property
+          def map_contents_folder_tahoe(self):
+              return self.map_kext_folder_tahoe / Path("Contents")
+      
+          @property
+          def pp_kext_folder(self):
+              return self.kexts_path / Path("CPUFriendDataProvider.kext")
+      
+          @property
+          def pp_contents_folder(self):
+              return self.pp_kext_folder / Path("Contents")
+      
+          @property
+          def agdp_kext_folder(self):
+              return self.kexts_path / Path("AGDP-Override.kext")
+      
+          @property
+          def agdp_contents_folder(self):
+              return self.agdp_kext_folder / Path("Contents")
+      
+          @property
+          def agpm_kext_folder(self):
+              return self.kexts_path / Path("AGPM-Override.kext")
+      
+          @property
+          def agpm_contents_folder(self):
+              return self.agpm_kext_folder / Path("Contents")
+      
+          @property
+          def amc_kext_folder(self):
+              return self.kexts_path / Path("AMC-Override.kext")
+      
+          @property
+          def amc_contents_folder(self):
+              return self.amc_kext_folder / Path("Contents")
+      
+          # Tools
+          @property
+          def macserial_path(self):
+              return self.payload_path / Path("OpenCore/macserial")
+      
+          @property
+          def vault_path(self):
+              return self.payload_path / Path("Tools/CreateVault/sign.command")
+      
+          @property
+          def ocvalidate_path(self):
+              return self.payload_path / Path(f"OpenCore/ocvalidate")
+      
+          @property
+          def oclp_helper_path(self):
+              return self.payload_path / Path("Tools/OpenCore-Patcher.app/Contents/MacOS/OpenCore-Patcher")
+      
+          @property
+          def rsrrepair_userspace_path(self):
+              return self.payload_path / Path("Tools/RSRRepair")
+      
+          # Icons
+          @property
+          def icns_resource_path(self):
+              if self.launcher_script:
+                  return self.payload_path / Path("Icon/AppIcons")
+              return Path(self.launcher_binary).parent.parent / Path("Resources")
+      
+      
+          @property
+          def app_icon_path(self):
+              return self.payload_path / Path("Icon/AppIcons/OC-Patcher.icns")
+      
+          @property
+          def icon_path_external(self):
+              return self.payload_path / Path("Icon/DriveIcons/External/.VolumeIcon.icns")
+      
+          @property
+          def icon_path_internal(self):
+              return self.payload_path / Path("Icon/DriveIcons/Internal/.VolumeIcon.icns")
+      
+          @property
+          def icon_path_sd(self):
+              return self.payload_path / Path("Icon/DriveIcons/SD-Card/.VolumeIcon.icns")
+      
+          @property
+          def icon_path_ssd(self):
+              return self.payload_path / Path("Icon/DriveIcons/SSD/.VolumeIcon.icns")
+      
+          @property
+          def icon_path_macos_generic(self):
+              return self.icns_resource_path / Path("Generic.icns")
+      
+          @property
+          def icon_path_macos_big_sur(self):
+              return self.icns_resource_path / Path("BigSur.icns")
+      
+          @property
+          def icon_path_macos_monterey(self):
+              return self.icns_resource_path / Path("Monterey.icns")
+      
+          @property
+          def icon_path_macos_ventura(self):
+              return self.icns_resource_path / Path("Ventura.icns")
+      
+          @property
+          def icon_path_macos_sonoma(self):
+              return self.icns_resource_path / Path("Sonoma.icns")
+      
+          @property
+          def icon_path_macos_sequoia(self):
+              return self.icns_resource_path / Path("Sequoia.icns")
+      
+          @property
+          def icon_path_macos_tahoe(self):
+              return self.icns_resource_path / Path("Tahoe.icns")
+      
+          @property
+          def gui_path(self):
+              return self.payload_path / Path("Icon/Resources.zip")
+      
+          @property
+          def installer_pkg_path(self):
+              return self.payload_path / Path("AutoPkg-Assets.pkg")
+      
+          @property
+          def installer_pkg_zip_path(self):
+              return self.payload_path / Path("AutoPkg-Assets.pkg.zip")
+      
+          # Apple Payloads Paths
+          @property
+          def payload_local_binaries_root_path(self):
+              return self.payload_path / Path("Universal-Binaries")
+      
+          @property
+          def kdk_download_path(self):
+              return self.payload_path / Path("KDK.dmg")
+      
+          @property
+          def metallib_download_path(self):
+              return self.payload_path / Path("MetallibSupportPkg.pkg")
+      
+          @property
+          def icons_path(self):
+              return [
+                  str(self.icon_path_macos_generic),
+                  str(self.icon_path_macos_big_sur),
+                  str(self.icon_path_macos_monterey),
+                  str(self.icon_path_macos_ventura),
+                  str(self.icon_path_macos_sonoma),
+                  str(self.icon_path_macos_sequoia),
+                  str(self.icon_path_macos_tahoe),
+              ]
+      
+          sbm_values = [
+              "j137ap",  #  iMacPro1,1
+              "j680ap",  #  MacBookPro15,1
+              "j132ap",  #  MacBookPro15,2
+              "j174ap",  #  Macmini8,1
+              "j140kap",  # MacBookAir8,1
+              "j780ap",  #  MacBookPro15,3
+              "j213ap",  #  MacBookPro15,4
+              "j140aap",  # MacBookAir8,2
+              "j152fap",  # MacBookPro16,1
+              "j160ap",  #  MacPro7,1
+              "j230kap",  # MacBookAir9,1
+              "j214kap",  # MacBookPro16,2
+              "j223ap",  #  MacBookPro16,3
+              "j215ap",  #  MacBookPro16,4
+              "j185ap",  #  iMac20,1
+              "j185fap",  # iMac20,2
+              # "x86legacy",  # non-T2 Macs/VMs, Monterey's boot.efi enforces this on all Macs
+          ]
+      
+          sandy_board_id_stock = [
+              "Mac-94245B3640C91C81",  # MacBookPro8,1
+              "Mac-94245A3940C91C80",  # MacBookPro8,2
+              "Mac-942459F5819B171B",  # MacBookPro8,3
+              "Mac-C08A6BB70A942AC2",  # MacBookAir4,1
+              "Mac-742912EFDBEE19B3",  # MacBookAir4,2
+              "Mac-8ED6AF5B48C039E1",  # Macmini5,1
+              "Mac-4BC72D62AD45599E",  # Macmini5,2
+              "Mac-7BA5B2794B2CDB12",  # Macmini5,3
+              "Mac-942B5BF58194151B",  # iMac12,1
+              "Mac-942B59F58194171B",  # iMac12,2
+              "Mac-94245AF5819B141B",  # AppleInternal MacBookPro8,3
+              "Mac-942B5B3A40C91381",  # AppleInternal iMac12,2
+          ]
