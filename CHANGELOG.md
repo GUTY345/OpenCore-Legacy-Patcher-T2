@@ -1,5 +1,5 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungslog
-## 4.0.0 alpha 15.4.2:
+## 4.0.0 alpha 15.4.2 (outside the development branch):
 This version fixes the following bug:
 since the official OpenCore Legacy Patcher uses Nightly/non-Nighly, and our uses alpha, canary, beta and stable, this causes a conflict when checking for updates for updates:
 self.installer_pkg_url: str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
