@@ -14,7 +14,7 @@ class Constants:
     def __init__(self) -> None:
         # Patcher Versioning
         # Wenn einen Release mit s endet, es heißt, dass sie noch nicht fertig ist.
-        self.patcher_version:                 str = "4.0.0prea515s"  # OpenCore-Legacy-Patcher
+        self.patcher_version:                 str = "4.0.0prea515"  # OpenCore-Legacy-Patcher
         self.patcher_version_label=self.patcher_version
         self.patcher_support_pkg_version:     str = "1.9.6"  # PatcherSupportPkg
         self.copyright_date:                  str = "Copyright © 2020-2025 Dortania"
