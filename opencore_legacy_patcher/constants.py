@@ -13,7 +13,8 @@ from .detections import device_probe
 class Constants:
     def __init__(self) -> None:
         # Patcher Versioning
-        self.patcher_version:                 str = "4.0.0prea415"  # OpenCore-Legacy-Patcher
+        # Wenn einen Release mit s endet, es heißt, dass sie noch nicht fertig ist.
+        self.patcher_version:                 str = "4.0.0prea515s"  # OpenCore-Legacy-Patcher
         self.patcher_version_label=self.patcher_version
         self.patcher_support_pkg_version:     str = "1.9.6"  # PatcherSupportPkg
         self.copyright_date:                  str = "Copyright © 2020-2025 Dortania"
@@ -36,14 +37,14 @@ class Constants:
         self.lilu_version:               str = "1.7.2"  #      Lilu
         self.whatevergreen_version:      str = "1.7.0"  #      WhateverGreen
         self.whatevergreen_navi_version: str = "1.6.9-Navi"  # WhateverGreen (Navi Patch)
-        self.airportbcrmfixup_version:   str = "2.1.9"  #      AirPortBrcmFixup
-        self.nvmefix_version:            str = "1.1.2"  #      NVMeFix
+        self.airportbcrmfixup_version:   str = "2.2.0"  #      AirPortBrcmFixup
+        self.nvmefix_version:            str = "1.1.3"  #      NVMeFix
         self.applealc_version:           str = "1.6.7"  #      AppleALC
         self.restrictevents_version:     str = "1.1.6"  #      RestrictEvents
         self.featureunlock_version:      str = "1.1.8"  #      FeatureUnlock
         self.debugenhancer_version:      str = "1.1.0"  #      DebugEnhancer
-        self.cpufriend_version:          str = "1.2.9"  #      CPUFriend
-        self.bluetool_version:           str = "2.6.9"  #      BlueToolFixup (BrcmPatchRAM)
+        self.cpufriend_version:          str = "1.3.0"  #      CPUFriend
+        self.bluetool_version:           str = "2.7.2"  #      BlueToolFixup (BrcmPatchRAM)
         self.cslvfixup_version:          str = "2.6.1"  #      CSLVFixup
         self.autopkg_version:            str = "1.0.4"  #      AutoPkgInstaller
         self.cryptexfixup_version:       str = "1.0.5"  #      CryptexFixup
@@ -258,11 +259,11 @@ class Constants:
         Special builds are used for testing. They do not get updates through the updater
         """
 
-        try:
-            version.parse(self.patcher_version)
-            return False
-        except version.InvalidVersion:
+        # Check for your custom 's' suffix indicator
+        if self.patcher_version.endswith("s"):
             return True
+        else:
+            return False
 
     # Payload Location
 
