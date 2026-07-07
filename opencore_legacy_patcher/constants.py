@@ -11,7 +11,7 @@ from .detections import device_probe
 
 
 class Constants:
-   def __init__(self) -> None:
+    def __init__(self) -> None:
         # Patcher Versioning
         # Wenn einen Release mit s endet, es heißt, dass sie noch nicht fertig ist.
         self.patcher_version:                 str = "4.0.0prea416s"  # OpenCore-Legacy-Patcher
