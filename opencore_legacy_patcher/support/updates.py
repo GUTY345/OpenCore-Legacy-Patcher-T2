@@ -109,14 +109,27 @@ class CheckBinaryUpdates:
         try:
             latest_remote_version = version.parse(data_set["tag_name"])
         except version.InvalidVersion:
+            logging.error(f"Diese Version ist nicht valid")
+            logging.error(f"That version is invalid")
+            logging.exception("Stack Trace:")
+            logging.info("Bitte suchen Sie manuell nach Updates in GitHub.")
+            logging.info("Please check for updates in GitHub manually.")
             return None
 
         # Fixed: Swap the parameters so that the remote version is tested against the local one properly.
         # Alternatively, you can also just pass (self.binary_version, latest_remote_version)
         if not self._check_if_build_newer(latest_remote_version, self.binary_version):
+            logging.info("Sie sind bereits auf die letzte Version.")
+            logging.info("You are already on the latest version.")
+            logging.info("Falls diese Nachricht noch erscheint auch wenn es nicht aktuell ist, sollten Sie sofort melden.")
+            logging.info("If this meessage appears even if it's not up to date, you should report this issue.")
+            logging.info("Für meisten Voralphas dieses Verhalten ist normal, weil diverse Version als Pre-release markiert ist.")
+            logging.info("For most pre-alpha versions, this behavior is normal because various versions are marked as pre-release.")
             return None
 
         for asset in data_set["assets"]:
+            logging.info("Einen neue Version ist verfügbar")
+            logging.info("A new version is available")
             logging.info(f"Found asset: {asset['name']}")
             if asset["name"] == "OpenCore-Patcher.pkg":
                 self.latest_details = {
