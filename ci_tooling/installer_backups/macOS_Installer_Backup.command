@@ -14,6 +14,7 @@ WARNING: Solely for internal usage, not intended for end-users.
 import sys
 import argparse
 import plistlib
+# subprocess wird nicht mehr für mv/rm benötigt, aber noch für dl_obj.download(spawn_thread=True)
 import subprocess
 
 from pathlib import Path
@@ -47,7 +48,7 @@ class InstallerBackup:
                      os_data.os_data.tahoe,
                     ],
                  first_run:      bool = False
-                ) -> None:
+                 ) -> None:
 
         print(f"Starting macOS Installer Backup: {datetime.now()}")
 
@@ -108,22 +109,22 @@ class InstallerBackup:
                 return
 
 
-    def _validate_against_chunklist(self, installer_path: str, chunklist: str) -> bool:
+    def _validate_against_chunklist(self, installer_path: Path, chunklist: Path) -> bool:
         """
-        Validate file against chunklist
+        Validate file against chunklist (Using pathlib for safety)
         """
 
         name = Path(installer_path).name
 
-        if not Path(installer_path).exists():
+        if not installer_path.exists():
             print("File does not exist")
             return False
 
-        if not Path(chunklist).exists():
+        if not chunklist.exists():
             print("Chunklist does not exist")
             return False
 
-        chunk_obj = integrity_verification.ChunklistVerification(installer_path, chunklist)
+        chunk_obj = integrity_verification.ChunklistVerification(str(installer_path), str(chunklist))
         if not chunk_obj.chunks:
             print("Failed to generate chunklist dict")
             return False
@@ -137,10 +138,14 @@ class InstallerBackup:
         if chunk_obj.status == integrity_verification.ChunklistStatus.FAILURE:
             print(chunk_obj.error_msg)
             print(f"Validating {name} against chunklist: chunk {chunk_obj.current_chunk} failed")
-            for file in [installer_path, chunklist]:
-                result = subprocess.run(["/bin/rm", "-f", file])
-                if result.returncode != 0:
-                    print(f"Failed to delete {file}")
+            # -- SICHERHEITS-FIX: Native pathlib Methoden verwenden ---
+            for file_path in [installer_path, chunklist]:
+                try:
+                    file_path.unlink(missing_ok=True) # Ersetzt rm -f
+                    print(f"Deleted {file_path}")
+                except OSError as e:
+                    print(f"Failed to delete {file_path}: {e}")
+            # ---------------------------------------------------------
 
         print(f"Validating {name} against chunklist: chunk {chunk_obj.total_chunks} passed")
         return True
@@ -164,16 +169,31 @@ class InstallerBackup:
 
         if not dl_obj.download_complete:
             print("Download failed")
-            subprocess.run(["/bin/rm", "-f", path]) # Retry later
+            # -- SICHERHEITS-FIX: Native pathlib Methode verwenden ---
+            try:
+                Path(path).unlink(missing_ok=True) # Ersetzt rm -f
+                print(f"Deleted incomplete file: {path}")
+            except OSError as e:
+                print(f"Failed to delete incomplete file {path}: {e}")
+            # ---------------------------------------------------------
             return False
 
 
         if Path(path).stat().st_size == 0:
             print("Downloaded file is empty, considering permanent failure") # Likely dead URL
-            if not Path(Path(path).parent, "Dead URLs").exists():
-                Path(Path(path).parent, "Dead URLs").mkdir()
+            dead_urls_dir = Path(Path(path).parent, "Dead URLs")
+            if not dead_urls_dir.exists():
+                dead_urls_dir.mkdir()
+
             if Path(path).exists():
-                subprocess.run(["/bin/mv", path, Path(Path(path).parent, "Dead URLs", Path(path).name)])
+                dest_path = Path(dead_urls_dir, Path(path).name)
+                # -- SICHERHEITS-FIX: Native pathlib Methode verwenden ---
+                try:
+                    Path(path).replace(dest_path) # Ersetzt mv
+                    print(f"Moved empty file to {dest_path}")
+                except OSError as e:
+                    print(f"Failed to move empty file {path} to {dest_path}: {e}")
+                # ---------------------------------------------------------
 
         return True
 
@@ -186,12 +206,13 @@ class InstallerBackup:
         if xnu_version not in self._os_table:
             raise ValueError(f"Unsupported OS version: {xnu_version}")
 
-        if not Path(self._os_table[xnu_version]).exists():
-            raise FileNotFoundError(f"Directory does not exist: {self._os_table[xnu_version]}")
+        target_dir = Path(self._os_table[xnu_version])
+        if not target_dir.exists():
+            raise FileNotFoundError(f"Directory does not exist: {target_dir}")
 
         # Check failed, as those are generally dead URLs
-        for path in [Path(self._os_table[xnu_version]), Path(self._os_table[xnu_version], "Dead URLs")]:
-            if not Path(path).exists():
+        for path in [target_dir, Path(target_dir, "Dead URLs")]:
+            if not path.exists():
                 continue
             for file in path.iterdir():
                 if file.is_dir():
@@ -226,21 +247,14 @@ class InstallerBackup:
         if variant not in ["InstallAssistant.pkg", ".ipsw"]:
             raise ValueError(f"Invalid variant: {variant}")
 
-        installers = {
-            # "22F82": {
-            #   url: "https://swcdn.apple.com/content/downloads/36/06/042-01917-A_B57IOY75IU/oocuh8ap7y8l8vhu6ria5aqk7edd262orj/InstallAssistant.pkg",
-            #   version: "13.4.1",
-            #   build: "22F82",
-            # }
-        }
-
+        installers = {}
         print(f"APPLEDB: Getting installers for variant: {variant}")
 
-        apple_db = network_handler.NetworkUtilities().get("https://api.appledb.dev/main.json")
-        if apple_db is None:
+        apple_db_resp = network_handler.NetworkUtilities().get("https://api.appledb.dev/main.json")
+        if apple_db_resp is None:
             return installers
 
-        apple_db = apple_db.json()
+        apple_db = apple_db_resp.json()
         for group in apple_db:
             if group != "ios":
                 continue
@@ -339,6 +353,8 @@ class InstallerBackup:
 
                 for os in self._os_table:
                     for directory in [self._os_table[os], Path(self._os_table[os], "Dead URLs")]:
+                        if not directory.exists():
+                            continue
                         for file in directory.iterdir():
                             if file.is_dir():
                                 continue
@@ -366,13 +382,16 @@ class InstallerBackup:
                                 continue
 
                             print(f"Renaming {file.name} to {_name}")
-                            result = subprocess.run(["/bin/mv", file, Path(directory, _name)])
-                            if result.returncode != 0:
-                                print(f"Failed to rename {file} to {Path(directory, _name)}")
+                            new_file_path = Path(directory, _name)
+                            # -- SICHERHEITS-FIX: Native pathlib Methode verwenden ---
+                            try:
+                                file.replace(new_file_path) # Ersetzt mv
+                                print(f"Moved {file.name} to {new_file_path}")
+                            except OSError as e:
+                                print(f"Failed to move {file} to {new_file_path}: {e}")
+                            # ---------------------------------------------------------
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="macOS Installer Backup")
-    parser.add_argument("--first-run", action="store_true", help="Create directories if missing")
-
-    InstallerBackup(**vars(parser.parse_args()))
+    parser.
