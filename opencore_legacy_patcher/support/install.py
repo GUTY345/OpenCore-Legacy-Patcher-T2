@@ -100,6 +100,7 @@ class tui_disk_installation:
     def install_opencore(self, full_disk_identifier: str):
         # TODO: Apple Script schlägt in Yosemite und älter fehl
         logging.info(f"Mounte Partition: {full_disk_identifier}")
+        logging.info(f"Mounting partition: {full_disk_identifier}")
         
         # Mount-Versuch als Root
         result = subprocess_wrapper.run_as_root(["/usr/sbin/diskutil", "mount", full_disk_identifier], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
