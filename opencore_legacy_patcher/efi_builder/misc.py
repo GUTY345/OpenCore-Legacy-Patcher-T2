@@ -418,11 +418,14 @@ class BuildMiscellaneous:
             if len(find_bytes) != len(replace_bytes):
                 logging.error(f"LÄNGENFEHLER in '{patch_dict.get('Comment')}': "
                               f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
+                 logging.error(f"LENGTH ISSUE in '{patch_dict.get('Comment')}': "
+                              f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
                 sys.exit(3)
                 return False
             return True
         except Exception as e:
             logging.error("Wir haben einen Problem, die Bytes-Länge zu vergleichen")
+            logging.error("We have an issue to compare the bytes length.")
             sys.exit(3)
     
     def _t2_handling(self) -> None:
