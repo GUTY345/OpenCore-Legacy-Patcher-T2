@@ -1,6 +1,7 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
 ## 4.0.0 alpha 15.4.3:
 Diese Version behebt einen Fehler, bei dem die Funktion, die die Byte-Länge prüfen sollte, dies nicht tat. Der fehlerhafte Code lautete wie folgt:
+
 def _validate_patch(self, patch_dict): #fehlerhafte Logik folgt
         """
         Loggt eine Fehlermeldung, falls Find und Replace unterschiedlich sind.
@@ -16,6 +17,7 @@ def _validate_patch(self, patch_dict): #fehlerhafte Logik folgt
             logging.info("Please update the app if a newer version is available")
 
 This release fixes a bug where in the function where it should check for byte length, it wasn't really checking the byte length. The buggy code was this:
+
 def _validate_patch(self, patch_dict): #buggy logic continues from here
         """
         Loggt eine Fehlermeldung, falls Find und Replace unterschiedlich sind.
