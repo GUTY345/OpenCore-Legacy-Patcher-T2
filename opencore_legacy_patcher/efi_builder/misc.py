@@ -410,23 +410,24 @@ class BuildMiscellaneous:
             sys.exit(3)
 
     def _validate_patch(self, patch_dict):
-        """
-        Loggt eine Fehlermeldung, falls Find und Replace unterschiedlich sind.
-        """
-        find_bytes = patch_dict.get("Find")
-        replace_bytes = patch_dict.get("Replace")
-    
-        # Wenn sie unterschiedlich sind, loggen wir den Fehler
-        if find_bytes != replace_bytes:
-            logging.error(f"Patch-Fehler: 'Find' und 'Replace' bytes sind NICHT identisch für '{patch_dict.get('Comment')}'.")
-            logging.error(f"Patch failure: Find and replace bytes aren't identical for '{patch_dict.get('Comment')}'.")
-            logging.info("Bitte aktualisieren Sie den App falls eine neuere Version vorhanden ist.")
-            logging.info("Please update the app if a newer version is available")
+        try:
+            find_bytes = patch_dict.get("Find")
+            replace_bytes = patch_dict.get("Replace")
+            
+            # Längenvergleich
+            if len(find_bytes) != len(replace_bytes):
+                logging.error(f"LÄNGENFEHLER in '{patch_dict.get('Comment')}': "
+                              f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
+                 logging.error(f"LENGTH ISSUE in '{patch_dict.get('Comment')}': "
+                              f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
+                logging.info("Dieses Patch wird nicht injiziert, um kritische Kernel Panics zu vermeiden.")
+                logging.info("This patch will not be injected to avoid critical kernel panics")
+                return False
+            return True
+        except Exception as e:
+            logging.error("Wir haben einen Problem, die Bytes-Länge zu vergleichen")
+            logging.error("We have an issue to compare the bytes length.")
             sys.exit(3)
-            # Hier wird NICHT False zurückgegeben, da du sagtest, bei identisch sei alles gut.
-            # Falls du den Patch trotz Fehler trotzdem hinzufügen willst, lass es so stehen.
-        
-        return True
     
     def _t2_handling(self) -> None:
         """T2 Security Chip Handler."""
