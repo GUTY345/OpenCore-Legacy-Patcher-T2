@@ -118,6 +118,9 @@ class UpdateFrame(wx.Frame):
         gui_support.wait_for_thread(thread)
 
         if not getattr(download_obj, 'download_complete', False):
+            logging.error("Es hat fehlgeschlagen, das Update herunterzuladen.")
+            logging.error("It failed to download the update")
+            logging.exception("Stack Trace:")
             fallback_text = "Failed to download update. If you continue to have this issue, please manually download the update."
             wx.CallAfter(self._handle_fatal_failure, fallback_text, "Critical Error!")
             return
