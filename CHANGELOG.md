@@ -1,4 +1,8 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.12022 - alpha 15.5.2:
+updates BlueToolFixup, NVMeFix, CPUFriend and AirportBrcmFixup to their latest versions to ensure stability, security and macOS 26 Tahoe compatability. This includes fixes that affect non-T2 Macs primarily, but also, T2 Macs.
+BlueToolFixup, NVMeFix, CPUFriend und AirportBrcmFixup werden auf die neuesten Versionen aktualisiert, um Stabilität, Sicherheit und Kompatibilität mit macOS 26 Tahoe zu gewährleisten. Dies umfasst Fehlerbehebungen, die sich hauptsächlich auf Nicht-T2-Macs, aber auch auf T2-Macs auswirken.
+
 ## 4.0.0.12021 - alpha 15.5.1
 This release fixes update reliability issues.
 Diese Version behebt Probleme mit der Zuverlässigkeit von Updates.
