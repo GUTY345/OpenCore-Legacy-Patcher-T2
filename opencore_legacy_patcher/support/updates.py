@@ -106,6 +106,8 @@ class CheckBinaryUpdates:
 
         if self.constants.special_build is True:
             # Special builds do not get updates through the updater
+            logging.info("Sie verwenden eine spezielle Version")
+            logging.info("You are using a special version")
             return None
 
         if self.latest_details:
@@ -113,8 +115,17 @@ class CheckBinaryUpdates:
             return self.latest_details
 
         if not network_handler.NetworkUtilities(REPO_LATEST_RELEASE_URL).verify_network_connection():
+            logging.error("Es hat fehlgeschlagen, einen Internetverbindung mit die GitHub-Webseite zu herstellen.")
+            logging.error("It failed to connect with the GitHub page")
+            logging.info("Bitte sehen Sie, ob Ihr Computer mit den Internet verbunden ist.")
+            logging.info("Please check if your computer is connected to the internet.")
+            logging.exception("Stack Trace:")
+            logging.info("Falls Ihren Computer mit Internet verbunden ist, ist es möglich zu sein, dass es um nicht valider Syntax handelt.")
+            logging.info("If your computer is connected to the internet, it may be due to invalid syntax.")
+            logging.info("Falls so, sollten Sie das Problem sofort melden.")
+            logging.info("If so, report this issue immediately")
             return None
-
+            
         response = network_handler.NetworkUtilities().get(REPO_LATEST_RELEASE_URL)
         data_set = response.json()
 
@@ -124,6 +135,8 @@ class CheckBinaryUpdates:
         # The release marked as latest will always be stable, and thus, have a proper version number
         # But if not, let's not crash the program
         try:
+            logging.info("Suchen ob die Version valid ist")
+            logging.info("Checking if the version is valid")
             latest_remote_version = version.parse(data_set["tag_name"])
         except version.InvalidVersion:
             logging.error(f"Diese Version ist nicht valid")
