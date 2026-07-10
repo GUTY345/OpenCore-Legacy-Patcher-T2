@@ -22,8 +22,15 @@ class CheckBinaryUpdates:
     def __init__(self, global_constants: constants.Constants) -> None:
         self.constants: constants.Constants = global_constants
         try:
+            logging.info("Suchen ob die Version valid ist")
+            logging.info("Checking if the version is valid")
             self.binary_version = version.parse(self.constants.patcher_version)
         except version.InvalidVersion:
+            logging.error("Da die Version nicht valid ist, werden keine automatische Updates durchgeführt.")
+            logging.error("Since the version is not valid, we will not install any automatic updates.")
+            logging.exception("Stack Trace:")
+            logging.info("Bitte manuell nach Updates in GitHub suchen.")
+            logging.info("Please check for updates in GitHub manually.")
             assert self.constants.special_build is True, "Invalid version number for binary"
             # Special builds will not have a proper version number
             self.binary_version = version.parse("0.0.0")
@@ -41,6 +48,10 @@ class CheckBinaryUpdates:
             bool: True if the provided version is newer, False if not
         """
         if self.constants.special_build is True:
+            logging.info("Das ist eine spezielle Version. Automatische Updates sind temporär deaktiviert und sie zu aktivieren, Sie müssen zu eine Standard-Release umsteigen.")
+            logging.info("Bitte suchen Sie manuell nach Updates in GitHub.")
+            logging.info("This is a special version. Automatic updates are permanently disabled and to be enabled, you need to switch to a standard release.")
+            logging.info("Please check for updates in GitHub manually.")
             return False
 
         # Fixed: Pass the local version as second argument (as expected by _check_if_build_newer)
@@ -63,6 +74,9 @@ class CheckBinaryUpdates:
                 first_version = version.parse(first_version)
             except version.InvalidVersion:
                 # Special build > release build: assume special build is newer
+                logging.error("Es gibt einen Problem zu aktualisieren. Bitte suchen Sie manuell nach Updates.")
+                logging.error("There is a problem to update. Please search for updates manually.")
+                logging.exception("Stack Trace:")
                 return True
 
         if not isinstance(second_version, version.Version):
@@ -70,6 +84,9 @@ class CheckBinaryUpdates:
                 second_version = version.parse(second_version)
             except version.InvalidVersion:
                 # Release build > special build: assume special build is newer
+                logging.error("Es gibt einen Problem zu aktualisieren. Bitte suchen Sie manuell nach Updates.")
+                logging.error("There is a problem to update. Please search for updates manually.")
+                logging.exception("Stack Trace:")
                 return False
 
         if first_version == second_version:
