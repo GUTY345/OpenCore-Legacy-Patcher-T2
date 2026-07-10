@@ -60,9 +60,11 @@ class UpdateFrame(wx.Frame):
                 version_label = dict["Version"]
                 url = dict["Link"]
             else:
+                logging.error("Es hat fehlgeschlagen, Update-Informationen zu erhalten")
+                logging.error("Failed to receive update info")
+                logging.exception("Stack Trace:")
                 wx.MessageBox("Failed to get update info", "Critical Error")
-                sys.exit(1)
-
+                sys.exit(3)
         self.version_label = version_label
         self.url = url
 
@@ -78,9 +80,16 @@ class UpdateFrame(wx.Frame):
         )
 
         # Title: Preparing update
-        self.title_label = wx.StaticText(self.frame, label="Preparing download... this may take several minutes", pos=(-1, 1))
-        self.title_label.SetFont(gui_support.font_factory(19, wx.FONTWEIGHT_BOLD))
-        self.title_label.Centre(wx.HORIZONTAL)
+        try:
+            self.title_label = wx.StaticText(self.frame, label="Preparing download...", pos=(-1, 1))
+            self.title_label.SetFont(gui_support.font_factory(19, wx.FONTWEIGHT_BOLD))
+            self.title_label.Centre(wx.HORIZONTAL)
+        except Exception as e:
+            logging.error("Es hat fehlgeschlagen, die Akutalisierung herunterzulade")
+            logging.error("Failed to download the update")
+            logging.exception("Stack Trace:")
+            wx.MessageBox("Failed to download the update", "Critical Error")
+            sys.exit(3)
 
         # Progress bar
         progress_bar = wx.Gauge(self.frame, range=100, pos=(10, 50), size=(300, 20))
@@ -127,7 +136,10 @@ class UpdateFrame(wx.Frame):
             wx.CallAfter(self._handle_fatal_failure, fallback_text, "Critical Error!")
             return
 
-        if not getattr(download_obj, 'download_complete', False):
+        # RELIABILITY FIX: Check if the file exists AND status is explicitly True
+        # Beheben von einen Bug, indem die Aktualisierungsmechanismus denkt, da wäre ein Fehler während es erfolgreich herunterlädt
+        # Relying on getattr() is dangerous if the object state isn't perfectly managed
+        if not (hasattr(download_obj, 'download_complete') and download_obj.download_complete):
             logging.error("Es hat fehlgeschlagen, das Update herunterzuladen.")
             logging.error("It failed to download the update")
             fallback_text = "Failed to download update. If you continue to have this issue, please manually download the update."
@@ -139,7 +151,6 @@ class UpdateFrame(wx.Frame):
             logging.info("Aktualisierung extrahieren")
             logging.info("Extract update")
             wx.CallAfter(self._update_status_label, "Extracting update...")
-            
             thread = threading.Thread(target=self._extract_update)
             thread.start()
             gui_support.wait_for_thread(thread)
@@ -156,11 +167,9 @@ class UpdateFrame(wx.Frame):
             logging.info("Aktualisierung durchführen")
             logging.info("Updating")
             wx.CallAfter(self._update_status_label, "Installing update...")
-    
             thread = threading.Thread(target=self._install_update)
             thread.start()
             gui_support.wait_for_thread(thread)
-    
             # --- Phase 4: Verification & Wrap-up ---
             wx.CallAfter(self._finalize_ui_and_start_countdown)
         except Exception as e:
@@ -250,13 +259,18 @@ class UpdateFrame(wx.Frame):
             ["/usr/bin/ditto", "-xk", str(self.constants.payload_path / "OpenCore-Patcher.pkg.zip"), str(self.constants.payload_path)], capture_output=True
         )
         if result.returncode != 0:
+            logging.error(f"Es hat fehlgeschlagen, die Aktualisierung zu extrahieren")
             logging.error(f"Failed to extract update.")
+            logging.exception("Stack Trace:")
             subprocess_wrapper.log(result)
             
             error_str = f"Failed to extract update. Error: {result.stderr.decode('utf-8')}"
             wx.CallAfter(self._handle_fatal_failure, error_str, "Critical Error!")
             # Ensure background thread execution chain halts gracefully
-            sys.exit(1)
+            wx.MessageBox("Since the update failed to extract, we'll close the app for you.", "Critical Error")
+            logging.info("Die App wird geschlossen.")
+            logging.info("Closing the app")
+            sys.exit(3)
 
     def _install_update(self) -> None:
         logging.info(f"Update wird installiert: {self.pkg_download_path}")
