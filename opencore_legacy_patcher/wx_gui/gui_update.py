@@ -28,7 +28,12 @@ class UpdateFrame(wx.Frame):
     Create a frame for updating the patcher
     """
     def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: wx.Point, url: str = "", version_label: str = "") -> None:
+        # CORRECTED: Always call the super-class constructor first to register the window correctly
+        super().__init__(parent, title=title, size=(350, 300), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
+        
         logging.info("Initializing Update Frame")
+        
+        # Handle the parent/child UI logic after the super-class is initialized
         if parent:
             self.parent: wx.Frame = parent
 
@@ -36,7 +41,6 @@ class UpdateFrame(wx.Frame):
                 child.Hide()
             parent.Hide()
         else:
-            super(UpdateFrame, self).__init__(parent, title=title, size=(350, 300), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
             gui_support.GenerateMenubar(self, global_constants).generate()
 
         self.title: str = title
