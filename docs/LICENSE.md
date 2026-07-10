@@ -1,4 +1,4 @@
-# OpenCore Legacy Patcher License
+# OpenCore Legacy Patcher Licenses
 
 This patcher is made of multiple external applications from different people and organizations. See each program for their licensing:
 
