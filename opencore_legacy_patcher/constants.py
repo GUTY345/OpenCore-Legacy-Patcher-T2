@@ -2,6 +2,8 @@
 constants.py: Defines versioning, file paths and other settings for the patcher
 """
 
+import logging
+import sys
 from pathlib   import Path
 from typing    import Optional
 from packaging import version
@@ -13,7 +15,8 @@ from .detections import device_probe
 class Constants:
     def __init__(self) -> None:
         # Patcher Versioning
-        self.patcher_version:                 str = "4.0.0a15.4.3"  # OpenCore-Legacy-Patcher
+        # Wenn eine Version mit s endet, es heißt, dass sie noch nicht fertig ist.
+        self.patcher_version:                 str = "4.0.0a15.5s"  # OpenCore-Legacy-Patcher
         self.patcher_version_label=self.patcher_version
         self.patcher_support_pkg_version:     str = "1.9.6"  # PatcherSupportPkg
         self.copyright_date:                  str = "Copyright © 2020-2025 Dortania"
@@ -36,14 +39,14 @@ class Constants:
         self.lilu_version:               str = "1.7.2"  #      Lilu
         self.whatevergreen_version:      str = "1.7.0"  #      WhateverGreen
         self.whatevergreen_navi_version: str = "1.6.9-Navi"  # WhateverGreen (Navi Patch)
-        self.airportbcrmfixup_version:   str = "2.1.9"  #      AirPortBrcmFixup
-        self.nvmefix_version:            str = "1.1.2"  #      NVMeFix
+        self.airportbcrmfixup_version:   str = "2.2.0"  #      AirPortBrcmFixup
+        self.nvmefix_version:            str = "1.1.3"  #      NVMeFix
         self.applealc_version:           str = "1.6.7"  #      AppleALC
         self.restrictevents_version:     str = "1.1.6"  #      RestrictEvents
         self.featureunlock_version:      str = "1.1.8"  #      FeatureUnlock
         self.debugenhancer_version:      str = "1.1.0"  #      DebugEnhancer
-        self.cpufriend_version:          str = "1.2.9"  #      CPUFriend
-        self.bluetool_version:           str = "2.6.9"  #      BlueToolFixup (BrcmPatchRAM)
+        self.cpufriend_version:          str = "1.3.0"  #      CPUFriend
+        self.bluetool_version:           str = "2.7.2"  #      BlueToolFixup (BrcmPatchRAM)
         self.cslvfixup_version:          str = "2.6.1"  #      CSLVFixup
         self.autopkg_version:            str = "1.0.4"  #      AutoPkgInstaller
         self.cryptexfixup_version:       str = "1.0.5"  #      CryptexFixup
@@ -259,9 +262,15 @@ class Constants:
         """
 
         try:
+            logging.info("Suchen ob die Version speziell ist")
+            logging.info("Checking if the version is special")
             version.parse(self.patcher_version)
             return False
         except version.InvalidVersion:
+            logging.info("Wir haben bestätigt, dass es sich um eine spezielle Version handelt.")
+            logging.info("Sie werden keine automatische Updates erhalten.")
+            logging.info("We have confirmed that this is a special version")
+            logging.info("You won't receive automatic updates.")
             return True
 
     # Payload Location
