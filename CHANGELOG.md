@@ -77,6 +77,39 @@ Diese Version:
 verzichtet auf a/prea-Builds, da der Updater diese als spezielle Versionen behandelt. Dies stellt eine gravierende Sicherheitslücke dar, die dazu führt, dass Nutzer anfällige Versionen auf ihren Rechnern behalten.
 Es können Fehler beim Injizieren von Kexts auftreten, ich kann das Update jedoch nicht verzögern, da es kritisch ist.
 
+## 4.0.0 alpha 15.4.3: (outside the development branch)
+Diese Version behebt einen Fehler, bei dem die Funktion, die die Byte-Länge prüfen sollte, dies nicht tat. Der fehlerhafte Code lautete wie folgt:
+
+def _validate_patch(self, patch_dict): #fehlerhafte Logik folgt
+        """
+        Loggt eine Fehlermeldung, falls Find und Replace unterschiedlich sind.
+        """
+        find_bytes = patch_dict.get("Find")
+        replace_bytes = patch_dict.get("Replace")
+    
+        # Wenn sie unterschiedlich sind, loggen wir den Fehler
+        if find_bytes != replace_bytes:
+            logging.error(f"Patch-Fehler: 'Find' und 'Replace' bytes sind NICHT identisch für '{patch_dict.get('Comment')}'.")
+            logging.error(f"Patch failure: Find and replace bytes aren't identical for '{patch_dict.get('Comment')}'.")
+            logging.info("Bitte aktualisieren Sie den App falls eine neuere Version vorhanden ist.")
+            logging.info("Please update the app if a newer version is available")
+
+This release fixes a bug where in the function where it should check for byte length, it wasn't really checking the byte length. The buggy code was this:
+
+def _validate_patch(self, patch_dict): #buggy logic continues from here
+        """
+        Loggt eine Fehlermeldung, falls Find und Replace unterschiedlich sind.
+        """
+        find_bytes = patch_dict.get("Find")
+        replace_bytes = patch_dict.get("Replace")
+    
+        # Wenn sie unterschiedlich sind, loggen wir den Fehler
+        if find_bytes != replace_bytes:
+            logging.error(f"Patch-Fehler: 'Find' und 'Replace' bytes sind NICHT identisch für '{patch_dict.get('Comment')}'.")
+            logging.error(f"Patch failure: Find and replace bytes aren't identical for '{patch_dict.get('Comment')}'.")
+            logging.info("Bitte aktualisieren Sie den App falls eine neuere Version vorhanden ist.")
+            logging.info("Please update the app if a newer version is available")
+
 
 ## 4.0.0 Voralpha 5 für alpha 16 / 4.0.0 pre-alpha 5 for alpha 16:
 This release:
