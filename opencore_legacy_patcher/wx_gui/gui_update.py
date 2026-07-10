@@ -202,7 +202,9 @@ class UpdateFrame(wx.Frame):
         else:
             wx.MessageBox(error_msg, title, wx.OK | wx.ICON_ERROR)
             
-        sys.exit(1)
+        logging.info("Die App wird geschlossen")
+        logging.info("Closing the app")
+        sys.exit(3)
 
     def _finalize_ui_and_start_countdown(self) -> None:
         """Reconstructs the interface layout and initializes the exit timer safely."""
