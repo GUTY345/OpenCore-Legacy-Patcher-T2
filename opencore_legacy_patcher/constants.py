@@ -3,6 +3,7 @@ constants.py: Defines versioning, file paths and other settings for the patcher
 """
 
 import logging
+import sys
 from pathlib   import Path
 from typing    import Optional
 from packaging import version
