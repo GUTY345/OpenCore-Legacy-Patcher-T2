@@ -369,7 +369,9 @@ class DownloadObject:
             self.error = True
             self.error_msg = str(e)
             self.status = DownloadStatus.ERROR
+            logging.error(f"Einen Fehler ist aufgetreten, {self.url}: {self.error_msg} zu herunterladen")
             logging.error(f"Error downloading {self.url}: {self.error_msg}")
+            logging.exception("Stack Trace:")
 
         self.status = DownloadStatus.COMPLETE
         utilities.enable_sleep_after_running()
