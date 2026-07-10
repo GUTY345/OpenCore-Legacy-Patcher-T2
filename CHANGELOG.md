@@ -1,4 +1,60 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0 Voralpha 6 für alpha 16 / 4.0.0 pre-alpha 6 for alpha 16:
+This release:
+- swtiches away from a/prea builds as the updater treats those as special versions and that's a huge vulnerability that makes people leave with vulnerable versions on their machines. 
+- Fixes the following vulnerabilities:
+By switching from external shell calls to the native functions of the Python standard library (pathlib), we primarily eliminated potential attack vectors that, while rarely exploited in a controlled environment, are nevertheless considered "best practice" security risks.
+
+Here are the specific improvements:
+
+1. Elimination of "Command Injection" Risks
+
+Before: Calling /bin/mv or /bin/rm via subprocess.run, while secure against direct injection with a correct list pass, still involved calling an external binary file. If the script were extended in an insecure context (e.g., with variable path inputs), special characters in filenames could manipulate the shell environment.
+
+After: By using pathlib.Path.unlink() and pathlib.Path.replace(), no process call is made. The file system operation is performed directly within the Python interpreter using operating system APIs. This completely decouples the script from shell interpretation.
+
+2. Protection against file path race conditions
+
+Before: When calling /bin/mv or /bin/rm, the system had to pass the path to the shell, which then had to locate the binary file, execute it, and resolve the path. An attacker with file system access could theoretically attempt to replace the file with a symbolic link between the command being called and its execution (symlink race).
+
+After: Since pathlib processes paths more atomically, or directly at the operating system level, the window of opportunity for such manipulation is significantly reduced. Furthermore, `unlink(missing_ok=True)` prevents errors with non-existent files without the need for shell error messages.
+
+
+``` 3. Improved Error Handling and Stability
+
+Before: While the return value of the subprocess call was checked, failures of the shell itself (e.g., permission errors or blocked paths) were often only logged in a rudimentary way.
+
+After: By integrating `try...except` OSError blocks, file access errors are now caught and handled in Python, instead of leaving the script in an undefined state or allowing uncontrolled error output from the shell.
+
+4. Avoidance of Path Traversal (Indirectly)
+
+Improvement: Since `pathlib` explicitly manages the path as an object, the script is now stricter in path validation. If you add further functions in the future that retrieve filenames from an API (such as apple_db), the pathlib structure provides a better basis for sanitizing paths (e.g., using Path(filename).name), thus preventing malicious path specifications such as ../../etc/passwd from being accepted as filenames.
+
+Diese Version:
+- verzichtet auf a/prea-Builds, da der Updater diese als spezielle Versionen behandelt. Dies stellt eine gravierende Sicherheitslücke dar, die dazu führt, dass Nutzer anfällige Versionen auf ihren Rechnern behalten.
+- behebt die folgende Sicherheitslücken:
+Durch die Umstellung von externen Shell-Aufrufen auf die nativen Funktionen der Python-Standardbibliothek (pathlib) wurden primär potenzielle Angriffsvektoren beseitigt, die zwar in einem kontrollierten Umfeld selten ausgenutzt werden, aber dennoch als "Best Practice"-Sicherheitsrisiken gelten.
+
+Hier sind die spezifischen Verbesserungen:
+
+1. Eliminierung von "Command Injection"-Risiken
+Vorher: Der Aufruf von /bin/mv oder /bin/rm über subprocess.run ist zwar bei korrekter Listen-Übergabe sicher gegen direkte Injection, bleibt aber dennoch ein Aufruf einer externen Binärdatei. Wenn das Skript in einem unsicheren Kontext (z.B. mit variablen Eingaben für Pfade) erweitert würde, könnten Sonderzeichen in Dateinamen die Shell-Umgebung manipulieren.
+
+Nachher: Durch die Verwendung von pathlib.Path.unlink() und pathlib.Path.replace() findet kein Prozessaufruf mehr statt. Die Dateisystem-Operation erfolgt innerhalb des Python-Interpreters direkt über Betriebssystem-APIs. Dies entkoppelt das Skript vollständig von der Shell-Interpretation.
+
+2. Schutz vor "Race Conditions" bei Dateipfaden
+Vorher: Beim Aufruf von /bin/mv oder /bin/rm muss das System den Pfad an die Shell übergeben, diese muss die Binärdatei finden, ausführen und den Pfad auflösen. Ein Angreifer mit Zugriff auf das Dateisystem könnte theoretisch versuchen, die Datei zwischen dem Aufruf und der Ausführung des Befehls durch einen symbolischen Link zu ersetzen (Symlink-Race).
+
+Nachher: Da pathlib die Pfade atomarer bzw. direkt auf Betriebssystem-Ebene verarbeitet, ist das Zeitfenster für solche Manipulationen deutlich verringert. Zudem verhindert unlink(missing_ok=True) Fehler bei nicht existierenden Dateien ohne den Umweg über Shell-Fehlermeldungen.
+
+3. Verbesserte Fehlerbehandlung und Stabilität
+Vorher: Der Rückgabewert des subprocess-Aufrufs wurde zwar geprüft, aber ein Fehlschlag der Shell selbst (z.B. Berechtigungsfehler oder blockierte Pfade) wurde oft nur rudimentär protokolliert.
+
+Nachher: Durch die Integration in try...except OSError-Blöcke werden Fehler bei Dateizugriffen nun abgefangen und in Python behandelt, anstatt das Skript in einen undefinierten Zustand zu versetzen oder unkontrollierte Fehlerausgaben der Shell zuzulassen.
+
+4. Vermeidung von "Path Traversal" (Indirekt)
+Verbesserung: Da pathlib den Pfad explizit als Objekt verwaltet, ist das Skript nun strikter bei der Pfadvalidierung. Wenn Sie zukünftig weitere Funktionen hinzufügen, die Dateinamen von einer API beziehen (wie apple_db), bietet die pathlib-Struktur eine bessere Basis, um Pfade zu "sanitizen" (z.B. durch Path(dateiname).name), wodurch verhindert wird, dass bösartige Pfad-Spezifikationen wie ../../etc/passwd als Dateiname akzeptiert werden.
+
 ## 4.0.0 Voralpha 5 für alpha 16 / 4.0.0 pre-alpha 5 for alpha 16:
 This release:
 
