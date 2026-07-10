@@ -113,11 +113,13 @@ class UpdateFrame(wx.Frame):
         download_obj = network_handler.DownloadObject(self.url, self.constants.payload_path / file_name)
 
         # --- Phase 1: Download ---
-        thread = threading.Thread(target=download_obj.download)
-        thread.start()
-        gui_support.wait_for_thread(thread)
-
-        if not getattr(download_obj, 'download_complete', False):
+        try:
+            logging.info("Aktualisierung wird heruntergeladen")
+            ogging.info("Downloading update")
+            thread = threading.Thread(target=download_obj.download)
+            thread.start()
+            gui_support.wait_for_thread(thread)
+        except Exception as e:
             logging.error("Es hat fehlgeschlagen, das Update herunterzuladen.")
             logging.error("It failed to download the update")
             logging.exception("Stack Trace:")
@@ -125,22 +127,49 @@ class UpdateFrame(wx.Frame):
             wx.CallAfter(self._handle_fatal_failure, fallback_text, "Critical Error!")
             return
 
+        if not getattr(download_obj, 'download_complete', False):
+            logging.error("Es hat fehlgeschlagen, das Update herunterzuladen.")
+            logging.error("It failed to download the update")
+            fallback_text = "Failed to download update. If you continue to have this issue, please manually download the update."
+            wx.CallAfter(self._handle_fatal_failure, fallback_text, "Critical Error!")
+            return
+
         # --- Phase 2: Extraction ---
-        wx.CallAfter(self._update_status_label, "Extracting update...")
-        
-        thread = threading.Thread(target=self._extract_update)
-        thread.start()
-        gui_support.wait_for_thread(thread)
+        try:
+            logging.info("Aktualisierung extrahieren")
+            logging.info("Extract update")
+            wx.CallAfter(self._update_status_label, "Extracting update...")
+            
+            thread = threading.Thread(target=self._extract_update)
+            thread.start()
+            gui_support.wait_for_thread(thread)
+        except Exception as e:
+            logging.error("Es hat fehlgeschlagen, das Update zu extrahieren, also kann auch nicht installiert sein.")
+            logging.error("It failed to extract the update, so it can't be installed.")
+            logging.exception("Stack Trace:")
+            fallback_text = "Failed to extract the update. If you continue to have this issue, please manually download the update."
+            wx.CallAfter(self._handle_fatal_failure, fallback_text, "Critical Error!")
+            return
 
         # --- Phase 3: Installation ---
-        wx.CallAfter(self._update_status_label, "Installing update...")
-
-        thread = threading.Thread(target=self._install_update)
-        thread.start()
-        gui_support.wait_for_thread(thread)
-
-        # --- Phase 4: Verification & Wrap-up ---
-        wx.CallAfter(self._finalize_ui_and_start_countdown)
+        try:
+            logging.info("Aktualisierung durchführen")
+            logging.info("Updating")
+            wx.CallAfter(self._update_status_label, "Installing update...")
+    
+            thread = threading.Thread(target=self._install_update)
+            thread.start()
+            gui_support.wait_for_thread(thread)
+    
+            # --- Phase 4: Verification & Wrap-up ---
+            wx.CallAfter(self._finalize_ui_and_start_countdown)
+        except Exception as e:
+            logging.error("Es hat fehlgeschlagen, das Update zu extrahieren, also kann auch nicht installiert sein.")
+            logging.error("It failed to extract the update, so it can't be installed.")
+            logging.exception("Stack Trace:")
+            fallback_text = "Failed to install the update. If you continue to have this issue, please manually download the update."
+            wx.CallAfter(self._handle_fatal_failure, fallback_text, "Critical Error!")
+            return
 
     # =========================================================================
     # ATOMIC MAIN-THREAD UI MUTATORS (Prevents race conditions / split events)
@@ -230,6 +259,7 @@ class UpdateFrame(wx.Frame):
             sys.exit(1)
 
     def _install_update(self) -> None:
+        logging.info(f"Update wird installiert: {self.pkg_download_path}")
         logging.info(f"Installing update: {self.pkg_download_path}")
         result = subprocess_wrapper.run_as_root(["/usr/sbin/installer", "-pkg", str(self.pkg_download_path), "-target", "/"], capture_output=True)
         
@@ -237,13 +267,15 @@ class UpdateFrame(wx.Frame):
             stderr_output = result.stderr.decode("utf-8")
             
             if "User cancelled" in stderr_output:
+                logging.info("Update von Benutzer abgebrochen")
                 logging.info("User cancelled update")
                 wx.CallAfter(self._handle_fatal_failure, "User cancelled update", "Update Cancelled", is_cancelled=True)
             else:
+                logging.critical("Den App hat fehlgeschalgen, per das Builtin-Update-Instrument zu aktualisieren.")
                 logging.critical("The app failed to update via the builtin updater.")
                 subprocess_wrapper.log(result)
-
-                logging.error("Failed to install update via the builtin updater, switching to in-place upgrade instead...")
+                logging.error("Auf In-Place-Upgrade wechseln...")
+                logging.error("Switching to in-place upgrade instead...")
                 subprocess.run(["/usr/bin/open", str(self.pkg_download_path)])
                 
                 support_url = getattr(self.constants, 'support_url', 'the official repository')
@@ -254,8 +286,10 @@ class UpdateFrame(wx.Frame):
 
     def _launch_update(self) -> None:
         try:
+            logging.info("Aktualisierung beginnen: '/Library/Application Support/Dortania/OpenCore-Patcher.app'")
             logging.info("Launching update: '/Library/Application Support/Dortania/OpenCore-Patcher.app'")
             subprocess.Popen(["/Library/Application Support/Dortania/OpenCore-Patcher.app/Contents/MacOS/OpenCore-Patcher", "--update_installed"])
         except Exception as e:
+            logging.error("Das Starten des Aktualisierung durch den Builtin-Update-Instrument hat fehlgeschlagen.")
             logging.error("Launching the update via the builtin updater failed.")
             logging.exception("Stack Trace:")
