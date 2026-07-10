@@ -125,9 +125,7 @@ class UpdateFrame(wx.Frame):
         try:
             logging.info("Aktualisierung wird heruntergeladen")
             logging.info("Downloading update")
-            thread = threading.Thread(target=download_obj.download)
-            thread.start()
-            gui_support.wait_for_thread(thread)
+            download_obj.download(display_progress=True, spawn_thread=False)
         except Exception as e:
             logging.error("Es hat fehlgeschlagen, das Update herunterzuladen.")
             logging.error("It failed to download the update")
@@ -250,10 +248,12 @@ class UpdateFrame(wx.Frame):
     # =========================================================================
 
     def _extract_update(self) -> None:
+        logging.info("Extrahierungs-Thread gestartet...")
+        logging.debug("Extraction thread started...")
         if not self.url.endswith(".zip"):
             return
-
-        logging.info("Extracting nightly update")
+        logging.info("Aktualisierung extrahieren")
+        logging.info("Extracting update")
         if Path(self.pkg_download_path).exists():
             subprocess.run(["/bin/rm", "-rf", str(self.pkg_download_path)])
 
