@@ -59,23 +59,31 @@ class NetworkUtilities:
 
 class DownloadObject:
     def __init__(self, url: str, path: str, checksum_algo: Optional[hashlib._Hash] = None) -> None:
-        self.url = url
-        self.status = DownloadStatus.INACTIVE
-        self.error_msg = ""
-        self.filename = self._get_filename()
-        self.filepath = Path(path)
-        self.total_file_size = 0.0
-        self.downloaded_file_size = 0.0
-        self.start_time = time.time()
-        self.error = False
-        self.should_stop = False
-        self.download_complete = False
-        self.has_network = NetworkUtilities(self.url).verify_network_connection()
-        self._checksum_storage = checksum_algo
-        self.checksum = None
-        if self.has_network:
-            self._populate_file_size()
+        try:
+            self.url = url
+            self.status = DownloadStatus.INACTIVE
+            self.error_msg = ""
+            self.filename = self._get_filename()
+            self.filepath = Path(path)
+            self.total_file_size = 0.0
+            self.downloaded_file_size = 0.0
+            self.start_time = time.time()
+            self.error = False
+            self.should_stop = False
+            self.download_complete = False
+            self.has_network = NetworkUtilities(self.url).verify_network_connection()
+            self._checksum_storage = checksum_algo
+            self.checksum = None
+            if self.has_network:
+                self._populate_file_size()
+        except Exception as e:
+            logging.error("Wir haben einen Problem, einige Aktualisierungsparametern zu setzen")
+            logging.error("We have an issue to set some update parameters")
+            logging.exception("Stack Trace:")
+            logging.info("Bitte suchen Sie manuell nach Updates.")
+            logging.info("Please check for updates manually.")
 
+    
     # --- RESTORED DIAGNOSTIC/HELPER METHODS ---
     def _get_filename(self) -> str:
         """
