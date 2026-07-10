@@ -1,4 +1,3 @@
-s
 Copyright (c) 2020-2025 Dhinak G, Mykola Grymalyuk, and individual contributors.
 
 All rights reserved.
