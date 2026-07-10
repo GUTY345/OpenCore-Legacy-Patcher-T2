@@ -259,11 +259,17 @@ class Constants:
         Special builds are used for testing. They do not get updates through the updater
         """
 
-        # Check for your custom 's' suffix indicator
-        if self.patcher_version.endswith("s"):
-            return True
-        else:
+        try:
+            logging.info("Suchen ob die Version speziell ist")
+            logging.info("Checking if the version is special")
+            version.parse(self.patcher_version)
             return False
+        except version.InvalidVersion:
+            logging.info("Wir haben bestätigt, dass es sich um eine spezielle Version handelt.")
+            logging.info("Sie werden keine automatische Updates erhalten.")
+            logging.info("We have confirmed that this is a special version")
+            logging.info("You won't receive automatic updates.")
+            return True
 
     # Payload Location
 
