@@ -418,7 +418,7 @@ class BuildMiscellaneous:
             if len(find_bytes) != len(replace_bytes):
                 logging.error(f"LÄNGENFEHLER in '{patch_dict.get('Comment')}': "
                               f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
-                 logging.error(f"LENGTH ISSUE in '{patch_dict.get('Comment')}': "
+                logging.error(f"LENGTH ISSUE in '{patch_dict.get('Comment')}': "
                               f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
                 sys.exit(3)
                 return False
