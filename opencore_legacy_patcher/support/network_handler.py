@@ -58,7 +58,7 @@ class NetworkUtilities:
             return requests.Response()
 
 class DownloadObject:
-    def __init__(self, url: str, path: str, checksum_algo: Optional[hashlib._Hash] = None) -> None:
+    def __init__(self, url: str, path: str, checksum_algo: Optional["hashlib._Hash"] = None) -> None:
         try:
             self.url = url
             self.status = DownloadStatus.INACTIVE
