@@ -115,7 +115,7 @@ class UpdateFrame(wx.Frame):
         # --- Phase 1: Download ---
         try:
             logging.info("Aktualisierung wird heruntergeladen")
-            ogging.info("Downloading update")
+            logging.info("Downloading update")
             thread = threading.Thread(target=download_obj.download)
             thread.start()
             gui_support.wait_for_thread(thread)
