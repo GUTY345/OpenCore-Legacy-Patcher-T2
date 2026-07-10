@@ -1,4 +1,22 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.12021 - alpha 15.5.1
+This release fixes update reliability issues.
+Diese Version behebt Probleme mit der Zuverlässigkeit von Updates.
+If you are using alpha 15.5.0 or earlier, you should download it manually.
+Falls Sie Alpha 15.5.0 oder älter verwenden, Sie sollen manuell herunterladen.
+Those who are using pre-alphas, they only get alpha updates, or in very certain cases, RCs or late pre-alpha versions.
+Wer Vorab-Alphas nutzt, erhält nur Alpha-Updates oder in sehr bestimmten Fällen RCs oder späte Vorab-Alpha-Versionen.
+
+## 4.0.0.12020 - alpha 15.5:
+This version:
+
+swtiches away from a/prea builds as the updater treats those as special versions and that's a huge vulnerability that makes people leave with vulnerable versions on their machines.
+There may be bugs regarding injecting kexts, however I can't delay the update as it's critical.
+Diese Version:
+
+verzichtet auf a/prea-Builds, da der Updater diese als spezielle Versionen behandelt. Dies stellt eine gravierende Sicherheitslücke dar, die dazu führt, dass Nutzer anfällige Versionen auf ihren Rechnern behalten.
+Es können Fehler beim Injizieren von Kexts auftreten, ich kann das Update jedoch nicht verzögern, da es kritisch ist.
+
 ## 4.0.0 alpha 15.4.3:
 Diese Version behebt einen Fehler, bei dem die Funktion, die die Byte-Länge prüfen sollte, dies nicht tat. Der fehlerhafte Code lautete wie folgt:
 
