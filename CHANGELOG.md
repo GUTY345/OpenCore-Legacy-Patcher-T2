@@ -55,6 +55,29 @@ Nachher: Durch die Integration in try...except OSError-Blöcke werden Fehler bei
 4. Vermeidung von "Path Traversal" (Indirekt)
 Verbesserung: Da pathlib den Pfad explizit als Objekt verwaltet, ist das Skript nun strikter bei der Pfadvalidierung. Wenn Sie zukünftig weitere Funktionen hinzufügen, die Dateinamen von einer API beziehen (wie apple_db), bietet die pathlib-Struktur eine bessere Basis, um Pfade zu "sanitizen" (z.B. durch Path(dateiname).name), wodurch verhindert wird, dass bösartige Pfad-Spezifikationen wie ../../etc/passwd als Dateiname akzeptiert werden.
 
+## 4.0.0.12022 - alpha 15.5.2: (outside the development branch)
+updates BlueToolFixup, NVMeFix, CPUFriend and AirportBrcmFixup to their latest versions to ensure stability, security and macOS 26 Tahoe compatability. This includes fixes that affect non-T2 Macs primarily, but also, T2 Macs.
+BlueToolFixup, NVMeFix, CPUFriend und AirportBrcmFixup werden auf die neuesten Versionen aktualisiert, um Stabilität, Sicherheit und Kompatibilität mit macOS 26 Tahoe zu gewährleisten. Dies umfasst Fehlerbehebungen, die sich hauptsächlich auf Nicht-T2-Macs, aber auch auf T2-Macs auswirken.
+
+## 4.0.0.12021 - alpha 15.5.1 (outside the development branch)
+This release fixes update reliability issues.
+Diese Version behebt Probleme mit der Zuverlässigkeit von Updates.
+If you are using alpha 15.5.0 or earlier, you should download it manually.
+Falls Sie Alpha 15.5.0 oder älter verwenden, Sie sollen manuell herunterladen.
+Those who are using pre-alphas, they only get alpha updates, or in very certain cases, RCs or late pre-alpha versions.
+Wer Vorab-Alphas nutzt, erhält nur Alpha-Updates oder in sehr bestimmten Fällen RCs oder späte Vorab-Alpha-Versionen.
+
+## 4.0.0.12020 - alpha 15.5: (outside the development branch)
+This version:
+
+swtiches away from a/prea builds as the updater treats those as special versions and that's a huge vulnerability that makes people leave with vulnerable versions on their machines.
+There may be bugs regarding injecting kexts, however I can't delay the update as it's critical.
+Diese Version:
+
+verzichtet auf a/prea-Builds, da der Updater diese als spezielle Versionen behandelt. Dies stellt eine gravierende Sicherheitslücke dar, die dazu führt, dass Nutzer anfällige Versionen auf ihren Rechnern behalten.
+Es können Fehler beim Injizieren von Kexts auftreten, ich kann das Update jedoch nicht verzögern, da es kritisch ist.
+
+
 ## 4.0.0 Voralpha 5 für alpha 16 / 4.0.0 pre-alpha 5 for alpha 16:
 This release:
 
