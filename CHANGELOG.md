@@ -1,4 +1,8 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0 Voralpha 6.1 für Alpha 16 / 4.0.0 pre-alpha 6 for alpha 16:
+This release fixes a bug where it offers to downgrade to the alpha release.
+Diese Version behebt einen Fehler, indem es anbietet, auf Alpha-Version downzugraden.
+
 ## 4.0.0 Voralpha 6 für alpha 16 / 4.0.0 pre-alpha 6 for alpha 16:
 This release:
 - swtiches away from a/prea builds as the updater treats those as special versions and that's a huge vulnerability that makes people leave with vulnerable versions on their machines. 
