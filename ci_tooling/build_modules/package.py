@@ -37,6 +37,7 @@ class GeneratePackage:
         _welcome = ""
         _welcome += "# Overview\n"
         _welcome += f"This package will install the OpenCore Legacy Patcher T2 application (v{constants.Constants().patcher_version}) on your system."
+        _welcome += "\n\nOpenCore Legacy Patcher T2 will be installed in /Library/Application Support/Dortania."
         _welcome += "\n\nAdditionally, a shortcut for OpenCore Legacy Patcher T2 will be added in the '/Applications' folder."
         _welcome += "\n\nThis package will not 'Build and Install OpenCore' or install any 'Root Patches' on your machine. If required, you can run OpenCore Legacy Patcher T2 to install any patches you may need."
         _welcome += f"\n\nFor more information on OpenCore Legacy Patcher T2 usage, see our [documentation]({constants.Constants().guide_link}) and [GitHub repository]({constants.Constants().repo_link})."
@@ -98,7 +99,7 @@ class GeneratePackage:
                 pkg_background="./ci_tooling/pkg_assets/PkgBackground-Uninstaller.png",
                 pkg_preinstall_script=tmp_uninstall_path,
                 pkg_as_distribution=True,
-                pkg_title="OpenCore Legacy Patcher T2 Uninstaller",
+                pkg_title="OpenCore Legacy Patcher T2",
                 pkg_welcome=self._generate_uninstaller_welcome(),
             ).build() is True
         finally:
@@ -131,7 +132,7 @@ class GeneratePackage:
                 pkg_preinstall_script=tmp_pre_path,
                 pkg_postinstall_script=tmp_post_path,
                 pkg_file_structure=self._files,
-                pkg_title="OpenCore Legacy Patcher T2 installer",
+                pkg_title="OpenCore Legacy Patcher T2",
                 pkg_welcome=self._generate_installer_welcome(),
             ).build() is True
         finally:
