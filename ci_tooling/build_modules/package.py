@@ -72,11 +72,11 @@ class GeneratePackage:
         Generate Welcome message for AutoPkg-Assets PKG
         """
         _welcome = ""
-        _welcome += "IMPORTANT: Please download only the OpenCore-Patcher.pkg or OpenCore-Patcher-Uninstaller.pkg from the GitHub Repository here: ({constants.Constants().repo_link}).\n\n"
+       _welcome += f"\033[1mIMPORTANT: Please download only the OpenCore-Patcher.pkg or OpenCore-Patcher-Uninstaller.pkg from the GitHub Repository here: ({constants.Constants().repo_link}).\033[0m\n\n"
         _welcome += "This installer isn't meant to be run by any user, it is meant only to be run from the patcher itself automatically\n\n"
         _welcome += "Attempting to run this installer manually will result in bricking the operating system, requiring to reinstall macOS completely afterwards.\n\n"
         _welcome += "To avoid this, please close the installer by pressing command + Q.\n\n"
-        _welcome += "Then go to ({constants.Constants().repo_link}) and download the appropriate installer from GitHub.\n\n"
+        _welcome += f"Then go to ({constants.Constants().repo_link}) and download the appropriate installer from GitHub.\n\n"
         _welcome += f"[OpenCore Legacy Patcher T2 GitHub Release]({constants.Constants().repo_link})"
 
         return _welcome
