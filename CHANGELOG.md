@@ -4,6 +4,10 @@ This release fixes a bug where it offers to downgrade to the alpha release.
 
 Diese Version behebt einen Fehler, indem es anbietet, auf Alpha-Version downzugraden.
 
+## 4.0.0.12023 - alpha 15.5.3: (outside the development branch)
+This release fixes a bug where on T2 Macs it skips injecting critical patches that have different Find and Replace byte lenghts by simply stopping the process in case this happens.
+Diese Version behebt einen Fehler, der dazu führt, dass auf T2 Macs das Einfügen kritischer Patches mit unterschiedlichen Find- und Replace-Bytelängen übersprungen wird, indem der Prozess in diesem Fall einfach gestoppt wird.
+
 ## 4.0.0 Voralpha 6 für alpha 16 / 4.0.0 pre-alpha 6 for alpha 16:
 This release:
 - swtiches away from a/prea builds as the updater treats those as special versions and that's a huge vulnerability that makes people leave with vulnerable versions on their machines. 
