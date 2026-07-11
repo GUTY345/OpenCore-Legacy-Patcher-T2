@@ -4,6 +4,33 @@ This release fixes a bug where it offers to downgrade to the alpha release.
 
 Diese Version behebt einen Fehler, indem es anbietet, auf Alpha-Version downzugraden.
 
+## 4.0.0 Voralpha 6.2 für Alpha 16 / 4.0.0 pre-alpha 6.2 for alpha 16:
+This release fixes a vulnerability where an attacker may force skipping critical patches on T2 Macs by simply deleting the sys.exit(3) after the logging.error if the length of the bytes between Find and Replace differs to return False to skip:
+Diese Version behebt eine Sicherheitslücke, durch die ein Angreifer kritische Patches auf T2-Macs überspringen kann, indem er einfach das sys.exit(3) nach logging.error löscht, falls die Länge der Bytes zwischen Suchen und Ersetzen unterschiedlich ist, um False zurückzugeben und so das Überspringen zu erzwingen.
+''' def _validate_patch(self, patch_dict):
+        try:
+            find_bytes = patch_dict.get("Find")
+            replace_bytes = patch_dict.get("Replace")
+            
+            # Längenvergleich
+            if len(find_bytes) != len(replace_bytes):
+                logging.error(f"LÄNGENFEHLER in '{patch_dict.get('Comment')}': "
+                              f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
+                logging.error(f"LENGTH ISSUE in '{patch_dict.get('Comment')}': "
+                              f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
+                return False
+                sys.exit(3)
+            return True
+        except Exception as e:
+            logging.error("Wir haben einen Problem, die Bytes-Länge zu vergleichen")
+            logging.error("We have an issue to compare the bytes length.")
+            sys.exit(3)
+            return False # this is the vulnerability / das ist die Sicherheitslücke
+Impact: the attackers can abuse this vulnerability to cause the computer to kernel panic.
+Auswirkungen: Angreifer können diese Sicherheitslücke ausnutzen, um einen Kernel-Panic des Computers zu verursachen.
+Außerdem, es gibt keinen Sinn, nach sys.exit(3), return False auszuführen - und doch, es ist eine gefährliche Sicherheitslücke.
+Furthermore, there is no point in executing `return False` after `sys.exit(3)` - and it is a dangerous vulnerability.
+
 ## 4.0.0.12023 - alpha 15.5.3: (outside the development branch)
 This release fixes a bug where on T2 Macs it skips injecting critical patches that have different Find and Replace byte lenghts by simply stopping the process in case this happens.
 Diese Version behebt einen Fehler, der dazu führt, dass auf T2 Macs das Einfügen kritischer Patches mit unterschiedlichen Find- und Replace-Bytelängen übersprungen wird, indem der Prozess in diesem Fall einfach gestoppt wird.
