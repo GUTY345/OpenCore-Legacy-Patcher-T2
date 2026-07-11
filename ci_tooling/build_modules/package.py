@@ -58,6 +58,8 @@ class GeneratePackage:
         _welcome += "# Application Uninstaller\n"
         _welcome += "This package will uninstall the OpenCore Legacy Patcher T2 application and its Privileged Helper Tool from your system."
         _welcome += "\n\n"
+        _welcome += "This package will also remove the shortcut from /Applications that created when installing the app."
+        _welcome += "\n\n"
         _welcome += "This will not remove any root patches or OpenCore configurations that you may have installed using OpenCore Legacy Patcher T2."
         _welcome += "\n\n"
         _welcome += f"For more information on OpenCore Legacy Patcher T2, see our [documentation]({constants.Constants().guide_link}) and [GitHub repository]({constants.Constants().repo_link})."
@@ -70,9 +72,11 @@ class GeneratePackage:
         Generate Welcome message for AutoPkg-Assets PKG
         """
         _welcome = ""
-        _welcome += "# DO NOT RUN AUTOPKG-ASSETS MANUALLY!\n\n"
-        _welcome += "## THIS CAN BREAK YOUR SYSTEM'S INSTALL!\n\n"
-        _welcome += "This package should only ever be invoked by the Patcher itself, never downloaded or run by the user. Download the OpenCore-Patcher.pkg on the Github Repository.\n\n"
+        _welcome += "IMPORTANT: Please download only the OpenCore-Patcher.pkg or OpenCore-Patcher-Uninstaller.pkg from the GitHub Repository here: ({constants.Constants().repo_link}).\n\n"
+        _welcome += "This installer isn't meant to be run by any user, it is meant only to be run from the patcher itself automatically\n\n"
+        _welcome += "Attempting to run this installer manually will result in bricking the operating system, requiring to reinstall macOS completely afterwards.\n\n"
+        _welcome += "To avoid this, please close the installer by pressing command + Q.\n\n"
+         _welcome += "Then go to ({constants.Constants().repo_link}) and download the appropriate installer from GitHub.\n\n"
         _welcome += f"[OpenCore Legacy Patcher T2 GitHub Release]({constants.Constants().repo_link})"
 
         return _welcome
