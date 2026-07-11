@@ -83,6 +83,7 @@ class GenerateApplication:
         Embed analytics key safely into the script
         """
         if not all([self._analytics_key, self._analytics_endpoint]):
+            print("Analyseschlüssel oder Endpunkt nicht angegeben, Einbettung wird übersprungen")
             print("Analytics key or endpoint not provided, skipping embedding")
             return
 
@@ -110,6 +111,7 @@ class GenerateApplication:
 
         print("Patching LC_VERSION_MIN_MACOSX")
         if not _file.exists():
+            raise FileNotFoundError(f"Zieldatei zum Patchen nicht gefunden: {_file}")
             raise FileNotFoundError(f"Target binary not found for patching: {_file}")
 
         with open(_file, "rb") as f:
@@ -132,6 +134,7 @@ class GenerateApplication:
 
         print("Patching LC_BUILD_VERSION")
         if not _file.exists():
+            raise FileNotFoundError(f"TZieldatei zum Patchen nicht gefunden: {_file}")
             raise FileNotFoundError(f"Target binary not found for patching: {_file}")
 
         with open(_file, "rb") as f:
@@ -155,6 +158,7 @@ class GenerateApplication:
 
         print("Embedding git data")
         if not _file.exists():
+            raise FileNotFoundError(f"Info.plist nicht gefunden: {_file}")
             raise FileNotFoundError(f"Info.plist not found: {_file}")
 
         with open(_file, "rb") as f:
@@ -209,4 +213,5 @@ class GenerateApplication:
         self._embed_git_data()
         self._embed_resources()
         
+        print("Build-Generierung abgeschlossen.")
         print("Build generation complete.")
