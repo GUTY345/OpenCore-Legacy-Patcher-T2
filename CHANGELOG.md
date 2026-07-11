@@ -1,10 +1,12 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
 ## 4.0.0 Voralpha 6.4 für Alpha 16 / 4.0.0 pre-alpha 6.4 for alpha 16:
 This release fixes formatting issues in AutoPkg-Assets.pkg
+
 Diese Version behebt Probleme mit den Formattierung in AutoPkg-Assets.pkg.
 
 ## 4.0.0 Voralpha 6.3 für Alpha 16 / 4.0.0 pre-alpha 6.3 for alpha 16:
 This release improves user experience and transparency inside the installer. For example, prior to this release, it said it will install OpenCore Legacy Patcher instead of OpenCore Legacy Patcher T2. 
+
 Diese Version verbessert die Benutzerfreundlichkeit und Transparenz des Installationsprogramms. Beispielsweise wurde vor dieser Version angezeigt, dass OpenCore Legacy Patcher anstelle von OpenCore Legacy Patcher T2 installiert wird.
 
 ## 4.0.0 Voralpha 6.2 für Alpha 16 / 4.0.0 pre-alpha 6.2 for alpha 16:
