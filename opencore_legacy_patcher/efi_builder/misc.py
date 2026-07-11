@@ -420,8 +420,8 @@ class BuildMiscellaneous:
                               f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
                 logging.error(f"LENGTH ISSUE in '{patch_dict.get('Comment')}': "
                               f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
-                sys.exit(3)
                 return False
+                sys.exit(3)
             return True
         except Exception as e:
             logging.error("Wir haben einen Problem, die Bytes-Länge zu vergleichen")
