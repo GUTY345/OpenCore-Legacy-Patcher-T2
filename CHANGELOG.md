@@ -1,9 +1,4 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
-## 4.0.0 Voralpha 6.1 für Alpha 16 / 4.0.0 pre-alpha 6 for alpha 16:
-This release fixes a bug where it offers to downgrade to the alpha release.
-
-Diese Version behebt einen Fehler, indem es anbietet, auf Alpha-Version downzugraden.
-
 ## 4.0.0 Voralpha 6.2 für Alpha 16 / 4.0.0 pre-alpha 6.2 for alpha 16:
 This release fixes a vulnerability where an attacker may force skipping critical patches on T2 Macs by simply deleting the sys.exit(3) after the logging.error if the length of the bytes between Find and Replace differs to return False to skip:
 Diese Version behebt eine Sicherheitslücke, durch die ein Angreifer kritische Patches auf T2-Macs überspringen kann, indem er einfach das sys.exit(3) nach logging.error löscht, falls die Länge der Bytes zwischen Suchen und Ersetzen unterschiedlich ist, um False zurückzugeben und so das Überspringen zu erzwingen.
@@ -34,6 +29,11 @@ Furthermore, there is no point in executing `return False` after `sys.exit(3)` -
 ## 4.0.0.12023 - alpha 15.5.3: (outside the development branch)
 This release fixes a bug where on T2 Macs it skips injecting critical patches that have different Find and Replace byte lenghts by simply stopping the process in case this happens.
 Diese Version behebt einen Fehler, der dazu führt, dass auf T2 Macs das Einfügen kritischer Patches mit unterschiedlichen Find- und Replace-Bytelängen übersprungen wird, indem der Prozess in diesem Fall einfach gestoppt wird.
+
+## 4.0.0 Voralpha 6.1 für Alpha 16 / 4.0.0 pre-alpha 6 for alpha 16:
+This release fixes a bug where it offers to downgrade to the alpha release.
+
+Diese Version behebt einen Fehler, indem es anbietet, auf Alpha-Version downzugraden.
 
 ## 4.0.0 Voralpha 6 für alpha 16 / 4.0.0 pre-alpha 6 for alpha 16:
 This release:
