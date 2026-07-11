@@ -39,7 +39,7 @@ class GeneratePackage:
         _welcome += f"This package will install the OpenCore Legacy Patcher T2 application (v{constants.Constants().patcher_version}) on your system."
         _welcome += "\n\nAdditionally, a shortcut for OpenCore Legacy Patcher T2 will be added in the '/Applications' folder."
         _welcome += "\n\nThis package will not 'Build and Install OpenCore' or install any 'Root Patches' on your machine. If required, you can run OpenCore Legacy Patcher T2 to install any patches you may need."
-        _welcome += f"\n\nFor more information on OpenCore Legacy Patcher usage, see our [documentation]({constants.Constants().guide_link}) and [GitHub repository]({constants.Constants().repo_link})."
+        _welcome += f"\n\nFor more information on OpenCore Legacy Patcher T2 usage, see our [documentation]({constants.Constants().guide_link}) and [GitHub repository]({constants.Constants().repo_link})."
         _welcome += "\n\n"
         _welcome += "## Files Installed"
         _welcome += "\n\nInstallation of this package will add the following files to your system:"
