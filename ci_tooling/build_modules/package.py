@@ -99,7 +99,7 @@ class GeneratePackage:
                 pkg_background="./ci_tooling/pkg_assets/PkgBackground-Uninstaller.png",
                 pkg_preinstall_script=tmp_uninstall_path,
                 pkg_as_distribution=True,
-                pkg_title="OpenCore Legacy Patcher T2",
+                pkg_title="Uninstall OpenCore Legacy Patcher T2",
                 pkg_welcome=self._generate_uninstaller_welcome(),
             ).build() is True
         finally:
