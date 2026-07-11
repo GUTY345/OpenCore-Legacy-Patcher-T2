@@ -22,6 +22,7 @@ def _validate_patch(self, patch_dict):
             logging.error("We have an issue to compare the bytes length.")
             sys.exit(3)
             return False # this is the vulnerability / das ist die Sicherheitslücke
+'''
 Impact: the attackers can abuse this vulnerability to cause the computer to kernel panic.
 Auswirkungen: Angreifer können diese Sicherheitslücke ausnutzen, um einen Kernel-Panic des Computers zu verursachen.
 Außerdem, es gibt keinen Sinn, nach sys.exit(3), return False auszuführen - und doch, es ist eine gefährliche Sicherheitslücke.
