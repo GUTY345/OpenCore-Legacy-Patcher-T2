@@ -1,4 +1,8 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0 Voralpha 6.3 für Alpha 16 / 4.0.0 pre-alpha 6.3 for alpha 16:
+This release improves user experience and transparency inside the installer. For example, prior to this release, it said it will install OpenCore Legacy Patcher instead of OpenCore Legacy Patcher T2. 
+Diese Version verbessert die Benutzerfreundlichkeit und Transparenz des Installationsprogramms. Beispielsweise wurde vor dieser Version angezeigt, dass OpenCore Legacy Patcher anstelle von OpenCore Legacy Patcher T2 installiert wird.
+
 ## 4.0.0 Voralpha 6.2 für Alpha 16 / 4.0.0 pre-alpha 6.2 for alpha 16:
 This release fixes a vulnerability where an attacker may force skipping critical patches on T2 Macs by simply deleting the sys.exit(3) after the logging.error if the length of the bytes between Find and Replace differs to return False to skip:
 Diese Version behebt eine Sicherheitslücke, durch die ein Angreifer kritische Patches auf T2-Macs überspringen kann, indem er einfach das sys.exit(3) nach logging.error löscht, falls die Länge der Bytes zwischen Suchen und Ersetzen unterschiedlich ist, um False zurückzugeben und so das Überspringen zu erzwingen.
