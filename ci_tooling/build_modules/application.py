@@ -134,7 +134,7 @@ class GenerateApplication:
 
         print("Patching LC_BUILD_VERSION")
         if not _file.exists():
-            raise FileNotFoundError(f"TZieldatei zum Patchen nicht gefunden: {_file}")
+            raise FileNotFoundError(f"Zieldatei zum Patchen nicht gefunden: {_file}")
             raise FileNotFoundError(f"Target binary not found for patching: {_file}")
 
         with open(_file, "rb") as f:
