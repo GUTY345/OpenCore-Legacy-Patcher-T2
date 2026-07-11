@@ -36,6 +36,7 @@ class GenerateDiskImages:
 
         whitelist_files = set()
 
+        print("Extra Binärdateien löschen...")
         print("Deleting extra binaries...")
         payloads_dir = Path("payloads")
         
@@ -47,6 +48,7 @@ class GenerateDiskImages:
             if file.is_dir():
                 if file.name in whitelist_folders:
                     continue
+                print(f"- Verzeichnis löschen: {file.name}")
                 print(f"- Deleting directory: {file.name}")
                 shutil.rmtree(file)  # Safe, native recursive deletion
             else:
@@ -71,6 +73,7 @@ class GenerateDiskImages:
             print("- Removing old payloads.dmg")
             dmg_path.unlink(missing_ok=True)
 
+        print("DMG generieren...")
         print("Generating DMG...")
         
         # Hardcoded password tokenized cleanly without shell risk
@@ -114,9 +117,11 @@ class GenerateDiskImages:
                     else:
                         target_path.unlink()
                 else:
+                    print(f"- {resource_path} existiert bereits, Herunterladen wird übersprungen")
                     print(f"- {resource_path} already exists, skipping download")
                     continue
 
+            print(f"- Herunterladen von {resource_path}...")
             print(f"- Downloading {resource_path}...")
 
             # Clean URL building, strictly mapping to the safe filename
@@ -131,6 +136,7 @@ class GenerateDiskImages:
             )
 
             if not target_path.exists():
+                print(f"- {resource_path} nicht gefunden nach dem Herunterladen")
                 print(f"- {resource_path} not found after download")
                 raise FileNotFoundError(f"{resource_path} failed to download.")
                 sys.exit(3)
