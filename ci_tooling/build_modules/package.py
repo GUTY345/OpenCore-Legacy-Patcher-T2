@@ -82,6 +82,7 @@ class GeneratePackage:
         Generate OpenCore-Patcher.pkg
         """
         # --- 1. UNINSTALLER PKG GENERATION ---
+        print("OpenCore-Patcher-Uninstaller.pkg generieren")
         print("Generating OpenCore-Patcher-Uninstaller.pkg")
         
         # Using a context manager ensures file descriptors close properly
@@ -97,7 +98,7 @@ class GeneratePackage:
                 pkg_background="./ci_tooling/pkg_assets/PkgBackground-Uninstaller.png",
                 pkg_preinstall_script=tmp_uninstall_path,
                 pkg_as_distribution=True,
-                pkg_title="OpenCore Legacy Patcher Uninstaller",
+                pkg_title="OpenCore Legacy Patcher T2 Uninstaller",
                 pkg_welcome=self._generate_uninstaller_welcome(),
             ).build() is True
         finally:
@@ -107,6 +108,7 @@ class GeneratePackage:
 
 
         # --- 2. STANDARD INSTALLER PKG GENERATION ---
+        print("OpenCore-Patcher.pkg generieren")
         print("Generating OpenCore-Patcher.pkg")
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".sh", delete=False, encoding="utf-8") as tmp_pre, \
@@ -129,7 +131,7 @@ class GeneratePackage:
                 pkg_preinstall_script=tmp_pre_path,
                 pkg_postinstall_script=tmp_post_path,
                 pkg_file_structure=self._files,
-                pkg_title="OpenCore Legacy Patcher",
+                pkg_title="OpenCore Legacy Patcher T2 installer",
                 pkg_welcome=self._generate_installer_welcome(),
             ).build() is True
         finally:
@@ -140,6 +142,7 @@ class GeneratePackage:
 
 
         # --- 3. AUTOPKG ASSETS GENERATION ---
+        print("AutoPkg-Assets.pkg generieren")
         print("Generating AutoPkg-Assets.pkg")
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".sh", delete=False, encoding="utf-8") as tmp_auto_pre, \
