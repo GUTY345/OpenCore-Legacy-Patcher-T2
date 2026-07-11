@@ -91,6 +91,7 @@ class GenerateDiskImages:
             '-passphrase', dmg_password, '-encryption'
         ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+        print("DMG-Generierung ist fertig")
         print("DMG generation complete")
 
     def _download_resources(self) -> None:
