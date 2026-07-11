@@ -74,7 +74,7 @@ class GeneratePackage:
         _welcome = ""
         _welcome += f"IMPORTANT: Please download only the OpenCore-Patcher.pkg or OpenCore-Patcher-Uninstaller.pkg from the [OpenCore Legacy Patcher T2 repo]({constants.Constants().repo_link})\n\n"
         _welcome += "This installer isn't meant to be run by any user, it is meant only to be run from the patcher itself automatically\n\n"
-        _welcome += "Attempting to run this installer manually will result in bricking the operating system, requiring to reinstall macOS completely afterwards.\n\n"
+        _welcome += "Attempting to run this installer manually will result in bricking the operating system, requiring to repair upgrade macOS afterwards or in worst case scenario, reinstall completely.\n\n"
         _welcome += "To avoid this, please close the installer by pressing command + Q.\n\n"
         _welcome += f"Then go to the [OpenCore Legacy Patcher T2 repo]({constants.Constants().repo_link}) and download the appropriate installer from GitHub.\n\n"
         _welcome += f"[OpenCore Legacy Patcher T2 GitHub Release]({constants.Constants().repo_link})"
