@@ -219,6 +219,7 @@ class BuildOpenCore:
                 logger.exception(f"Fehler, die Funktion, die heißt {function.__name__} zu starten")
                 logger.exception(f"Failed to initialize the function called {function.__name__}")
                 logging.exception("Stack Trace:")
+                sys.exit(3)
 
         # Work-around ocvalidate
         # Auch behebt einen Fehler, indem Windows 10/11 per Boot Camp-Installation verschwindet wegen zu viele Malen \EFI\Microsoft\Boot\bootmgfw.efi erstellt werden oder das \EFI\Microsoft\Boot\bootmgfw.efi erstellen in config.plist, auch wenn es schon da steht.
