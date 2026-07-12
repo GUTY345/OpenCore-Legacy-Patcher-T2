@@ -28,9 +28,9 @@ class ParseCommitInfo:
                     github_data = plist_info.get("Github", {})
                     
                     return (
-                        github_data.get("Branch", "Unknown"),
+                        github_data.get("Branch", "development"),
                         github_data.get("Commit Date", "Unknown"),
-                        github_data.get("Commit URL", ""),
+                        github_data.get("Commit URL", "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"),
                     )
             except (plistlib.InvalidFileException, OSError):
                 logging.error("Wir konnten nicht, Commit-Informationen zu bestimmen.")
