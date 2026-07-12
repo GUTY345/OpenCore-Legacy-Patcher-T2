@@ -93,7 +93,7 @@ class BuildOpenCore:
                 logging.info("macOS 27 Golden Gate ist nur für arm64, spezifischer für Apple Silicon kompiliert.")
                 logging.info("Please select macOS 26 Tahoe or older version.")
                 logging.info("Bitte wählen Sie macOS 26 oder ältere Version.")
-                sys.exit(1)
+                sys.exit(0)
             else:
                 logging.info("You're not targeting macOS 27 Golden Gate, this is good.")
                 logging.info("Sie haben nicht macOS 27 Golden Gate ausgewählt, das ist gut.")
