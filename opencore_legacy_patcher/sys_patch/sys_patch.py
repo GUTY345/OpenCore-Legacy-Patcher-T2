@@ -486,61 +486,72 @@ class PatchSysVolume:
 
     def _preflight_checks(self, required_patches: dict, source_files_path: Path) -> dict:
         """
-        Runs preflight checks before patching
-
-        Parameters:
-            required_patches (dict): Patchset dictionary (from HardwarePatchsetDetection)
-            source_files_path (Path): Path to the source files (PatcherSupportPkg)
-
-        Returns:
-            dict: Updated patchset dictionary
+        Runs preflight checks before patching with improved path validation
+        and diagnostic logging for T2 environment debugging.
         """
-
         logging.info("- Running Preflight Checks before patching")
+        source_base = Path(source_files_path)
 
         for patch in required_patches:
-            # Check if all files are present
-            for method_type in [PatchType.OVERWRITE_SYSTEM_VOLUME, PatchType.OVERWRITE_DATA_VOLUME, PatchType.MERGE_SYSTEM_VOLUME, PatchType.MERGE_DATA_VOLUME]:
+            # Check all files are present
+            for method_type in [PatchType.OVERWRITE_SYSTEM_VOLUME, PatchType.OVERWRITE_DATA_VOLUME, 
+                                PatchType.MERGE_SYSTEM_VOLUME, PatchType.MERGE_DATA_VOLUME]:
+                
                 if method_type not in required_patches[patch]:
                     continue
+                
                 for install_patch_directory in required_patches[patch][method_type]:
                     for install_file in required_patches[patch][method_type][install_patch_directory]:
+                        
+                        # Resolve Dynamic Patchsets
                         try:
                             if required_patches[patch][method_type][install_patch_directory][install_file] in DynamicPatchset:
-                                required_patches[patch][method_type][install_patch_directory][install_file] = self._resolve_dynamic_patchset(required_patches[patch][method_type][install_patch_directory][install_file])
+                                required_patches[patch][method_type][install_patch_directory][install_file] = \
+                                    self._resolve_dynamic_patchset(required_patches[patch][method_type][install_patch_directory][install_file])
                         except TypeError:
                             pass
 
-                        source_file = required_patches[patch][method_type][install_patch_directory][install_file] + install_patch_directory + "/" + install_file
+                        # Path Construction using Pathlib for safety
+                        raw_source_path = required_patches[patch][method_type][install_patch_directory][install_file]
+                        
+                        # Determine if we need to prepend the source_base
+                        if not raw_source_path.startswith("/"):
+                            # Logic: base + path + dir + file
+                            target_path = source_base / raw_source_path / install_patch_directory.lstrip('/') / install_file
+                        else:
+                            # If it starts with '/', treat as absolute (or relative to root)
+                            target_path = Path(raw_source_path) / install_patch_directory.lstrip('/') / install_file
 
-                        # Check whether to source from root
-                        if not required_patches[patch][method_type][install_patch_directory][install_file].startswith("/"):
-                            source_file = source_files_path + "/" + source_file
-                        if not Path(source_file).exists():
-                            raise Exception(f"Failed to find {source_file}")
+                        # Validate existence
+                        if not target_path.exists():
+                            logging.error(f"CRITICAL: Path validation failed for: {target_path}")
+                            # Diagnostic: Inspect parent directory
+                            parent = target_path.parent
+                            if parent.exists():
+                                logging.error(f"DEBUG: Contents of parent folder {parent}: {list(parent.iterdir())}")
+                            else:
+                                logging.error(f"DEBUG: Parent directory does not exist: {parent}")
+                            raise Exception(f"Failed to find required payload: {target_path}")
+                        
+                        # Update the dictionary with the fully resolved path
+                        required_patches[patch][method_type][install_patch_directory][install_file] = str(target_path.parent)
 
-        # Make sure old SkyLight plugins aren't being used
+        # Ensure KDK and housekeeping tasks
         self._clean_skylight_plugins()
-
-        # Make sure non-Metal Enforcement preferences are not present
         self._delete_nonmetal_enforcement()
-
-        # Make sure we clean old kexts in /L*/E* that are not in the patchset
+        
         kernelcache.KernelCacheSupport(
             mount_location_data=self.mount_location_data,
             detected_os=self.constants.detected_os,
             skip_root_kmutil_requirement=self.skip_root_kmutil_requirement
         ).clean_auxiliary_kc()
 
-        # Make sure SNB kexts are compatible with the host
         if "Intel Sandy Bridge" in required_patches:
             sys_patch_helpers.SysPatchHelpers(self.constants).snb_board_id_patch(source_files_path)
 
-        # Ensure KDK is properly installed
         self._merge_kdk_with_root(save_hid_cs=True if "Legacy USB 1.1" in required_patches else False)
 
         logging.info("- Finished Preflight, starting patching")
-
         return required_patches
 
 
