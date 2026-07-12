@@ -37,6 +37,15 @@ class GeneratePackage:
         _welcome = ""
         _welcome += "# Overview\n"
         _welcome += f"This package will install the OpenCore Legacy Patcher T2 application (v{constants.Constants().patcher_version}) on your system."
+        _welcome += "\n\n"
+        _welcome += "If you want to check the SHA256 certificate of the installer, do the following:"
+        _welcome += "\n\n"
+        _welcome += "Press command + space to open Spotlight (or click the magnifying glass next to the WiFi icon)"
+        _welcome += "\n\n"
+        _welcome += "Type Terminal and press Enter when Terminal appears"
+        _welcome += "\n\n"
+        _welcome += "Type the following command: shasum -a 256 /Users/Albert/Downloads/OpenCore-Patcher.pkg (replace Albert with your account's name and if it is not in Downloads - replace with the proper folder/directory)"
+        _welcome += "\n\n"
         _welcome += "\n\nOpenCore Legacy Patcher T2 will be installed in /Library/Application Support/Dortania."
         _welcome += "\n\nAdditionally, a shortcut for OpenCore Legacy Patcher T2 will be added in the '/Applications' folder."
         _welcome += "\n\nThis package will not 'Build and Install OpenCore' or install any 'Root Patches' on your machine. If required, you can run OpenCore Legacy Patcher T2 to install any patches you may need."
@@ -46,7 +55,6 @@ class GeneratePackage:
         _welcome += "\n\nInstallation of this package will add the following files to your system:"
         for key, value in self._files.items():
             _welcome += f"\n\n- `{value}`"
-
         return _welcome
 
 
