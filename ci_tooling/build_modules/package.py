@@ -38,7 +38,7 @@ class GeneratePackage:
         _welcome += "# Overview\n"
         _welcome += f"This package will install the OpenCore Legacy Patcher T2 application (v{constants.Constants().patcher_version}) on your system."
         _welcome += "\n\n"
-        _welcome += "If you want to check the SHA256 certificate of the installer, do the following:"
+        _welcome += "If you want to verify and check the SHA256 certificate of the installer, do the following:"
         _welcome += "\n\n"
         _welcome += "Press command + space to open Spotlight (or click the magnifying glass next to the WiFi icon)"
         _welcome += "\n\n"
