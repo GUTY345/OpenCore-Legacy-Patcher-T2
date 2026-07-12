@@ -236,7 +236,6 @@ class BuildOpenCore:
                 self.config["Misc"]["BlessOverride"].append(target_path)    
 
     
-    
     def _generate_base(self) -> None:
         """
         Generate OpenCore base folder and config
@@ -379,12 +378,18 @@ class BuildOpenCore:
             sys.exit(3)
 
         # Post-build handling
-        logging.info("Post-build handling")
-        support.BuildSupport(self.model, self.constants, self.config).sign_files()
-        support.BuildSupport(self.model, self.constants, self.config).validate_pathing()
-
-        logging.info("")
-        logging.info(f"Your OpenCore EFI for {self.model} has been built at:")
-        logging.info(f"    {self.constants.opencore_release_folder}")
-        logging.info("")
+        try:
+            logging.info("Post-build handling")
+            support.BuildSupport(self.model, self.constants, self.config).sign_files()
+            support.BuildSupport(self.model, self.constants, self.config).validate_pathing()
     
+            logging.info("")
+            logging.info(f"Your OpenCore EFI for {self.model} has been built at:")
+            logging.info(f"    {self.constants.opencore_release_folder}")
+            logging.info("")
+        except Exception as e:
+            logging.info("")
+            logging.error(f"Your OpenCore EFI for {self.model} is not ready due to an unexpected error:")
+            logging.exception("Stack Trace:")
+            logging.info("Please try again later.")
+            sys.exit(3)
