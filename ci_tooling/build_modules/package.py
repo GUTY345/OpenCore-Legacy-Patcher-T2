@@ -21,8 +21,7 @@ class GeneratePackage:
         Initialize
         """
         self._files = {
-            "./dist/OpenCore-Patcher.app": "/Library/Application Support/Dortania/OpenCore-Patcher.app",
-            "./ci_tooling/privileged_helper_tool/com.dortania.opencore-legacy-patcher.privileged-helper": "/Library/PrivilegedHelperTools/com.dortania.opencore-legacy-patcher.privileged-helper",
+            "./dist/OpenCore-Patcher.app": "/Library/Application Support/Dortania/OpenCore-Patcher.app"
         }
         self._autopkg_files = {
             "./payloads/Launch Services/com.dortania.opencore-legacy-patcher.auto-patch.plist": "/Library/LaunchAgents/com.dortania.opencore-legacy-patcher.auto-patch.plist",
@@ -36,16 +35,25 @@ class GeneratePackage:
         """
         _welcome = ""
         _welcome += "# Overview\n"
-        _welcome += f"This package will install the OpenCore Legacy Patcher application (v{constants.Constants().patcher_version}) on your system."
-        _welcome += "\n\nAdditionally, a shortcut for OpenCore Legacy Patcher will be added in the '/Applications' folder."
-        _welcome += "\n\nThis package will not 'Build and Install OpenCore' or install any 'Root Patches' on your machine. If required, you can run OpenCore Legacy Patcher to install any patches you may need."
-        _welcome += f"\n\nFor more information on OpenCore Legacy Patcher usage, see our [documentation]({constants.Constants().guide_link}) and [GitHub repository]({constants.Constants().repo_link})."
+        _welcome += f"This package will install the OpenCore Legacy Patcher T2 application (v{constants.Constants().patcher_version}) on your system."
+        _welcome += "\n\n"
+        _welcome += "If you want to verify and check the SHA256 certificate of the installer, do the following:"
+        _welcome += "\n\n"
+        _welcome += "Press command + space to open Spotlight (or click the magnifying glass next to the WiFi icon)"
+        _welcome += "\n\n"
+        _welcome += "Type Terminal and press Enter when Terminal appears"
+        _welcome += "\n\n"
+        _welcome += "Type the following command: shasum -a 256 /Users/Albert/Downloads/OpenCore-Patcher.pkg (replace Albert with your account's name and if it is not in Downloads - replace with the proper folder/directory)"
+        _welcome += "\n\n"
+        _welcome += "\n\nOpenCore Legacy Patcher T2 will be installed in /Library/Application Support/Dortania."
+        _welcome += "\n\nAdditionally, a shortcut for OpenCore Legacy Patcher T2 will be added in the '/Applications' folder."
+        _welcome += "\n\nThis package will not 'Build and Install OpenCore' or install any 'Root Patches' on your machine. If required, you can run OpenCore Legacy Patcher T2 to install any patches you may need."
+        _welcome += f"\n\nFor more information on OpenCore Legacy Patcher T2 usage, see our [documentation]({constants.Constants().guide_link}) and [GitHub repository]({constants.Constants().repo_link})."
         _welcome += "\n\n"
         _welcome += "## Files Installed"
         _welcome += "\n\nInstallation of this package will add the following files to your system:"
         for key, value in self._files.items():
             _welcome += f"\n\n- `{value}`"
-
         return _welcome
 
 
@@ -55,11 +63,13 @@ class GeneratePackage:
         """
         _welcome = ""
         _welcome += "# Application Uninstaller\n"
-        _welcome += "This package will uninstall the OpenCore Legacy Patcher application and its Privileged Helper Tool from your system."
+        _welcome += "This package will uninstall the OpenCore Legacy Patcher T2 application and its Privileged Helper Tool from your system."
         _welcome += "\n\n"
-        _welcome += "This will not remove any root patches or OpenCore configurations that you may have installed using OpenCore Legacy Patcher."
+        _welcome += "This package will also remove the shortcut from /Applications that created when installing the app."
         _welcome += "\n\n"
-        _welcome += f"For more information on OpenCore Legacy Patcher, see our [documentation]({constants.Constants().guide_link}) and [GitHub repository]({constants.Constants().repo_link})."
+        _welcome += "This will not remove any root patches or OpenCore configurations that you may have installed using OpenCore Legacy Patcher T2."
+        _welcome += "\n\n"
+        _welcome += f"For more information on OpenCore Legacy Patcher T2, see our [documentation]({constants.Constants().guide_link}) and [GitHub repository]({constants.Constants().repo_link})."
 
         return _welcome
 
@@ -69,10 +79,12 @@ class GeneratePackage:
         Generate Welcome message for AutoPkg-Assets PKG
         """
         _welcome = ""
-        _welcome += "# DO NOT RUN AUTOPKG-ASSETS MANUALLY!\n\n"
-        _welcome += "## THIS CAN BREAK YOUR SYSTEM'S INSTALL!\n\n"
-        _welcome += "This package should only ever be invoked by the Patcher itself, never downloaded or run by the user. Download the OpenCore-Patcher.pkg on the Github Repository.\n\n"
-        _welcome += f"[OpenCore Legacy Patcher GitHub Release]({constants.Constants().repo_link})"
+        _welcome += f"IMPORTANT: Please download only the OpenCore-Patcher.pkg or OpenCore-Patcher-Uninstaller.pkg from the [OpenCore Legacy Patcher T2 repo]({constants.Constants().repo_link})\n\n"
+        _welcome += "This installer isn't meant to be run by any user, it is meant only to be run from the patcher itself automatically\n\n"
+        _welcome += "Attempting to run this installer manually will result in bricking the operating system, requiring to repair upgrade macOS afterwards or in worst case scenario, reinstall completely.\n\n"
+        _welcome += "To avoid this, please close the installer by pressing command + Q.\n\n"
+        _welcome += f"Then go to the [OpenCore Legacy Patcher T2 repo]({constants.Constants().repo_link}) and download the appropriate installer from GitHub.\n\n"
+        _welcome += f"[OpenCore Legacy Patcher T2 GitHub Release]({constants.Constants().repo_link})"
 
         return _welcome
 
@@ -82,6 +94,7 @@ class GeneratePackage:
         Generate OpenCore-Patcher.pkg
         """
         # --- 1. UNINSTALLER PKG GENERATION ---
+        print("OpenCore-Patcher-Uninstaller.pkg generieren")
         print("Generating OpenCore-Patcher-Uninstaller.pkg")
         
         # Using a context manager ensures file descriptors close properly
@@ -97,7 +110,7 @@ class GeneratePackage:
                 pkg_background="./ci_tooling/pkg_assets/PkgBackground-Uninstaller.png",
                 pkg_preinstall_script=tmp_uninstall_path,
                 pkg_as_distribution=True,
-                pkg_title="OpenCore Legacy Patcher Uninstaller",
+                pkg_title="Uninstall OpenCore Legacy Patcher T2",
                 pkg_welcome=self._generate_uninstaller_welcome(),
             ).build() is True
         finally:
@@ -107,6 +120,7 @@ class GeneratePackage:
 
 
         # --- 2. STANDARD INSTALLER PKG GENERATION ---
+        print("OpenCore-Patcher.pkg generieren")
         print("Generating OpenCore-Patcher.pkg")
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".sh", delete=False, encoding="utf-8") as tmp_pre, \
@@ -129,7 +143,7 @@ class GeneratePackage:
                 pkg_preinstall_script=tmp_pre_path,
                 pkg_postinstall_script=tmp_post_path,
                 pkg_file_structure=self._files,
-                pkg_title="OpenCore Legacy Patcher",
+                pkg_title="OpenCore Legacy Patcher T2",
                 pkg_welcome=self._generate_installer_welcome(),
             ).build() is True
         finally:
@@ -140,6 +154,7 @@ class GeneratePackage:
 
 
         # --- 3. AUTOPKG ASSETS GENERATION ---
+        print("AutoPkg-Assets.pkg generieren")
         print("Generating AutoPkg-Assets.pkg")
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".sh", delete=False, encoding="utf-8") as tmp_auto_pre, \
