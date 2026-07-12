@@ -340,7 +340,7 @@ class PatchSysVolume:
     def _create_new_apfs_snapshot(self) -> bool:
         """
         Create a new APFS snapshot of the root volume.
-
+        
         Returns:
             bool: True if snapshot was created, False if not
         """
