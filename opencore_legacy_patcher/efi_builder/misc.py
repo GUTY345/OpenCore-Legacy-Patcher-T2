@@ -422,8 +422,8 @@ class BuildMiscellaneous:
                               f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
                 logging.info("Um dieses Fehler zu beheben, Sie müssen nach Updates suchen und falls ein Update ist verfügbar, zu aktualisieren.")
                 logging.info("To fix this issue, you need to check for updates and if a newer version is available, to update.")
-                logging.info("Falls noch keine neue Version verfügbar ist, Voralpha 6.1 für Alpha 16 und neuere Voralphas haben dieses Fehler für meisten Patches behoben.")
-                logging.info("If there is no newer version available, pre-alpha 6.1 for alpha 16 and newer pre-alphas have fixed this issue for most patches.")
+                logging.info("Falls noch keine neue Version verfügbar ist, Voralpha 7 für Alpha 16 und neuere Voralphas haben dieses Fehler für meisten Patches behoben.")
+                logging.info("If there is no newer version available, pre-alpha 7 for alpha 16 and newer pre-alphas have fixed this issue for most patches.")
                 sys.exit(3)
             return True
         except Exception as e:
