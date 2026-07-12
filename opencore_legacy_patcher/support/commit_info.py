@@ -1,5 +1,4 @@
 import plistlib
-import logging
 from pathlib import Path
 from typing import Tuple, Optional
 
@@ -28,14 +27,12 @@ class ParseCommitInfo:
                     github_data = plist_info.get("Github", {})
                     
                     return (
-                        github_data.get("Branch", "development"),
+                        github_data.get("Branch", "Unknown"),
                         github_data.get("Commit Date", "Unknown"),
-                        github_data.get("Commit URL", "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"),
+                        github_data.get("Commit URL", ""),
                     )
             except (plistlib.InvalidFileException, OSError):
-                logging.error("Wir konnten nicht, Commit-Informationen zu bestimmen.")
-                logging.error("We couldn't identify the commit information.")
-                logging.exception("Stack Trace:")
+                # Logge hier ggf. einen Fehler
                 pass
                 
         return ("Running from source", "Not applicable", "")
