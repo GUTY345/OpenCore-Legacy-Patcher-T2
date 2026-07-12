@@ -1,4 +1,47 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.12030 - 4.0.0 alpha 15.6
+This release improves user experience and transparency inside the installer. For example, prior to this release, it said it will install OpenCore Legacy Patcher instead of OpenCore Legacy Patcher T2.
+And also fixes critical vulnerabilities:
+- it installed a Priveleged Helper tool that is no longer in use since 3.0.0 alpha 4.3 that is executing as root. This gives the ability for attackers to execute arbitary code with root privileges, which would allow attackers to modify critical system files.
+- fixes also the following vulnerability:
+
+              # Call support functions
+                      for function in [
+                          firmware.BuildFirmware,
+                          wired.BuildWiredNetworking,
+                          wireless.BuildWirelessNetworking,
+                          graphics_audio.BuildGraphicsAudio,
+                          bluetooth.BuildBluetooth,
+                          storage.BuildStorage,
+                          smbios.BuildSMBIOS,
+                          security.BuildSecurity,
+                          misc.BuildMiscellaneous
+                      ]:
+                          function(self.model, self.constants, self.config) # <- here's the vulnerability - try/except loop is completely missing that raises an exception if something goes south
+Impact: if a function is not called properly, misbehaving or just an attacker pointing to an arbitary function, an attacker could launch DoS attacks to crash the application or execute arbitary code.
+
+Diese Version verbessert die Benutzerfreundlichkeit und Transparenz des Installationsprogramms. Beispielsweise wurde vor dieser Version angezeigt, dass OpenCore Legacy Patcher anstelle von OpenCore Legacy Patcher T2 installiert wird.
+Auch behebt kritische Sicherheitslücken:
+
+- Es installierte ein privilegiertes Hilfsprogramm, das seit Version 3.0.0 Alpha 4.3 nicht mehr verwendet wird und als Root ausgeführt wird. Dadurch können Angreifer beliebigen Code mit Root-Rechten ausführen und somit kritische Systemdateien verändern.
+
+- Behebt außerdem die folgende Sicherheitslücke:
+
+          # Call support functions
+                    for function in [
+                        firmware.BuildFirmware,
+                        wired.BuildWiredNetworking,
+                        wireless.BuildWirelessNetworking,
+                        graphics_audio.BuildGraphicsAudio,
+                        bluetooth.BuildBluetooth,
+                        storage.BuildStorage,
+                        smbios.BuildSMBIOS,
+                        security.BuildSecurity,
+                        misc.BuildMiscellaneous
+                    ]:
+                        function(self.model, self.constants, self.config) # <- Hier liegt die Sicherheitslücke – die try/except-Schleife, die eine Ausnahme auslöst, falls ein Fehler auftritt, fehlt vollständig.
+Auswirkung: Wenn eine Funktion nicht ordnungsgemäß aufgerufen wird, sich fehlerhaft verhält oder ein Angreifer einfach auf eine beliebige Funktion verweist, kann ein Angreifer DoS-Angriffe starten, um die Anwendung zum Absturz zu bringen oder beliebigen Code auszuführen.
+
 ## 4.0.0.12023 - alpha 15.5.3:
 This release fixes a bug where on T2 Macs it skips injecting critical patches that have different Find and Replace byte lenghts by simply stopping the process in case this happens.
 Diese Version behebt einen Fehler, der dazu führt, dass auf T2 Macs das Einfügen kritischer Patches mit unterschiedlichen Find- und Replace-Bytelängen übersprungen wird, indem der Prozess in diesem Fall einfach gestoppt wird.
