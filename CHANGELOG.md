@@ -1,4 +1,92 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+
+## 4.0.0.130010 - 4.0.0 Voralpha 7 für Alpha 16 / 4.0.0 pre-alpha 7 for alpha 16:
+This release fixes critical vulnerabilities:
+- it installed a Priveleged Helper tool that is no longer in use since 3.0.0 alpha 4.3 that is executing as root. This gives the ability for attackers to execute arbitary code with root privileges, which would allow attackers to modify critical system files.
+- Refactor KEXT handling and update download logic to fix vulnerabilities - With the integration of size checking and HTTPS streaming logic, we have closed the three most critical entry points for attacks (supply chain risks) in your automated kext update process: 1. Protection against "Man-in-the-Middle" (MitM) manipulation. The vulnerability: An attacker on the same network (or a compromised DNS server) could inject a modified file under the original name during the curl download. The fix: Using the requests library with raise_for_status() ensures that the connection is running over a validated HTTPS protocol. The script immediately aborts if the SSL certificate is not trusted or the connection is interrupted. 2. Protection against incomplete or corrupted downloads. The vulnerability: If a download is prematurely terminated (e.g., due to an unstable internet connection), a "half" ZIP archive could end up on the hard drive. The script would originally attempt to unpack this fragment, which could lead to errors or—in the worst case—the execution of incomplete, unpredictable code. The fix: By using API size matching (if os.path.getsize(temp_zip) != asset["size"]), the integrity of the file is checked against the official GitHub metadata immediately after downloading. If the file is even one byte too small or too large, the process is stopped before the unzip command is executed. 3. Elimination of the "Blind Trust" Vector (Auditability) The vulnerability: The script previously operated completely transparently "to the outside." After a week, it was no longer possible to verify whether an update had been successful or if a package had been manipulated. The solution: Audit logging records every successful download, including file size and URL, in the update_audit.log file. Why this provides security: You can now periodically check whether the files on your system match expectations. Should a developer's GitHub repository account be compromised and upload a manipulated version with a changed file size, not only will the size check immediately raise an alarm, but you will also have chronological evidence in the log of what happened and when. Summary of "Closed Loops" Security Aspect Old Vulnerability (Blind Trust) New Solution (Verify & Log) Download Source Unverified HTTP/HTTPS Connection Strict HTTPS Validation File Integrity No Content Check Comparison with API Metadata (Size) Transparency No History (Blind) Audit Log for Every Step System Protection Direct System Integration Automatic Stop on Inconsistency This has enabled us to implement a "Defense-in-Depth" strategy: Even if a GitHub asset were compromised, the attacker would additionally have to match the file size exactly to the byte to bypass your check. This massively increases the hurdle for a successful attack, while maintaining full automation and maintainability (no manual hashes).
+- fixes also the following vulnerability:
+            # Call support functions
+                    for function in [
+                        firmware.BuildFirmware,
+                        wired.BuildWiredNetworking,
+                        wireless.BuildWirelessNetworking,
+                        graphics_audio.BuildGraphicsAudio,
+                        bluetooth.BuildBluetooth,
+                        storage.BuildStorage,
+                        smbios.BuildSMBIOS,
+                        security.BuildSecurity,
+                        misc.BuildMiscellaneous
+                    ]:
+                        function(self.model, self.constants, self.config) # <- here's the vulnerability - try/except loop is completely missing that raises an exception if something goes south
+Impact: if a function is not called properly, misbehaving or just an attacker pointing to an arbitary function, an attacker could launch DoS attacks to crash the application or execute arbitary code.
+
+Diese Version behebt kritische Sicherheitslücken:
+
+- Es installierte ein privilegiertes Hilfsprogramm, das seit Version 3.0.0 Alpha 4.3 nicht mehr verwendet wird und als Root ausgeführt wird. Dadurch können Angreifer beliebigen Code mit Root-Rechten ausführen und somit kritische Systemdateien verändern.
+
+- Die KEXT-Verarbeitung wurde überarbeitet und die Download-Logik aktualisiert, um Sicherheitslücken zu schließen. - Durch die Integration von Größenprüfung und HTTPS-Streaming-Logik haben wir die drei wichtigsten Angriffspunkte (Lieferkettenrisiken) in Ihrem automatisierten KEXT-Update-Prozess geschlossen: 1. Schutz vor Man-in-the-Middle-Angriffen (MitM). Die Sicherheitslücke: Ein Angreifer im selben Netzwerk (oder über einen kompromittierten DNS-Server) konnte während des curl-Downloads eine veränderte Datei unter dem Originalnamen einschleusen. Die Lösung: Die Verwendung der Requests-Bibliothek mit `raise_for_status()` stellt sicher, dass die Verbindung über ein validiertes HTTPS-Protokoll läuft. Das Skript wird sofort abgebrochen, wenn das SSL-Zertifikat nicht vertrauenswürdig ist oder die Verbindung unterbrochen wird. 2. Schutz vor unvollständigen oder beschädigten Downloads. Die Schwachstelle: Wird ein Download vorzeitig abgebrochen (z. B. aufgrund einer instabilen Internetverbindung), kann ein unvollständiges ZIP-Archiv auf der Festplatte landen. Das Skript versucht zunächst, dieses Fragment zu entpacken, was zu Fehlern oder – im schlimmsten Fall – zur Ausführung von unvollständigem, unvorhersehbarem Code führen kann. Die Lösung: Durch die Verwendung des API-Größenabgleichs (if os.path.getsize(temp_zip) != asset["size"]) wird die Integrität der Datei unmittelbar nach dem Download anhand der offiziellen GitHub-Metadaten überprüft. Ist die Datei auch nur ein Byte zu klein oder zu groß, wird der Vorgang vor der Ausführung des Entpackungsbefehls abgebrochen. 3. Beseitigung des „Blind Trust“-Angriffs (Überprüfbarkeit). Die Schwachstelle: Das Skript arbeitete zuvor völlig transparent von außen. Nach einer Woche war es nicht mehr möglich zu überprüfen, ob ein Update erfolgreich war oder ob ein Paket manipuliert wurde. Die Lösung: Die Audit-Protokollierung zeichnet jeden erfolgreichen Download inklusive Dateigröße und URL in der Datei update_audit.log auf. Warum dies Sicherheit bietet: Sie können nun regelmäßig überprüfen, ob die Dateien auf Ihrem System den Erwartungen entsprechen. Sollte das GitHub-Repository-Konto eines Entwicklers kompromittiert werden und eine manipulierte Version mit geänderter Dateigröße hochgeladen werden, löst die Größenprüfung nicht nur sofort einen Alarm aus, sondern Sie haben auch chronologische Beweise im Protokoll, was wann passiert ist. Zusammenfassung des Sicherheitsaspekts „Geschlossene Schleifen“ Alte Schwachstelle (Blind Trust) Neue Lösung (Überprüfung & Protokollierung) Downloadquelle Unverifizierte HTTP/HTTPS-Verbindung Strenge HTTPS-Validierung Dateiintegrität Keine Inhaltsprüfung Vergleich mit API-Metadaten (Größe) Transparenz Keine Historie (Blind) Audit-Protokoll für jeden Schritt Systemschutz Direkte Systemintegration Automatischer Stopp bei Inkonsistenz Dies hat es uns ermöglicht, eine „Verteidigung in der Tiefe“-Strategie zu implementieren: Selbst wenn ein GitHub-Asset kompromittiert würde, müsste der Angreifer zusätzlich die Dateigröße bytegenau anpassen, um Ihre Prüfung zu umgehen. Dies erhöht die Hürde für einen erfolgreichen Angriff erheblich und erhält gleichzeitig die volle Automatisierung und Wartbarkeit (keine manuellen Hashes).
+
+- Behebt außerdem die folgende Sicherheitslücke:
+
+          # Call support functions
+                    for function in [
+                        firmware.BuildFirmware,
+                        wired.BuildWiredNetworking,
+                        wireless.BuildWirelessNetworking,
+                        graphics_audio.BuildGraphicsAudio,
+                        bluetooth.BuildBluetooth,
+                        storage.BuildStorage,
+                        smbios.BuildSMBIOS,
+                        security.BuildSecurity,
+                        misc.BuildMiscellaneous
+                    ]:
+                        function(self.model, self.constants, self.config) # <- Hier liegt die Sicherheitslücke – die try/except-Schleife, die eine Ausnahme auslöst, falls ein Fehler auftritt, fehlt vollständig.
+Auswirkung: Wenn eine Funktion nicht ordnungsgemäß aufgerufen wird, sich fehlerhaft verhält oder ein Angreifer einfach auf eine beliebige Funktion verweist, kann ein Angreifer DoS-Angriffe starten, um die Anwendung zum Absturz zu bringen oder beliebigen Code auszuführen.
+
+## 4.0.0.12030 - 4.0.0 alpha 15.6 (outside the development branch)
+This release improves user experience and transparency inside the installer. For example, prior to this release, it said it will install OpenCore Legacy Patcher instead of OpenCore Legacy Patcher T2.
+And also fixes critical vulnerabilities:
+- it installed a Priveleged Helper tool that is no longer in use since 3.0.0 alpha 4.3 that is executing as root. This gives the ability for attackers to execute arbitary code with root privileges, which would allow attackers to modify critical system files.
+- fixes also the following vulnerability:
+
+              # Call support functions
+                      for function in [
+                          firmware.BuildFirmware,
+                          wired.BuildWiredNetworking,
+                          wireless.BuildWirelessNetworking,
+                          graphics_audio.BuildGraphicsAudio,
+                          bluetooth.BuildBluetooth,
+                          storage.BuildStorage,
+                          smbios.BuildSMBIOS,
+                          security.BuildSecurity,
+                          misc.BuildMiscellaneous
+                      ]:
+                          function(self.model, self.constants, self.config) # <- here's the vulnerability - try/except loop is completely missing that raises an exception if something goes south
+Impact: if a function is not called properly, misbehaving or just an attacker pointing to an arbitary function, an attacker could launch DoS attacks to crash the application or execute arbitary code.
+
+Diese Version verbessert die Benutzerfreundlichkeit und Transparenz des Installationsprogramms. Beispielsweise wurde vor dieser Version angezeigt, dass OpenCore Legacy Patcher anstelle von OpenCore Legacy Patcher T2 installiert wird.
+Auch behebt kritische Sicherheitslücken:
+
+- Es installierte ein privilegiertes Hilfsprogramm, das seit Version 3.0.0 Alpha 4.3 nicht mehr verwendet wird und als Root ausgeführt wird. Dadurch können Angreifer beliebigen Code mit Root-Rechten ausführen und somit kritische Systemdateien verändern.
+
+- Behebt außerdem die folgende Sicherheitslücke:
+
+          # Call support functions
+                    for function in [
+                        firmware.BuildFirmware,
+                        wired.BuildWiredNetworking,
+                        wireless.BuildWirelessNetworking,
+                        graphics_audio.BuildGraphicsAudio,
+                        bluetooth.BuildBluetooth,
+                        storage.BuildStorage,
+                        smbios.BuildSMBIOS,
+                        security.BuildSecurity,
+                        misc.BuildMiscellaneous
+                    ]:
+                        function(self.model, self.constants, self.config) # <- Hier liegt die Sicherheitslücke – die try/except-Schleife, die eine Ausnahme auslöst, falls ein Fehler auftritt, fehlt vollständig.
+Auswirkung: Wenn eine Funktion nicht ordnungsgemäß aufgerufen wird, sich fehlerhaft verhält oder ein Angreifer einfach auf eine beliebige Funktion verweist, kann ein Angreifer DoS-Angriffe starten, um die Anwendung zum Absturz zu bringen oder beliebigen Code auszuführen.
+
+
 ## 4.0.0 Voralpha 6.4 für Alpha 16 / 4.0.0 pre-alpha 6.4 for alpha 16:
 This release fixes formatting issues in AutoPkg-Assets.pkg
 
