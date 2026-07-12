@@ -32,7 +32,9 @@ class ParseCommitInfo:
                         github_data.get("Commit URL", ""),
                     )
             except (plistlib.InvalidFileException, OSError):
-                # Logge hier ggf. einen Fehler
+                logging.error("Wir konnten nicht, Commit-Informationen zu bestimmen.")
+                logging.error("We couldn't identify the commit information.")
+                logging.exception("Stack Trace:")
                 pass
                 
         return ("Running from source", "Not applicable", "")
