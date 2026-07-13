@@ -212,12 +212,15 @@ class PatchSysVolume:
                     f"expected {self.constants.detected_os_version} ({self.constants.detected_os_build})"
                 )
                 logging.error("An update is in progress on your machine and patching cannot continue until it is cancelled or finished")
+                logging.exception("Stack Trace:")
                 return False
         except FileNotFoundError:
             logging.error("- SystemVersion.plist file not found")
+            logging.exception("Stack Trace:")
             return False
         except plistlib.InvalidFileException as e:
             logging.error(f"- Failed to parse SystemVersion.plist: {e}")
+            logging.exception("Stack Trace:")
             return False
         except Exception as e:
             logging.error(f"- Unexpected error reading SystemVersion.plist: {e}")
@@ -253,6 +256,7 @@ class PatchSysVolume:
         
         if not APFSSnapshot(self.constants.detected_os, self.mount_location).revert_snapshot():
             logging.error("- Failed to revert APFS snapshot")
+            logging.exception("Stack Trace:")
             return
 
         self._clean_skylight_plugins()
@@ -266,6 +270,7 @@ class PatchSysVolume:
             ).clean_auxiliary_kc()
         except Exception as e:
             logging.error(f"- Failed to clean auxiliary kernel cache: {e}")
+            logging.exception("Stack Trace:")
             return
 
         self.constants.root_patcher_succeeded = True
