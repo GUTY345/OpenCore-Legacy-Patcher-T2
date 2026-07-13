@@ -63,12 +63,14 @@ class SysPatchHelpers:
             # Pad the reported Board ID with zeros to match the length of the board to patch
             reported_board_hex = reported_board_hex + bytes(len(board_to_patch_hex) - len(reported_board_hex))
         elif len(board_to_patch_hex) < len(reported_board_hex):
-            logging.info(f"Error: Board ID {self.constants.computer.reported_board_id} is longer than {board_to_patch}")
+            logging.error(f"Error: Board ID {self.constants.computer.reported_board_id} is longer than {board_to_patch}")
+            logging.exception("Stack Trace:")
             raise Exception("Host's Board ID is longer than the kext's Board ID, cannot patch!!!")
 
         path = source_files_path + "/10.13.6/System/Library/Extensions/AppleIntelSNBGraphicsFB.kext/Contents/MacOS/AppleIntelSNBGraphicsFB"
         if not Path(path).exists():
-            logging.info(f"Error: Could not find {path}")
+            logging.error(f"Error: Could not find {path}")
+            logging.exception("Stack Trace:")
             raise Exception("Failed to find AppleIntelSNBGraphicsFB.kext, cannot patch!!!")
 
         with open(path, 'rb') as f:
@@ -177,7 +179,8 @@ class SysPatchHelpers:
         logging.info("Installing Kernel Collection syncing utility")
         result = subprocess_wrapper.run_as_root([self.constants.rsrrepair_userspace_path, "--install"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if result.returncode != 0:
-            logging.info("- Failed to install RSRRepair")
+            logging.error("- Failed to install RSRRepair")
+            logging.exception("Stack Trace:")
             subprocess_wrapper.log(result)
 
 
@@ -227,6 +230,8 @@ class SysPatchHelpers:
         DEST_DIR = f"{LIBRARY_DIR}/{GPU_VERSION}"
 
         if not Path(DEST_DIR).exists():
+            logging.error(f"Failed to find GPUCompiler libraries at {DEST_DIR}")
+            logging.info("Stack Trace:")
             raise Exception(f"Failed to find GPUCompiler libraries at {DEST_DIR}")
 
         for file in Path(LIBRARY_DIR).iterdir():
