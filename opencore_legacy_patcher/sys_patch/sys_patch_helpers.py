@@ -7,6 +7,8 @@ import logging
 import plistlib
 import subprocess
 import sys
+import shutil
+import glob
 
 from typing import Union
 from pathlib import Path
@@ -46,7 +48,13 @@ class SysPatchHelpers:
 
         """
 
-        source_files_path = str(source_files_path)
+        # Safely resolve and validate the source path to prevent path traversal attacks
+        try:
+            source_path = Path(source_files_path).resolve()
+        except (OSError, ValueError) as e:
+            logging.error(f"Invalid source path: {source_files_path}")
+            logging.exception("Stack Trace:")
+            raise Exception(f"Invalid source path: {e}")
 
         if self.constants.computer.reported_board_id in self.constants.sandy_board_id_stock:
             return
@@ -64,20 +72,35 @@ class SysPatchHelpers:
             reported_board_hex = reported_board_hex + bytes(len(board_to_patch_hex) - len(reported_board_hex))
         elif len(board_to_patch_hex) < len(reported_board_hex):
             logging.error(f"Error: Board ID {self.constants.computer.reported_board_id} is longer than {board_to_patch}")
-            logging.exception("Stack Trace:")
             raise Exception("Host's Board ID is longer than the kext's Board ID, cannot patch!!!")
 
-        path = source_files_path + "/10.13.6/System/Library/Extensions/AppleIntelSNBGraphicsFB.kext/Contents/MacOS/AppleIntelSNBGraphicsFB"
-        if not Path(path).exists():
+        # Construct the target path safely
+        relative_path = Path("10.13.6/System/Library/Extensions/AppleIntelSNBGraphicsFB.kext/Contents/MacOS/AppleIntelSNBGraphicsFB")
+        path = source_path / relative_path
+        
+        # Verify the resolved path is still within the expected source directory (prevent directory escape)
+        try:
+            path.relative_to(source_path)
+        except ValueError:
+            logging.error(f"Path traversal detected: {path} is outside {source_path}")
+            logging.exception("Stack Trace:")
+            raise Exception("Path traversal attack detected!")
+        
+        if not path.exists():
             logging.error(f"Error: Could not find {path}")
             logging.exception("Stack Trace:")
             raise Exception("Failed to find AppleIntelSNBGraphicsFB.kext, cannot patch!!!")
 
-        with open(path, 'rb') as f:
-            data = f.read()
-            data = data.replace(board_to_patch_hex, reported_board_hex)
+        try:
+            with open(path, 'rb') as f:
+                data = f.read()
+                data = data.replace(board_to_patch_hex, reported_board_hex)
             with open(path, 'wb') as f:
                 f.write(data)
+        except (OSError, IOError) as e:
+            logging.error(f"Failed to patch binary: {e}")
+            logging.exception("Stack Trace:")
+            raise Exception(f"Failed to patch AppleIntelSNBGraphicsFB.kext: {e}")
 
 
     def generate_patchset_plist(self, patchset: dict, file_name: str, kdk_used: Path, metallib_used: Path):
@@ -88,22 +111,23 @@ class SysPatchHelpers:
             patchset (dict): Dictionary of patchset, sys_patch/patchsets
             file_name (str): Name of the file to write to
             kdk_used (Path): Path to the KDK used, if any
+            metallib_used (Path): Path to the Metal Library used, if any
 
         Returns:
             bool: True if successful, False if not
 
         """
 
-        source_path = f"{self.constants.payload_path}"
-        source_path_file = f"{source_path}/{file_name}"
+        source_path = Path(self.constants.payload_path)
+        source_path_file = source_path / file_name
 
         kdk_string = "Not applicable"
         if kdk_used:
-            kdk_string = kdk_used
+            kdk_string = str(kdk_used)
 
         metallib_used_string = "Not applicable"
         if metallib_used:
-            metallib_used_string = metallib_used
+            metallib_used_string = str(metallib_used)
 
         data = {
             "OpenCore Legacy Patcher": f"v{self.constants.patcher_version}",
@@ -118,15 +142,45 @@ class SysPatchHelpers:
 
         data.update(patchset)
 
-        if Path(source_path_file).exists():
-            os.remove(source_path_file)
+        # Create backup before writing (TOCTTOU prevention and data loss protection)
+        if source_path_file.exists():
+            backup_path = source_path_file.with_stem(f"{source_path_file.stem}.backup")
+            try:
+                shutil.copy2(source_path_file, backup_path)
+                logging.info(f"Created backup of patchset at {backup_path}")
+                os.remove(source_path_file)
+            except (OSError, IOError) as e:
+                logging.warning(f"Failed to create backup of patchset: {e}")
+                logging.exception("Stack Trace:")
+                # Continue anyway, but log the issue
+                try:
+                    os.remove(source_path_file)
+                except OSError:
+                    pass
 
-        # Need to write to a safe location
-        plistlib.dump(data, Path(source_path_file).open("wb"), sort_keys=False)
+        # Write to a temporary file first, then rename (atomic write)
+        temp_path = source_path_file.with_suffix(source_path_file.suffix + '.tmp')
+        try:
+            with temp_path.open("wb") as f:
+                plistlib.dump(data, f, sort_keys=False)
+            # Atomic rename to target location
+            temp_path.replace(source_path_file)
+        except (OSError, IOError) as e:
+            logging.error(f"Failed to write patchset plist: {e}")
+            logging.exception("Stack Trace:")
+            # Clean up temp file if it exists
+            try:
+                temp_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+            return False
 
-        if Path(source_path_file).exists():
+        # Verify the file was written successfully
+        if source_path_file.exists():
             return True
 
+        logging.error(f"Patchset file was not created at {source_path_file}")
+        logging.exception("Stack Trace:")
         return False
 
 
@@ -145,10 +199,27 @@ class SysPatchHelpers:
             return
 
         logging.info("Disabling WindowServer Caching")
-        # Invoke via 'bash -c' to resolve pathing
-        subprocess_wrapper.run_as_root(["/bin/bash", "-c", "/bin/rm -rf /private/var/folders/*/*/*/WindowServer/com.apple.WindowServer"])
+        
+        # Use glob to find matching paths and remove them without shell expansion
+        window_server_paths = glob.glob("/private/var/folders/*/*/*/WindowServer/com.apple.WindowServer")
+        if window_server_paths:
+            for path in window_server_paths:
+                try:
+                    subprocess_wrapper.run_as_root(["/bin/rm", "-rf", path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                except Exception as e:
+                    logging.error(f"Failed to remove WindowServer cache at {path}: {e}")
+                    logging.exception("Stack Trace:")
+        
         # Disable writing to WindowServer folder
-        subprocess_wrapper.run_as_root(["/bin/bash", "-c", "/usr/bin/chflags uchg /private/var/folders/*/*/*/WindowServer"])
+        window_server_dirs = glob.glob("/private/var/folders/*/*/*/WindowServer")
+        if window_server_dirs:
+            for path in window_server_dirs:
+                try:
+                    subprocess_wrapper.run_as_root(["/usr/bin/chflags", "uchg", path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                except Exception as e:
+                    logging.warning(f"Failed to set immutable flag on {path}: {e}")
+                    logging.exception("Stack Trace:")
+        
         # Reference:
         #   To reverse write lock:
         #   'chflags nouchg /private/var/folders/*/*/*/WindowServer'
@@ -177,11 +248,15 @@ class SysPatchHelpers:
             return
 
         logging.info("Installing Kernel Collection syncing utility")
-        result = subprocess_wrapper.run_as_root([self.constants.rsrrepair_userspace_path, "--install"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        if result.returncode != 0:
-            logging.error("- Failed to install RSRRepair")
+        try:
+            result = subprocess_wrapper.run_as_root([self.constants.rsrrepair_userspace_path, "--install"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            if result.returncode != 0:
+                logging.error("- Failed to install RSRRepair")
+                logging.exception("Stack Trace:")
+                subprocess_wrapper.log(result)
+        except Exception as e:
+            logging.error(f"Error installing RSRRepair: {e}")
             logging.exception("Stack Trace:")
-            subprocess_wrapper.log(result)
 
 
     def patch_gpu_compiler_libraries(self, mount_point: Union[str, Path]):
@@ -226,15 +301,16 @@ class SysPatchHelpers:
             BASE_VERSION = "32023"
             GPU_VERSION = f"{BASE_VERSION}.26"
 
-        LIBRARY_DIR = f"{mount_point}/System/Library/PrivateFrameworks/GPUCompiler.framework/Versions/{BASE_VERSION}/Libraries/lib/clang"
-        DEST_DIR = f"{LIBRARY_DIR}/{GPU_VERSION}"
+        mount_point = Path(mount_point)
+        LIBRARY_DIR = mount_point / f"System/Library/PrivateFrameworks/GPUCompiler.framework/Versions/{BASE_VERSION}/Libraries/lib/clang"
+        DEST_DIR = LIBRARY_DIR / GPU_VERSION
 
-        if not Path(DEST_DIR).exists():
+        if not DEST_DIR.exists():
             logging.error(f"Failed to find GPUCompiler libraries at {DEST_DIR}")
-            logging.info("Stack Trace:")
+            logging.exception("Stack Trace:")
             raise Exception(f"Failed to find GPUCompiler libraries at {DEST_DIR}")
 
-        for file in Path(LIBRARY_DIR).iterdir():
+        for file in LIBRARY_DIR.iterdir():
             if file.is_file():
                 continue
             if file.name == GPU_VERSION:
@@ -246,8 +322,26 @@ class SysPatchHelpers:
 
             logging.info(f"Merging GPUCompiler.framework libraries to match binary")
 
-            src_dir = f"{LIBRARY_DIR}/{file.name}"
-            if not Path(f"{DEST_DIR}/lib").exists():
-                subprocess_wrapper.run_as_root_and_verify(generate_copy_arguments(f"{src_dir}/lib", f"{DEST_DIR}/"), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            src_dir = LIBRARY_DIR / file.name
+            dest_lib_dir = DEST_DIR / "lib"
+            
+            if not dest_lib_dir.exists():
+                # Validate that generate_copy_arguments returns a valid result
+                copy_args = generate_copy_arguments(str(src_dir / "lib"), str(DEST_DIR / ""))
+                if not copy_args:
+                    logging.error(f"Failed to generate copy arguments for {src_dir}/lib")
+                    logging.exception("Stack Trace:")
+                    raise Exception(f"Failed to generate copy arguments for {src_dir}/lib")
+                
+                try:
+                    result = subprocess_wrapper.run_as_root_and_verify(copy_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    if result and result.returncode != 0:
+                        logging.error(f"Failed to copy GPUCompiler libraries")
+                        logging.exception("Stack Trace:")
+                        raise Exception(f"Failed to copy GPUCompiler libraries")
+                except Exception as e:
+                    logging.error(f"Error copying GPUCompiler libraries: {e}")
+                    logging.exception("Stack Trace:")
+                    raise
 
             break
