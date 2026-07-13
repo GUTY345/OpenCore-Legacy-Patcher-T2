@@ -1,3 +1,7 @@
+"""
+modern_audio.py: Modern Audio patch set for macOS 26
+"""
+
 import os
 from ..base import BaseHardware, HardwareVariant
 from ...base import PatchType
