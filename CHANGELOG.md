@@ -58,6 +58,7 @@ The Fix: We implemented Input Normalization (e.g., .upper()) and Range-Based Com
 ## 4.0.0.13011 - 4.0.0 Voralpha 7.1 / 4.0.0 pre-alpha 7.1
 Thanks @jasondillontech-lgtm for reporting a bug where trying to install drivers and patches (Root patches) causes an error called An internal error occured while running the Root Patcher!
 This release fixes an issue where upon trying to install Drivers and patches (Root Patches), it faces an error due to invalid syntax and broken sys_patch.py
+
 Vielen Dank an @jasondillontech-lgtm für die Meldung eines Fehlers, bei dem der Versuch, Treiber und Patches (Root-Patches) zu installieren, zu einem Fehler mit der Bezeichnung „An internal error occured while running the Root Patcher!“ führt.
 Diese Version behebt ein Problem, das beim Versuch, Treiber und Patches (Root-Patches) zu installieren, aufgrund ungültiger Syntax und einer beschädigten Datei sys_patch.py ​​zu einem Fehler führte.
 
