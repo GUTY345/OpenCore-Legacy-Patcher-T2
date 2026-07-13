@@ -224,6 +224,7 @@ class PatchSysVolume:
             return False
         except Exception as e:
             logging.error(f"- Unexpected error reading SystemVersion.plist: {e}")
+            logging.exception("Stack Trace:")
             return False
 
         logging.debug("Sanity checks passed")
@@ -331,6 +332,7 @@ class PatchSysVolume:
 
             if not result:
                 logging.error("- Kernel cache rebuild failed")
+                logging.exception("Stack Trace:")
                 return False
 
             if not self.skip_root_kmutil_requirement:
@@ -339,6 +341,7 @@ class PatchSysVolume:
             return True
         except Exception as e:
             logging.error(f"- Exception during kernel cache rebuild: {e}")
+            logging.exception("Stack Trace:")
             return False
 
 
@@ -354,6 +357,7 @@ class PatchSysVolume:
             return APFSSnapshot(self.constants.detected_os, self.mount_location).create_snapshot()
         except Exception as e:
             logging.error(f"- Failed to create APFS snapshot: {e}")
+            logging.exception("Stack Trace:")
             return False
 
 
@@ -375,6 +379,7 @@ class PatchSysVolume:
             )
         except Exception as e:
             logging.error(f"- Failed to rebuild dyld shared cache: {e}")
+            logging.exception("Stack Trace:")
 
 
     def _update_preboot_kernel_cache(self) -> None:
@@ -395,6 +400,7 @@ class PatchSysVolume:
             )
         except Exception as e:
             logging.error(f"- Failed to update preboot kernel cache: {e}")
+            logging.exception("Stack Trace:")
 
 
     def _clean_skylight_plugins(self) -> None:
@@ -426,7 +432,8 @@ class PatchSysVolume:
                     stderr=subprocess.STDOUT
                 )
         except Exception as e:
-            logging.warning(f"- Failed to manage SkylightPlugins folder: {e}")
+            logging.error(f"- Failed to manage SkylightPlugins folder: {e}")
+            logging.exception("Stack Trace:")
 
 
     def _delete_nonmetal_enforcement(self) -> None:
@@ -483,6 +490,7 @@ class PatchSysVolume:
                 )
         except Exception as e:
             logging.error(f"- Failed to write patchset: {e}")
+            logging.exception("Stack Trace:")
 
 
     def _patch_root_vol(self):
@@ -650,6 +658,7 @@ class PatchSysVolume:
                             )
                         except Exception as e:
                             logging.error(f"- Failed to execute root process: {e}")
+                            logging.error("Stack Trace:")
                     else:
                         logging.info(f"- Running Process:\n{process}")
                         try:
@@ -871,6 +880,7 @@ class PatchSysVolume:
         logging.info("- Patcher is capable of patching")
         if not PatcherSupportPkgMount(self.constants).mount():
             logging.error("- Critical resources missing, cannot continue with patching!!!")
+            logging.exception("Stack Trace:")
             return
 
         if not self._mount_root_vol():
