@@ -1,5 +1,68 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
 
+## 4.0.0.13021 - 4.0.0 Voralpha 8.1 / 4.0.0 pre-alpha 8.1:
+This release fixes a bug where optional patches would be injected blindly without checking for byte length of the patch between Find and Replace for T2 Macs
+
+Diese Version behebt einen Fehler, bei dem optionale Patches bei T2 Macs blind eingefügt wurden, ohne die Byte-Länge des Patches zwischen Find und Replace zu überprüfen.
+
+## 4.0.0.12040 - alpha 15.7 (outside the development branch):
+Thanks @jasondillontech-lgtm and @YBronst for reporting a bug upon trying to install drivers and patches for modern audio!
+This release:
+- removes optional patches that are known to cause kernel panics or instability for T2 Macs
+- fixes a bug where optional patches would be injected blindly without checking for byte length of the patch between Find and Replace for T2 Macs
+- fixes an issue where upon trying to install Drivers and patches (Root Patches), it faces an error due to invalid syntax and broken sys_patch.py
+- fixes a bug where upon trying to Install drivers and patches, it stops with a critical error
+- Now when an update is staged but the user tries to install drivers and patches anyways, instead of just throwing an error, now it will ask whether the user wants to check Apple Software Update or not. If yes, this will open System Preferences / System Settings > General > Software Update.
+- fixes compatability with modern wireless audio on macOS 26 Tahoe where installing this root patch on anything beyond macOS 26.0 Dev Beta 1 will result in a critical error rather than successful patch
+- fixes the following vulnerabilities:
+sys_patch_helpers.py:
+- Fixes a vulnerability in sys_patch_helpers.py where instead of raising an error using logging.error, it raises an error using logging.info:
+
+              elif len(board_to_patch_hex) < len(reported_board_hex):
+                          logging.info(f"Error: Board ID {self.constants.computer.reported_board_id} is longer than {board_to_patch}") # <- this is a vulnerability
+                          raise Exception("Host's Board ID is longer than the kext's Board ID, cannot patch!!!")
+Impact: this allows attackers to launch DoS attacks or execute arbitary code without the user's knowledge while it shows error raising via logging.info instead of logging.error
+- Fix path traversal vulnerability in snb_board_id_patch() by safely resolving paths and validating they stay within expected bounds
+- Remove unsafe shell glob patterns in disable_window_server_caching() to prevent unintended path expansion
+
+Stability improvements:
+- Add atomic write pattern in generate_patchset_plist() using temp file + rename to prevent partial writes
+- Create backups before overwriting patchset files to prevent silent data loss
+- Add proper error handling for file operations with try-except blocks
+- Validate generate_copy_arguments() return value before using in patch_gpu_compiler_libraries()
+- Fix TOCTTOU (Time-of-Check-Time-of-Use) race condition by using atomic rename
+- Improve exception handling with proper error logging and context
+
+Code quality:
+- Use pathlib.Path throughout for safer path handling
+- Add input validation for source_files_path parameter
+- Correct logging.error() calls (was using logging.info() for errors)
+- Add missing type hints and docstring updates
+- Add missing imports (shutil, glob)"
+
+
+modern_audio.py:
+1. Arbitrary Code Execution (ACE) via Path Injection
+The Vulnerability: The original code accepted arbitrary string inputs for system paths and versioning. In a patching context, this allows an attacker to manipulate those inputs to point the patcher to malicious files or system-critical binaries, resulting in persistent code execution at the root level.
+
+The Fix: We implemented a Static Patch Registry. By defining _PATCH_REGISTRY with hardcoded, immutable destination paths, we removed the ability for any external variable or input to influence where the patcher writes. The script now refuses to act on any path not explicitly whitelisted in the registry.
+
+2. Time-of-Check to Time-of-Use (TOCTOU) & Logic Spoofing
+The Vulnerability: Relying on a fragile, single-build string check (25A5279m) for system security is insecure. An attacker could potentially spoof the OS build report to trigger a "native" state (bypassing necessary patches) or force a downgrade/fallback to an older, insecure AppleHDA version.
+
+The Fix: We transitioned to a Version-Range Evaluation. By checking the xnu_major version, we establish a stable, immutable "Gate" for security logic. The patcher now determines its behavior based on the OS's major version architecture rather than easily spoofed build strings.
+
+3. Fail-Open Silent Failure
+The Vulnerability: Your original native_os logic returned False (non-native) for any build that didn't match your hardcoded string. If an unknown OS version was introduced, the code would "fail-open" and attempt to apply patches to an untested environment, which is highly dangerous.
+
+The Fix: We introduced a Fail-Closed Logic. By using explicit conditional state management (e.g., is_native = False), the patcher will now default to a secure state. If an OS is unrecognized, it aborts the patching operation entirely rather than guessing.
+
+4. Logic Fragility & "False Negatives"
+The Vulnerability: The original reliance on exact string matching for build numbers caused legitimate versions to be skipped (e.g., if the OS reported a build string with different casing or minor variations). This creates a Denial of Service (DoS) where essential audio features fail to function because the patcher incorrectly identified the OS as native.
+
+The Fix: We implemented Input Normalization (e.g., .upper()) and Range-Based Comparison. This ensures that the patcher is robust against minor variations in system reporting, ensuring that security and feature patches are applied reliably across all releases of a major version (like 26.x).
+
+
 ## 4.0.0.13020 - 4.0.0 Voralpha 8 für Alpha 16 / 4.0.0 pre-alpha 8 for alpha 15:
 Thanks @jasondillontech-lgtm for reporting a bug upon trying to install drivers and patches for modern audio!
 This release:
