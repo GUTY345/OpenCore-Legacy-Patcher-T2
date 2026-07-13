@@ -53,7 +53,7 @@ Noteworthy features of OpenCore Legacy Patcher:
 
 ----------
 
-Note: Only clean-installs and upgrades are supported. macOS Big Sur installs already patched with other patchers, such as [Patched Sur](https://github.com/BenSova/Patched-Sur) or [bigmac](https://github.com/StarPlayrX/bigmac), cannot be used due to broken file integrity with APFS snapshots and SIP. Here's an exception: if you are already using patchers like OCLP-Mod or the official OpenCore Legacy Patcher by Dortania, you can revert the root patches and upgrade to this patcher. But that's not the case with OCLP-Plus, since OCLP-Plus leaves the integrity with APFS snapshots and SIP broken.
+Note: Only clean-installs and upgrades are supported. macOS Big Sur installs already patched with other patchers, such as [Patched Sur](https://github.com/BenSova/Patched-Sur) or [bigmac](https://github.com/StarPlayrX/bigmac), cannot be used due to broken file integrity with APFS snapshots and SIP. Here's an exception: if you are already using patchers like OCLP-Mod or OCLP-Plus or the official OpenCore Legacy Patcher by Dortania, you can revert the root patches and upgrade to this patcher. 
 
 * You can, however, reinstall macOS with this patcher and retain your original data
 
