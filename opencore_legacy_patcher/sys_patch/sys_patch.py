@@ -670,6 +670,7 @@ class PatchSysVolume:
                             )
                         except Exception as e:
                             logging.error(f"- Failed to execute process: {e}")
+                            logging.exception("Stack Trace:")
 
         # Handle GPU-specific patches
         if any(x in required_patches for x in ["AMD Legacy GCN", "AMD Legacy Polaris", "AMD Legacy Vega"]):
@@ -706,6 +707,8 @@ class PatchSysVolume:
         )
         
         if not metallib_obj.success:
+            logging.error(f"Failed to find MetalLibSupportPkg: {metallib_obj.error_msg}")
+            logging.exception("Stack Trace:")
             raise Exception(f"Failed to find MetalLibSupportPkg: {metallib_obj.error_msg}")
 
         metallib_download_obj = metallib_obj.retrieve_download()
@@ -717,9 +720,13 @@ class PatchSysVolume:
 
         metallib_download_obj.download(spawn_thread=False)
         if not metallib_download_obj.download_complete:
+            logging.error(f"Could not download MetalLibSupportPkg: {metallib_download_obj.error_msg}")
+            logging.exception("Stack Trace:")
             raise Exception(f"Could not download MetalLibSupportPkg: {metallib_download_obj.error_msg}")
 
         if not metallib_obj.install_metallib():
+            logging.error("Failed to install MetalLibSupportPkg")
+            logging.exception("Stack Trace:")
             raise Exception("Failed to install MetalLibSupportPkg")
 
         # After install, check if it's present
@@ -746,7 +753,8 @@ class PatchSysVolume:
         
         if variant == DynamicPatchset.MetallibSupportPkg:
             return self._resolve_metallib_support_pkg()
-
+        logging.error(f"Unknown Dynamic Patchset: {variant}")
+        logging.exception("Stack Trace:")
         raise Exception(f"Unknown Dynamic Patchset: {variant}")
 
 
@@ -807,6 +815,8 @@ class PatchSysVolume:
                             source_file = source_files_path + "/" + source_file
                         
                         if not Path(source_file).exists():
+                            logging.error(f"Failed to find {source_file}")
+                            logging.exception("Stack Trace:")
                             raise Exception(f"Failed to find {source_file}")
                         
                         logging.debug(f"Verified file exists: {source_file}")
@@ -834,6 +844,7 @@ class PatchSysVolume:
                 sys_patch_helpers.SysPatchHelpers(self.constants).snb_board_id_patch(source_files_path)
             except Exception as e:
                 logging.error(f"- Failed to patch Sandy Bridge board ID: {e}")
+                logging.exception("Stack Trace:")
                 raise
 
         # Ensure KDK is properly installed
@@ -843,6 +854,7 @@ class PatchSysVolume:
             )
         except Exception as e:
             logging.error(f"- Failed to merge KDK with root: {e}")
+            logging.exception("Stack Trace:")
             raise
 
         logging.info("- Finished Preflight, starting patching")
@@ -874,6 +886,7 @@ class PatchSysVolume:
         logging.info("- Verifying whether Root Patching possible")
         if not patchset_obj.can_patch:
             logging.error("- Cannot continue with patching!!!")
+            logging.exception("Stack Trace:")
             patchset_obj.detailed_errors()
             return
 
@@ -885,13 +898,27 @@ class PatchSysVolume:
 
         if not self._mount_root_vol():
             logging.error("- Failed to mount root volume, cannot continue with patching!!!")
+            logging.exception("Stack Trace:")
             return
 
         if not self._run_sanity_checks():
             self._unmount_root_vol()
-            logging.error("- Failed sanity checks, cannot continue with patching!!!")
-            logging.error("- Please ensure that you do not have any updates pending")
-            return
+            logging.error("- Failed sanity checks: Pending updates/upgrades detected.")
+            logging.info("It is recommended to install that update/upgrade and only then run the patcher once again.")
+            
+            # Offer the user a choice
+            choice = input("Do you want to open Software Update now? (y/n): ").lower()
+            
+            if choice == 'y':
+                logging.info("Launching Software Update...")
+                # Open the specific Software Update pane
+                subprocess.run(["open", "x-apple.systempreferences:com.apple.preferences.softwareupdate"])
+                # Exit cleanly as the system is now out of your hands
+                logging.info("Exiting the Install drivers and patches menu.")
+                sys.exit(0)
+            else:
+                logging.info("User declined update. Exiting the Install drivers and patches menu.")
+                sys.exit(1)
 
         self._patch_root_vol()
 
@@ -907,11 +934,13 @@ class PatchSysVolume:
         
         if not patchset_obj.can_unpatch:
             logging.error("- Cannot continue with unpatching!!!")
+            logging.exception("Stack Trace:")
             patchset_obj.detailed_errors()
             return
 
         if not self._mount_root_vol():
             logging.error("- Failed to mount root volume, cannot continue with unpatching!!!")
+            logging.exception("Stack Trace:")
             return
 
         self._unpatch_root_vol()
