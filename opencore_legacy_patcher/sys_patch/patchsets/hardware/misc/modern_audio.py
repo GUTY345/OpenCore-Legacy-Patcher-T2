@@ -1,75 +1,84 @@
 """
-modern_audio.py: Modern Audio patch set for macOS 26
+modern_audio.py: Modern Audio support for macOS Tahoe and newer
 """
 
-import os
 from ..base import BaseHardware, HardwareVariant
+
 from ...base import PatchType
+
 from .....constants import Constants
+from ..... import constants
 from .....datasets.os_data import os_data
+from .....detections.amfi_detect import AmfiConfigDetectLevel
+
 
 class ModernAudio(BaseHardware):
-    # Registry now uses a range-based strategy
-    _MINIMUM_MODERN_AUDIO_OS = 26  # Version 26.0
 
     def __init__(self, xnu_major, xnu_minor, os_build, global_constants: Constants) -> None:
         super().__init__(xnu_major, xnu_minor, os_build, global_constants)
 
+        self.constants: constants.Constants = global_constants
+
+
     def name(self) -> str:
-        return f"{self.hardware_variant()}: Modern Audio"
+        """
+        Display name for end users
+        """
+        return f"{self.hardware_variant()}: 音频补丁"
+
 
     def present(self) -> bool:
-        return True
+        """
+        Always present as we're targeting system version rather than specific hardware
+        """
+        '''
+        if (
+            isinstance(self._computer.hda, device_probe.IntelHDAController)
+        ):
+            return True
+        '''
+        return self.constants.allow_hda_patch
 
     def native_os(self) -> bool:
         """
-        Uses version comparison rather than string matching.
-        Native if:
-        1. XNU major version is strictly less than 26.
-        2. Or, if it is 26, we check against a build-specific whitelist.
+        Only applicable for macOS 26.0 (Tahoe) and newer
         """
-        # Everything clearly older than 26 is native
-        if self._xnu_major < self._MINIMUM_MODERN_AUDIO_OS:
-            return True
+        return self._xnu_major < os_data.tahoe.value
 
-        # If we are on 26+, we only consider it native if the build is in the 
-        # explicitly supported native list. 
-        # This handles the 'Beta 1' edge case without breaking future versions.
-        native_builds = {"25A5279M"}
-        
-        # We only return False (non-native) if we are on 26+ and the build isn't whitelisted.
-        if self._xnu_major >= self._MINIMUM_MODERN_AUDIO_OS:
-            if str(self._os_build).upper() in native_builds:
-                return True
-            return False
-
-        return False
 
     def hardware_variant(self) -> HardwareVariant:
+        """
+        Type of hardware variant
+        """
         return HardwareVariant.MISCELLANEOUS
 
-    def _modern_audio_patches(self) -> dict:
+    def requires_kernel_debug_kit(self) -> bool:
         """
-        Uses a static path registry to prevent ACE/Injection vulnerabilities.
+        Disable KDK requirement as we're only replacing existing kexts
         """
+        return True
+    
+    def required_amfi_level(self) -> AmfiConfigDetectLevel:
+        """
+        What level of AMFI configuration is required for this patch set
+        """
+        return AmfiConfigDetectLevel.NO_CHECK
+
+
+    def patches(self) -> dict:
+        """
+        Patches for modern audio support
+        Replaces AppleHDA.kext with a compatible version
+        """
+        if self.native_os() is True:
+            return {}
+
         return {
-            "Modern Audio": {
-                PatchType.OVERWRITE_SYSTEM_VOLUME: {
+            "音频补丁": {
+                PatchType.MERGE_SYSTEM_VOLUME: {
                     "/System/Library/Extensions": {
-                        "AppleHDA.kext": "26.0+", # Generic target for 26+
+                        "AppleHDA.kext": "15.6",
                     },
                 },
             },
         }
-
-    def patches(self) -> dict:
-        """
-        Safe patch entry point.
-        """
-        # If native, return no patches
-        if self.native_os():
-            return {}
-
-        # If we are here, we are on 26.0+ and it is NOT native.
-        # This automatically applies to all 26.x versions past Beta 1.
-        return self._modern_audio_patches()
