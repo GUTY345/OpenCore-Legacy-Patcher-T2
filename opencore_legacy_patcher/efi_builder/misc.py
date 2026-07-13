@@ -702,6 +702,7 @@ class BuildMiscellaneous:
         
         if enable_experimental_patches==True: #soll normalerweise dieser Funktion niemals True rückgeben, ohne dass der Benutzer selbst ins Code eingreift
             # corecrypto-Patches komplett entfernt - diese verstecken das echte Problem und beheben nichts
+            # Bypass AppleBCMWLANCore long start timeout patches komplett entfernt - dieses Patch verursacht Hängen beim Apple Logo
             # NotebookLLM-generierten Patches, überprüfung und testen erforderlich:
             # bitte beachten Sie, dass dieser Patch noch nicht überprüft ist und kann Kernel Panic oder andere unerwünschte Verhalten verursachen
             # Seien Sie momentan mit diese Patches vorsichtig bevor sie es aktivieren
@@ -711,7 +712,7 @@ class BuildMiscellaneous:
                 if not any(p.get("Comment") == "Bypass AppleUSBVHCI::processInterrupts to prevent protocol-driven panics" for p in kernel_patches): #von NotebookLLM-generierten Patch
                     logging.info("Aktivierung von AppleUSBVHCI process interrupts patches")
                     logging.info("Enabling AppleUSBVHCI process interrupts patches")
-                    kernel_patches.append([
+                    new_patch = ([
                         {
                             "Arch": "x86_64",
                             "Comment": "Bypass AppleUSBVHCI::processInterrupts to prevent protocol-driven panics",
@@ -749,6 +750,14 @@ class BuildMiscellaneous:
                             "Replace": binascii.unhexlify("C390909090909090909090909090909090")
                         }
                     ])
+                if self._validate_patch(new_patch):
+                    logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
+                    logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
+                    kernel_patches.append(new_patch)
+                else:
+                    logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                    logging.error("We have a problem comparing the byte length between Find and Replace operations.")
+                    sys.exit(3)
             except Exception as e:
                 logging.error("Injectin optional patches failed due to the following error:")
                 logging.exception("Stack Trace:")
