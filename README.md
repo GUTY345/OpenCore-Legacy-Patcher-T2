@@ -91,6 +91,8 @@ To run the project from source, see here: [Build and run from source](./SOURCE.m
 * [Ausdauersportler](https://github.com/Ausdauersportler)
   * iMacs Metal GPUs Upgrade Patch set and documentation
 * [vit9696](https://github.com/vit9696)
+* [laobamac](https://github.com/laobamac/)
+* for introducing macOS 26 support across several patches
 * [Albert Müller](https://github.com/albert-mueller/)
   * Adding support for unsupported T2 Macs and the main author of this fork
   * Help troubleshooting, determining fixes and writing patches
