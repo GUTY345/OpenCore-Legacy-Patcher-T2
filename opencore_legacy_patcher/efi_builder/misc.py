@@ -729,7 +729,7 @@ class BuildMiscellaneous:
                 if not any(p.get("Comment") == "Bypass AppleUSBVHCI::processInterrupts to prevent protocol-driven panics" for p in kernel_patches): #von NotebookLLM-generierten Patch
                     logging.info("Aktivierung von AppleUSBVHCI process interrupts patches")
                     logging.info("Enabling AppleUSBVHCI process interrupts patches")
-                    kernel_patches.append([
+                    new_patch = ([
                         {
                             "Arch": "x86_64",
                             "Comment": "Bypass AppleUSBVHCI::processInterrupts to prevent protocol-driven panics",
@@ -767,6 +767,14 @@ class BuildMiscellaneous:
                             "Replace": binascii.unhexlify("C390909090909090909090909090909090")
                         }
                     ])
+                if self._validate_patch(new_patch):
+                    logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
+                    logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
+                    kernel_patches.append(new_patch)
+                else:
+                    logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
+                    logging.error("We have a problem comparing the byte length between Find and Replace operations.")
+                    sys.exit(3)
             except Exception as e:
                 logging.error("Injectin optional patches failed due to the following error:")
                 logging.exception("Stack Trace:")
