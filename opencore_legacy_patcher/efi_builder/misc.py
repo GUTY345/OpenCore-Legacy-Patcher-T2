@@ -575,18 +575,18 @@ class BuildMiscellaneous:
                 new_patch = {
                     "Arch": "x86_64",
                     "Identifier": "com.apple.driver.AppleSEPManager",
-                    "Base": "__ZN21AppleSEPDeviceService18getSendOolMaxPagesEv",
+                    "Base": "__ZN21AppleSEPDeviceService18getSendOolMaxPagesEv", # Symbol aus PDF [1]
                     "Comment": "Hardcode SEP OOL Max Send Pages Limit",
                     "Count": 1,
                     "Enabled": True,
                     "MinKernel": "24.0.0",
-                    "Find": binascii.unhexlify("554889E5488B"),        # 6 Bytes: Prolog + Start von MOV RAX [1, 2]
+                    "Find": binascii.unhexlify("554889E5488B"),        # 6 Bytes: Prolog + Start von MOV RAX [2]
                     "Replace": binascii.unhexlify("B840000000C3"),     # 6 Bytes: mov eax, 0x40; ret
                     "Mask": b"",
                     "ReplaceMask": b"",
                     "Limit": 0,
                     "Skip": 0
-                }
+            }
                 if self._validate_patch(new_patch):
                     logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                     logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
