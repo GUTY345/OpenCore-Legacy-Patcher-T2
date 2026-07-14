@@ -94,8 +94,6 @@ To run the project from source, see here: [Build and run from source](./SOURCE.m
 * [Albert Müller](https://github.com/albert-mueller/)
   * Adding support for unsupported T2 Macs and the main author of this fork
   * Help troubleshooting, determining fixes and writing patches
-* [Ronan LE MEILLAT / altorio](https://github.com/aeltorio)
-  * Fix modern wireless on unsupported T2 Macs running macOS 26 Tahoe
 * [YBronst](https://github.com/YBronst/OCLP-Plus)
 * for fixing modern wireless on macOS 26 Tahoe
 * [vytska69](https://github.com/vytska69)
