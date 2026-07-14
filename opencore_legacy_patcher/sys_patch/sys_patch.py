@@ -916,8 +916,17 @@ class PatchSysVolume:
             else:
                 logging.info("User declined update. Exiting the Install drivers and patches menu.")
                 sys.exit(1)
-
-        self._patch_root_vol()
+        try:
+            logging.info("Patchen des Root-Volumes")
+            logging.info("Patching the root volume")
+            self._patch_root_vol()
+        except Exception as e:
+            logging.error("Es hat gescheitert, des Root-Volumes zu patchen")
+            logging.error("Failed to root patch the volume")
+            logging.exception("Stack Trace:")
+            logging.info("Damit wir sicherstellen, dass Ihr System trotz fehlgeschlagener Root-Volumes-Patch noch überhaupt startet, wir werden alle Patches widerrufen.")
+            logging.info("To ensure that your system continues to boot even after the root volume patches have failed to apply, we'll undo the patches that were applied until now.")
+            self.unpatch_root_vol()
 
 
     def start_unpatch(self) -> None:
