@@ -1,34 +1,8 @@
 """
 subprocess_wrapper.py: Wrapper for subprocess module to better handle errors and output
-and to minimize repeated macOS GUI password prompts by caching an authenticated
-sudo session per Python process when possible.
 """
 import logging
 import subprocess
-import shlex
-from typing import Union, List, Tuple
-
-# State to track if this Python process has performed GUI authentication
-_is_authenticated = False
-
-
-def authenticate() -> None:
-    """
-    Trigger a single native macOS GUI password prompt to cache credentials
-    for the current user session. This uses AppleScript to call "sudo -v"
-    with administrator privileges which causes macOS to show the GUI dialog.
-    """
-    global _is_authenticated
-    auth_script = 'do shell script "sudo -v" with administrator privileges'
-
-    try:
-        subprocess.run(["osascript", "-e", auth_script], check=True)
-        _is_authenticated = True
-        logging.info("Session authenticated successfully.")
-    except subprocess.CalledProcessError:
-        logging.error("Authentication failed or cancelled by user.")
-        raise PermissionError("Root privileges are required to perform this action.")
-
 
 def run(*args, **kwargs) -> subprocess.CompletedProcess:
     """
@@ -36,153 +10,30 @@ def run(*args, **kwargs) -> subprocess.CompletedProcess:
     """
     return subprocess.run(*args, **kwargs)
 
-
-def _is_authentication_failure(result: subprocess.CompletedProcess) -> bool:
-    """
-    Heuristic to detect sudo / authentication failure from a CompletedProcess.
-    Checks both stdout and stderr since sudo may write to either depending on
-    the system configuration.
-    """
-    try:
-        stderr = result.stderr.decode("utf-8", errors="ignore") if isinstance(result.stderr, (bytes, bytearray)) else (str(result.stderr) if result.stderr is not None else "")
-    except Exception:
-        stderr = ""
-
-    try:
-        stdout = result.stdout.decode("utf-8", errors="ignore") if isinstance(result.stdout, (bytes, bytearray)) else (str(result.stdout) if result.stdout is not None else "")
-    except Exception:
-        stdout = ""
-
-    auth_markers = [
-        "sudo: a password is required",
-        "sudo: password for",
-        "sudo: 3 incorrect password attempts",
-        "Sorry, try again."
-    ]
-
-    # Check both stdout and stderr for auth markers
-    combined_output = stderr + stdout
-    if any(marker in combined_output for marker in auth_markers):
-        return True
-
-    # Conservative fallback: sudo -n often returns 1 when the timestamp has expired
-    if result.returncode == 1 and not combined_output:
-        return True
-
-    return False
-
-
-def _build_sudo_command(cmd: Union[str, List[str], Tuple[str, ...]], shell: bool) -> Union[List[str], str]:
-    """
-    Build the sudo command to pass to subprocess.run.
-
-    - If cmd is a list/tuple, return a list like ["sudo", "-n", ...].
-    - If cmd is a string and shell=True, return a string that runs via sh -c
-      (the caller must execute with shell=True).
-    - If cmd is a string and shell=False, split it safely with shlex.
-    """
-    if isinstance(cmd, (list, tuple)):
-        return ["sudo", "-n"] + list(cmd)
-
-    if shell:
-        # run a quoted shell command under sudo non-interactively
-        return f"sudo -n sh -c {shlex.quote(cmd)}"
-
-    # split safely
-    return ["sudo", "-n"] + shlex.split(cmd)
-
-
 def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
     """
-    Run subprocess as root using a cached sudo session when possible.
-
-    Usage examples:
-      run_as_root(["/usr/sbin/installer", "-pkg", pkg_path, "-target", "/"])
-      run_as_root("cmd1 && cmd2", shell=True)
-
-    Behavior:
-      - If this process has not called authenticate(), call it once (GUI prompt).
-      - Attempt sudo -n which uses the cached timestamp without prompting.
-      - If sudo -n appears to fail due to authentication, call authenticate() once
-        and retry the command one time.
-      - If authentication still fails, fall back to interactive sudo (will prompt user).
-
-    Returns the subprocess.CompletedProcess for the final attempt.
+    Run subprocess as root using macOS native GUI authentication.
     """
-    global _is_authenticated
-
     if not args or not args[0]:
         raise ValueError("No command provided")
-
-    # Copy kwargs so we can adjust shell without mutating caller's dict
-    run_kwargs = dict(kwargs)
-    shell = bool(run_kwargs.get("shell", False))
-    cmd = args[0]
-
-    # Ensure we have a cached sudo session in this process
-    if not _is_authenticated:
-        authenticate()
-
-    sudo_cmd = _build_sudo_command(cmd, shell)
-
-    # Decide how to call subprocess.run based on sudo_cmd type
-    if isinstance(sudo_cmd, str):
-        run_kwargs["shell"] = True
-        attempt_args = (sudo_cmd,)
-    else:
-        run_kwargs["shell"] = False
-        attempt_args = (sudo_cmd,)
-
-    # Ensure we capture output to detect auth failures.
-    # Only set capture_output if caller hasn't already specified stdout/stderr
-    # (they are mutually exclusive with capture_output in subprocess.run).
-    # If caller provided explicit stdout/stderr, they'll be available in the result.
-    if "stdout" not in run_kwargs and "stderr" not in run_kwargs:
-        run_kwargs["capture_output"] = True
-
-    # First attempt: non-interactive sudo (uses cached timestamp)
-    result = subprocess.run(*attempt_args, **run_kwargs)
-
-    # If sudo failed because the timestamp expired, re-authenticate once and retry
-    if _is_authentication_failure(result):
-        logging.info("Cached sudo timestamp likely expired; prompting GUI once and retrying.")
-        _is_authenticated = False
-        try:
-            authenticate()
-            result = subprocess.run(*attempt_args, **run_kwargs)
-        except PermissionError as e:
-            logging.error("Re-authentication failed; attempting interactive sudo as last resort")
-            # Fall back to interactive sudo that will prompt user directly
-            result = _run_as_root_interactive(cmd, shell, run_kwargs)
-
-    return result
-
-
-def _run_as_root_interactive(cmd: Union[str, List[str], Tuple[str, ...]], shell: bool, run_kwargs: dict) -> subprocess.CompletedProcess:
-    """
-    Fall back to interactive sudo that will prompt the user directly in the terminal.
-    This bypasses the credential caching issue by letting sudo handle authentication.
-    """
-    if isinstance(cmd, (list, tuple)):
-        sudo_cmd = ["sudo"] + list(cmd)
-    elif shell:
-        sudo_cmd = f"sudo sh -c {shlex.quote(cmd)}"
-    else:
-        sudo_cmd = ["sudo"] + shlex.split(cmd)
-
-    # For interactive mode, we need to allow stdin so user can type password
-    run_kwargs_interactive = dict(run_kwargs)
-    run_kwargs_interactive.pop("capture_output", None)
-    run_kwargs_interactive.pop("stdout", None)
-    run_kwargs_interactive.pop("stderr", None)
-
-    if isinstance(sudo_cmd, str):
-        run_kwargs_interactive["shell"] = True
-        return subprocess.run(sudo_cmd, **run_kwargs_interactive)
-    else:
-        run_kwargs_interactive["shell"] = False
-        return subprocess.run(sudo_cmd, **run_kwargs_interactive)
-
+    
+    # Standardize args[0] as a list for processing
+    original_command = list(args[0])
+    
+    # Convert the command list into a single escaped string for AppleScript
+    # We use shlex.join to handle spaces and special characters safely
+    import shlex
+    cmd_string = shlex.join(str(arg) for arg in original_command)
+    
+    # Construct the AppleScript command
+    # 'with administrator privileges' triggers the native macOS password prompt
+    as_script = f'do shell script "{cmd_string}" with administrator privileges'
+    
+    # We call osascript to execute the AppleScript logic
+    # Note: We remove 'sudo' from the command list because AppleScript handles elevation
+    gui_command = ["osascript", "-e", as_script]
+    
+    return subprocess.run(gui_command, **kwargs)
 
 def verify(process_result: subprocess.CompletedProcess) -> None:
     """
@@ -193,20 +44,17 @@ def verify(process_result: subprocess.CompletedProcess) -> None:
     log(process_result)
     raise Exception(f"Process failed with exit code {process_result.returncode}")
 
-
 def run_and_verify(*args, **kwargs) -> None:
     """
     Run subprocess and verify result.
     """
     verify(run(*args, **kwargs))
 
-
 def run_as_root_and_verify(*args, **kwargs) -> None:
     """
     Run subprocess as root and verify result.
     """
     verify(run_as_root(*args, **kwargs))
-
 
 def log(process: subprocess.CompletedProcess) -> None:
     """
@@ -215,34 +63,30 @@ def log(process: subprocess.CompletedProcess) -> None:
     for line in generate_log(process).split("\n"):
         logging.error(line)
 
-
 def generate_log(process: subprocess.CompletedProcess) -> str:
     """
-    Generate a formatted log of subprocess failure.
+    Display subprocess error output in formatted string.
     """
     output = "Subprocess failed.\n"
     output += f" Command: {process.args}\n"
     output += f" Return Code: {process.returncode}\n"
-    output += "    Standard Output:\n"
+    output += f"    Standard Output:\n"
     if process.stdout:
-        stdout_bytes = process.stdout
-        output += __format_output(stdout_bytes.decode("utf-8") if isinstance(stdout_bytes, (bytes, bytearray)) else str(stdout_bytes))
+        output += __format_output(process.stdout.decode("utf-8"))
     else:
         output += "        None\n"
 
-    output += "    Standard Error:\n"
+    output += f"    Standard Error:\n"
     if process.stderr:
-        stderr_bytes = process.stderr
-        output += __format_output(stderr_bytes.decode("utf-8") if isinstance(stderr_bytes, (bytes, bytearray)) else str(stderr_bytes))
+        output += __format_output(process.stderr.decode("utf-8"))
     else:
         output += "        None\n"
 
     return output
 
-
 def __format_output(output: str) -> str:
     """
-    Helper to indent log lines for readability.
+    Format output.
     """
     if not output:
         return " None\n"
@@ -250,3 +94,4 @@ def __format_output(output: str) -> str:
     if not _result.endswith("\n"):
         _result += "\n"
     return _result
+
