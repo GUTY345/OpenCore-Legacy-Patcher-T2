@@ -105,6 +105,7 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
       - Attempt sudo -n which uses the cached timestamp without prompting.
       - If sudo -n appears to fail due to authentication, call authenticate() once
         and retry the command one time.
+      - If authentication still fails, fall back to interactive sudo (will prompt user).
 
     Returns the subprocess.CompletedProcess for the final attempt.
     """
@@ -145,18 +146,42 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
     # If sudo failed because the timestamp expired, re-authenticate once and retry
     if _is_authentication_failure(result):
         logging.info("Cached sudo timestamp likely expired; prompting GUI once and retrying.")
-        # Reset the auth state and force re-authentication
         _is_authenticated = False
         try:
             authenticate()
             result = subprocess.run(*attempt_args, **run_kwargs)
-        except PermissionError:
-            # If re-authentication fails, return the original failed result
-            # so callers can see the actual error
-            logging.error("Re-authentication failed; returning original error")
-            pass
+        except PermissionError as e:
+            logging.error("Re-authentication failed; attempting interactive sudo as last resort")
+            # Fall back to interactive sudo that will prompt user directly
+            result = _run_as_root_interactive(cmd, shell, run_kwargs)
 
     return result
+
+
+def _run_as_root_interactive(cmd: Union[str, List[str], Tuple[str, ...]], shell: bool, run_kwargs: dict) -> subprocess.CompletedProcess:
+    """
+    Fall back to interactive sudo that will prompt the user directly in the terminal.
+    This bypasses the credential caching issue by letting sudo handle authentication.
+    """
+    if isinstance(cmd, (list, tuple)):
+        sudo_cmd = ["sudo"] + list(cmd)
+    elif shell:
+        sudo_cmd = f"sudo sh -c {shlex.quote(cmd)}"
+    else:
+        sudo_cmd = ["sudo"] + shlex.split(cmd)
+
+    # For interactive mode, we need to allow stdin so user can type password
+    run_kwargs_interactive = dict(run_kwargs)
+    run_kwargs_interactive.pop("capture_output", None)
+    run_kwargs_interactive.pop("stdout", None)
+    run_kwargs_interactive.pop("stderr", None)
+
+    if isinstance(sudo_cmd, str):
+        run_kwargs_interactive["shell"] = True
+        return subprocess.run(sudo_cmd, **run_kwargs_interactive)
+    else:
+        run_kwargs_interactive["shell"] = False
+        return subprocess.run(sudo_cmd, **run_kwargs_interactive)
 
 
 def verify(process_result: subprocess.CompletedProcess) -> None:
