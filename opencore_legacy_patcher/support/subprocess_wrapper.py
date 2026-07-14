@@ -40,11 +40,18 @@ def run(*args, **kwargs) -> subprocess.CompletedProcess:
 def _is_authentication_failure(result: subprocess.CompletedProcess) -> bool:
     """
     Heuristic to detect sudo / authentication failure from a CompletedProcess.
+    Checks both stdout and stderr since sudo may write to either depending on
+    the system configuration.
     """
     try:
         stderr = result.stderr.decode("utf-8", errors="ignore") if isinstance(result.stderr, (bytes, bytearray)) else (str(result.stderr) if result.stderr is not None else "")
     except Exception:
         stderr = ""
+
+    try:
+        stdout = result.stdout.decode("utf-8", errors="ignore") if isinstance(result.stdout, (bytes, bytearray)) else (str(result.stdout) if result.stdout is not None else "")
+    except Exception:
+        stdout = ""
 
     auth_markers = [
         "sudo: a password is required",
@@ -53,11 +60,13 @@ def _is_authentication_failure(result: subprocess.CompletedProcess) -> bool:
         "Sorry, try again."
     ]
 
-    if any(marker in stderr for marker in auth_markers):
+    # Check both stdout and stderr for auth markers
+    combined_output = stderr + stdout
+    if any(marker in combined_output for marker in auth_markers):
         return True
 
     # Conservative fallback: sudo -n often returns 1 when the timestamp has expired
-    if result.returncode == 1 and not stderr:
+    if result.returncode == 1 and not combined_output:
         return True
 
     return False
