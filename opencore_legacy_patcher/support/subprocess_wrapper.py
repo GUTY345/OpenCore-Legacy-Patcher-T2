@@ -14,15 +14,17 @@ def authenticate():
     Triggers one single native macOS GUI password prompt to cache credentials.
     """
     global _is_authenticated
-    # 'sudo -v' (validate) updates the timestamp for the current session.
-    # If the user is authorized, it grants a window (usually 5 mins) of 
-    # password-less sudo access.
-    result = subprocess.run(["sudo", "-v"], capture_output=True, text=True)
-    if result.returncode == 0:
+    # 'do shell script "sudo -v" with administrator privileges' is the 
+    # specific bridge that forces macOS to show the GUI password dialog.
+    # Once entered, the system caches the credentials for the current session.
+    auth_script = 'do shell script "sudo -v" with administrator privileges'
+    
+    try:
+        subprocess.run(["osascript", "-e", auth_script], check=True)
         _is_authenticated = True
-    else:
-        # If authentication fails, log it and raise to stop the patcher
-        logging.error(f"Authentication failed: {result.stderr}")
+        logging.info("Session authenticated successfully.")
+    except subprocess.CalledProcessError:
+        logging.error("Authentication failed or cancelled by user.")
         raise PermissionError("Root privileges are required to perform this action.")
 
 def run(*args, **kwargs) -> subprocess.CompletedProcess:
@@ -42,8 +44,9 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
     if not args or not args[0]:
         raise ValueError("No command provided")
     
-    # Use -n (non-interactive) to ensure the command uses the cached token
-    # and fails immediately if the session expired, rather than hanging on a prompt.
+    # Use -n (non-interactive). It will use the cached token from 
+    # authenticate() and fail if the session has expired.
+    # This prevents the script from hanging on unexpected prompts.
     gui_command = ["sudo", "-n"] + list(args[0])
     
     return subprocess.run(gui_command, **kwargs)
