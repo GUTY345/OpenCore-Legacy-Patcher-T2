@@ -22,10 +22,19 @@ def authenticate() -> None:
     auth_script = 'do shell script "sudo -v" with administrator privileges'
 
     try:
-        subprocess.run(["osascript", "-e", auth_script], check=True)
-        _is_authenticated = True
-        logging.info("Session authenticated successfully.")
-    except subprocess.CalledProcessError:
+        result = subprocess.run(["osascript", "-e", auth_script], capture_output=True, check=True)
+        # After AppleScript authentication, also validate with direct sudo -v to ensure
+        # the current process has access to the cached credentials
+        validate_result = subprocess.run(["sudo", "-n", "-v"], capture_output=True)
+        if validate_result.returncode == 0:
+            _is_authenticated = True
+            logging.info("Session authenticated successfully.")
+        else:
+            # AppleScript succeeded but current process can't access credentials
+            # This can happen on some macOS versions. Log and raise error.
+            logging.error("AppleScript authentication succeeded but sudo validation failed.")
+            raise PermissionError("Root privileges are required to perform this action.")
+    except subprocess.CalledProcessError as e:
         logging.error("Authentication failed or cancelled by user.")
         raise PermissionError("Root privileges are required to perform this action.")
 
@@ -145,8 +154,16 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
     # If sudo failed because the timestamp expired, re-authenticate once and retry
     if _is_authentication_failure(result):
         logging.info("Cached sudo timestamp likely expired; prompting GUI once and retrying.")
-        authenticate()
-        result = subprocess.run(*attempt_args, **run_kwargs)
+        # Reset the auth state and force re-authentication
+        _is_authenticated = False
+        try:
+            authenticate()
+            result = subprocess.run(*attempt_args, **run_kwargs)
+        except PermissionError:
+            # If re-authentication fails, return the original failed result
+            # so callers can see the actual error
+            logging.error("Re-authentication failed; returning original error")
+            pass
 
     return result
 
