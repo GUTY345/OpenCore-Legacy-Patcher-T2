@@ -126,7 +126,7 @@ class GenerateDiskImages:
             print(f"- Downloading {resource_path}...")
 
             # Clean URL building, strictly mapping to the safe filename
-            download_url = f"https://github.com/dortania/PatcherSupportPkg/releases/download/{patcher_support_pkg_version}/{resource_path}"
+            download_url = f"https://github.com/YBronst/PatcherSupportPkg/releases/download/{patcher_support_pkg_version}/{resource}{patcher_support_pkg_version}/{resource_path}"
 
             subprocess_wrapper.run_and_verify(
                 [
