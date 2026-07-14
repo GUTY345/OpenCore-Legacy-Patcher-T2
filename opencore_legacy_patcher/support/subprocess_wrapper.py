@@ -123,6 +123,10 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
         run_kwargs["shell"] = False
         attempt_args = (sudo_cmd,)
 
+    # Ensure we capture stderr to detect auth failures, but respect explicit
+    # stdout/stderr settings from caller if provided
+    run_kwargs.setdefault("capture_output", True)
+
     # First attempt: non-interactive sudo (uses cached timestamp)
     result = subprocess.run(*attempt_args, **run_kwargs)
 
