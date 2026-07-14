@@ -1,53 +1,37 @@
 """
 subprocess_wrapper.py: Wrapper for subprocess module to better handle errors and output
-using session-based authentication to eliminate prompt fatigue.
 """
 import logging
 import subprocess
-import shlex
-
-# State to track if the session is currently authenticated
-_is_authenticated = False
-
-def authenticate():
-    """
-    Triggers one single native macOS GUI password prompt to cache credentials.
-    """
-    global _is_authenticated
-    # 'do shell script "sudo -v" with administrator privileges' is the 
-    # specific bridge that forces macOS to show the GUI password dialog.
-    # Once entered, the system caches the credentials for the current session.
-    auth_script = 'do shell script "sudo -v" with administrator privileges'
-    
-    try:
-        subprocess.run(["osascript", "-e", auth_script], check=True)
-        _is_authenticated = True
-        logging.info("Session authenticated successfully.")
-    except subprocess.CalledProcessError:
-        logging.error("Authentication failed or cancelled by user.")
-        raise PermissionError("Root privileges are required to perform this action.")
 
 def run(*args, **kwargs) -> subprocess.CompletedProcess:
     """
-    Basic subprocess.run wrapper for unprivileged commands.
+    Basic subprocess.run wrapper.
     """
     return subprocess.run(*args, **kwargs)
 
 def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
     """
-    Run subprocess as root using cached sudo session.
-    Automatically authenticates if no session exists.
+    Run subprocess as root using macOS native GUI authentication.
     """
-    if not _is_authenticated:
-        authenticate()
-    
     if not args or not args[0]:
         raise ValueError("No command provided")
     
-    # Use -n (non-interactive). It will use the cached token from 
-    # authenticate() and fail if the session has expired.
-    # This prevents the script from hanging on unexpected prompts.
-    gui_command = ["sudo", "-n"] + list(args[0])
+    # Standardize args[0] as a list for processing
+    original_command = list(args[0])
+    
+    # Convert the command list into a single escaped string for AppleScript
+    # We use shlex.join to handle spaces and special characters safely
+    import shlex
+    cmd_string = shlex.join(str(arg) for arg in original_command)
+    
+    # Construct the AppleScript command
+    # 'with administrator privileges' triggers the native macOS password prompt
+    as_script = f'do shell script "{cmd_string}" with administrator privileges'
+    
+    # We call osascript to execute the AppleScript logic
+    # Note: We remove 'sudo' from the command list because AppleScript handles elevation
+    gui_command = ["osascript", "-e", as_script]
     
     return subprocess.run(gui_command, **kwargs)
 
@@ -81,18 +65,18 @@ def log(process: subprocess.CompletedProcess) -> None:
 
 def generate_log(process: subprocess.CompletedProcess) -> str:
     """
-    Generate a formatted log of subprocess failure.
+    Display subprocess error output in formatted string.
     """
     output = "Subprocess failed.\n"
     output += f" Command: {process.args}\n"
     output += f" Return Code: {process.returncode}\n"
-    output += "    Standard Output:\n"
+    output += f"    Standard Output:\n"
     if process.stdout:
         output += __format_output(process.stdout.decode("utf-8"))
     else:
         output += "        None\n"
 
-    output += "    Standard Error:\n"
+    output += f"    Standard Error:\n"
     if process.stderr:
         output += __format_output(process.stderr.decode("utf-8"))
     else:
@@ -102,7 +86,7 @@ def generate_log(process: subprocess.CompletedProcess) -> str:
 
 def __format_output(output: str) -> str:
     """
-    Helper to indent log lines for readability.
+    Format output.
     """
     if not output:
         return " None\n"
