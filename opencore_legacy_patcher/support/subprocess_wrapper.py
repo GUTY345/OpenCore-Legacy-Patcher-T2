@@ -22,19 +22,10 @@ def authenticate() -> None:
     auth_script = 'do shell script "sudo -v" with administrator privileges'
 
     try:
-        result = subprocess.run(["osascript", "-e", auth_script], capture_output=True, check=True)
-        # After AppleScript authentication, also validate with direct sudo -v to ensure
-        # the current process has access to the cached credentials
-        validate_result = subprocess.run(["sudo", "-n", "-v"], capture_output=True)
-        if validate_result.returncode == 0:
-            _is_authenticated = True
-            logging.info("Session authenticated successfully.")
-        else:
-            # AppleScript succeeded but current process can't access credentials
-            # This can happen on some macOS versions. Log and raise error.
-            logging.error("AppleScript authentication succeeded but sudo validation failed.")
-            raise PermissionError("Root privileges are required to perform this action.")
-    except subprocess.CalledProcessError as e:
+        subprocess.run(["osascript", "-e", auth_script], check=True)
+        _is_authenticated = True
+        logging.info("Session authenticated successfully.")
+    except subprocess.CalledProcessError:
         logging.error("Authentication failed or cancelled by user.")
         raise PermissionError("Root privileges are required to perform this action.")
 
