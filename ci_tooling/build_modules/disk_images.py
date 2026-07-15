@@ -3,13 +3,10 @@ disk_images.py: Fetch and generate disk images (Universal-Binaries.dmg, payloads
 """
 
 import subprocess
-
 from pathlib import Path
 
 from opencore_legacy_patcher import constants
 from opencore_legacy_patcher import subprocess_wrapper
-
-
 
 class GenerateDiskImages:
 
@@ -19,12 +16,10 @@ class GenerateDiskImages:
         """
         self.reset_dmg_cache = reset_dmg_cache
 
-
     def _delete_extra_binaries(self):
         """
         Delete extra binaries from payloads directory
         """
-
         whitelist_folders = [
             "ACPI",
             "Config",
@@ -51,8 +46,6 @@ class GenerateDiskImages:
                 print(f"- Deleting {file.name}")
                 subprocess_wrapper.run_and_verify(["/bin/rm", "-f", file])
 
-
-
     def _generate_payloads_dmg(self):
         """
         Generate disk image containing all payloads
@@ -72,19 +65,33 @@ class GenerateDiskImages:
             )
 
         print("Generating DMG...")
-        subprocess_wrapper.run_and_verify([
+
+        # Fixed: Using -stdinpass to avoid deprecated/insecure -passphrase
+        cmd = [
             '/usr/bin/hdiutil', 'create', './payloads.dmg',
-            '-megabytes', '32000',  # Overlays can only be as large as the disk image allows
+            '-megabytes', '32000',
             '-format', 'UDZO', '-ov',
             '-volname', 'OpenCore Patcher Resources (Base)',
             '-fs', 'APFS',
             '-layout', 'NONE',
             '-srcfolder', './payloads',
-            '-passphrase', 'password', '-encryption'
-        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            '-encryption',
+            '-stdinpass'
+        ]
+
+        # Use Popen to pipe the password securely
+        process = subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        stdout, stderr = process.communicate(input=b"password")
+
+        if process.returncode != 0:
+            raise Exception(f"Failed to generate DMG: {stderr.decode().strip()}")
 
         print("DMG generation complete")
-
 
     def _download_resources(self):
         """
@@ -101,7 +108,6 @@ class GenerateDiskImages:
             if Path(f"./{resource}").exists():
                 if self.reset_dmg_cache is True:
                     print(f"  - Removing old {resource}")
-                    # Just to be safe
                     assert resource, "Resource cannot be empty"
                     assert resource not in ("/", "."), "Resource cannot be root"
                     subprocess_wrapper.run_and_verify(
@@ -126,12 +132,10 @@ class GenerateDiskImages:
                 print(f"- {resource} not found")
                 raise Exception(f"{resource} not found")
 
-
     def generate(self) -> None:
         """
         Generate disk images
         """
-
         self._delete_extra_binaries()
         self._generate_payloads_dmg()
         self._download_resources()
