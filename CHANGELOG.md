@@ -1,5 +1,38 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
 
+## 4.0.0.13030 - 4.0.0 Voralpha 9 für Alpha 16 / 4.0.0 pre-alpha 9 for alpha 15 Pre-release
+Thanks @jasondillontech-lgtm for reporting a bug that upon trying to mount Universal-Binaries.dmg will fail due to using deprecated feature!
+This release:
+
+- fixes a bug where upon trying to mount Universal-Binaries.dmg, it failed due to using deprecated Python/macOS feature
+
+disk_images.py:
+
+- fixes a vulnerability where the password of the dmg file was passed as a command line argument
+
+sys_patch.py:
+
+- fixes a couple of vulnerabilities that lets attackers execute arbitary code as root
+- fixes a vulnerability that lets attackers brick unsupported Macs while trying to patch in order to brick or corrupt the operating system and then execute arbitary code as root
+- Rather than leaving the system in half patched state, now when patches fail in certain cases will automatically revert the APFS snapshot immediately
+improves error handling by a lot
+
+Vielen Dank an @jasondillontech-lgtm für die Meldung eines Fehlers, der beim Versuch, Universal-Binaries.dmg einzubinden, aufgrund der Verwendung einer veralteten Funktion fehlschlägt!
+Diese Version:
+
+- Behebt einen Fehler, der beim Mounten von Universal-Binaries.dmg aufgrund der Verwendung einer veralteten Python/macOS-Funktion fehlschlug.
+
+disk_images.py:
+
+- Behebt eine Sicherheitslücke, durch die das Passwort der DMG-Datei als Kommandozeilenargument übergeben wurde.
+
+sys_patch.py:
+
+- Behebt mehrere Sicherheitslücken, die es Angreifern ermöglichen, beliebigen Code als Root auszuführen.
+- Behebt eine Sicherheitslücke, die es Angreifern ermöglicht, nicht unterstützte Macs während des Patchvorgangs zu beschädigen oder unbrauchbar zu machen, um anschließend beliebigen Code als Root auszuführen.
+- Anstatt das System in einem nur teilweise gepatchten Zustand zu belassen, wird der APFS-Snapshot nun in bestimmten Fällen, wenn Patches fehlschlagen, automatisch sofort wiederhergestellt.
+- Verbessert die Fehlerbehandlung erheblich.
+
 ## 4.0.0.13021 - 4.0.0 Voralpha 8.1 / 4.0.0 pre-alpha 8.1:
 This release fixes a bug where optional patches would be injected blindly without checking for byte length of the patch between Find and Replace for T2 Macs
 
