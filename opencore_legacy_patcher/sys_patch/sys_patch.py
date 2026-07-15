@@ -500,17 +500,22 @@ class PatchSysVolume:
         Executes patches and triggers kernel cache rebuild.
         """
         logging.info(f"- Running patches for {self.model}")
-        
-        patches = self.patch_set_dictionary if self.patch_set_dictionary else HardwarePatchsetDetection(self.constants).patches
-        self._execute_patchset(patches)
-
-        if self.constants.wxpython_variant and self.constants.detected_os >= os_data.os_data.big_sur:
-            needs_daemon = self.requires_kdk_caching or self.requires_metallib_caching
-            InstallAutomaticPatchingServices(self.constants).install_auto_patcher_launch_agent(
-                kdk_caching_needed=needs_daemon
-            )
-
-        self._rebuild_root_volume()
+        try:
+            patches = self.patch_set_dictionary if self.patch_set_dictionary else HardwarePatchsetDetection(self.constants).patches
+            self._execute_patchset(patches)
+    
+            if self.constants.wxpython_variant and self.constants.detected_os >= os_data.os_data.big_sur:
+                needs_daemon = self.requires_kdk_caching or self.requires_metallib_caching
+                InstallAutomaticPatchingServices(self.constants).install_auto_patcher_launch_agent(
+                    kdk_caching_needed=needs_daemon
+                )
+    
+            self._rebuild_root_volume()
+        except Exception as e:
+            logging.error("Wir haben ein Problem, Patches auszuführen und das Kernel-Cache erneut zu builden.")
+            logging.error("We have a problem ti execute patches and rebuild the Kernel-Cache.")
+            logging.exception("Stack Trace:")
+            return
 
 
     def _get_destination_path(self, method_type: PatchType, patch_directory: str) -> str:
@@ -676,12 +681,14 @@ class PatchSysVolume:
                 sys_patch_helpers.SysPatchHelpers(self.constants).disable_window_server_caching()
             except Exception as e:
                 logging.error(f"- Failed to disable window server caching: {e}")
+                logging.exception("Stack Trace:")
         
         if "Metal 3802 Common Extended" in required_patches:
             try:
                 sys_patch_helpers.SysPatchHelpers(self.constants).patch_gpu_compiler_libraries(mount_point=self.mount_location)
             except Exception as e:
                 logging.error(f"- Failed to patch GPU compiler libraries: {e}")
+                logging.exception("Stack Trace:")
 
         self._write_patchset(required_patches)
 
@@ -751,9 +758,10 @@ class PatchSysVolume:
         
         if variant == DynamicPatchset.MetallibSupportPkg:
             return self._resolve_metallib_support_pkg()
-        logging.error(f"Unknown Dynamic Patchset: {variant}")
-        logging.exception("Stack Trace:")
-        raise Exception(f"Unknown Dynamic Patchset: {variant}")
+        else:
+            logging.error(f"Unknown Dynamic Patchset: {variant}")
+            logging.exception("Stack Trace:")
+            raise Exception(f"Unknown Dynamic Patchset: {variant}")
 
 
     def _preflight_checks(self, required_patches: dict, source_files_path: Path) -> dict:
@@ -834,6 +842,7 @@ class PatchSysVolume:
             ).clean_auxiliary_kc()
         except Exception as e:
             logging.error(f"- Failed to clean auxiliary kernel cache during preflight: {e}")
+            logging.exception("Stack Trace:")
             raise
 
         # Make sure SNB kexts are compatible with the host
