@@ -300,14 +300,21 @@ class PatchSysVolume:
 
         if not self._create_new_apfs_snapshot():
             return False
-
-        self._unmount_root_vol()
+        try:
+            logging.info("Unmounting the root volume")
+            self._unmount_root_vol()
+        except Exception as e:
+            logging.error("Failed to unmount the root volume")
+            logging.exception("Stack Trace:")
 
         logging.info("- Patching complete")
         logging.info("\nPlease reboot the machine for patches to take effect")
 
         if self.needs_kmutil_exemptions:
-            logging.info("Note: Apple will require you to open System Preferences -> Security to allow the new kernel extensions to be loaded")
+            if self.constants.detected_os <= os_data.os_data.monterey:
+                logging.info("Note: Apple will require you to open System Preferences -> Security to allow the new kernel extensions to be loaded")
+            else:
+                logging.info("Note: Apple will require you to open System Settings -> Privacy & Security to allow the new kernel extensions to be loaded")
 
         self.constants.root_patcher_succeeded = True
         return True
@@ -354,6 +361,7 @@ class PatchSysVolume:
         """
         logging.debug("Creating new APFS snapshot")
         try:
+            logging.info("Creating APFS snapshot")
             return APFSSnapshot(self.constants.detected_os, self.mount_location).create_snapshot()
         except Exception as e:
             logging.error(f"- Failed to create APFS snapshot: {e}")
@@ -368,6 +376,7 @@ class PatchSysVolume:
         Only required on Mojave and older.
         """
         if self.constants.detected_os > os_data.os_data.catalina:
+            logging.info(f"You're running macOS 10.15 Catalina or newer, which is newer than macOS 10.14 Mojave, so not compatible with dyld shared cache patches.")
             return
         
         logging.info("- Rebuilding dyld shared cache")
@@ -389,6 +398,7 @@ class PatchSysVolume:
         Only required on Catalina.
         """
         if self.constants.detected_os != os_data.os_data.catalina:
+            logging.info("You're not running macOS 10.15 Catalina. The patch for updating the preboot kernel cache is not compatible for your system.")
             return
         
         logging.info("- Rebuilding preboot kernel cache")
@@ -529,10 +539,14 @@ class PatchSysVolume:
         Returns:
             str: Full destination path
         """
-        if method_type in [PatchType.OVERWRITE_SYSTEM_VOLUME, PatchType.MERGE_SYSTEM_VOLUME]:
-            return str(self.mount_location) + patch_directory
-        else:
-            return str(self.mount_location_data) + patch_directory
+        try:
+            if method_type in [PatchType.OVERWRITE_SYSTEM_VOLUME, PatchType.MERGE_SYSTEM_VOLUME]:
+                return str(self.mount_location) + patch_directory
+            else:
+                return str(self.mount_location_data) + patch_directory
+        except Exception as e:
+            logging.error("We couldn't get the destination path.")
+            logging.exception("Stack Trace:")
 
 
     def _handle_patch_removal(self, required_patches: dict, patch: str, kc_support_obj) -> None:
@@ -545,8 +559,13 @@ class PatchSysVolume:
             kc_support_obj: Kernel cache support object
         """
         for method_remove in [PatchType.REMOVE_SYSTEM_VOLUME, PatchType.REMOVE_DATA_VOLUME]:
-            if method_remove not in required_patches[patch]:
-                continue
+            try:
+                if method_remove not in required_patches[patch]:
+                    continue
+            except Exception as e:
+                 logging.error("We have issues to handle patch removal, so we couldn't remove the patch.")
+                 logging.exception("Stack Trace:")
+                 return
                 
             for remove_patch_directory in required_patches[patch][method_remove]:
                 logging.info("- Remove Files at: " + remove_patch_directory)
