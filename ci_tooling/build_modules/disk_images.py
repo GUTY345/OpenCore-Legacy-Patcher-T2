@@ -2,11 +2,13 @@
 disk_images.py: Fetch and generate disk images (Universal-Binaries.dmg, payloads.dmg)
 """
 
+import os
+import shutil
 import subprocess
 from pathlib import Path
 
 from opencore_legacy_patcher import constants
-from opencore_legacy_patcher import subprocess_wrapper
+from opencore_legacy_patcher.support import subprocess_wrapper
 
 class GenerateDiskImages:
 
