@@ -212,7 +212,6 @@ class PatchSysVolume:
                     f"expected {self.constants.detected_os_version} ({self.constants.detected_os_build})"
                 )
                 logging.error("An update is in progress on your machine and patching cannot continue until it is cancelled or finished")
-                logging.exception("Stack Trace:")
                 return False
         except FileNotFoundError:
             logging.error("- SystemVersion.plist file not found")
