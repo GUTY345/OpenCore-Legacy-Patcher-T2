@@ -241,12 +241,17 @@ class PatchSysVolume:
             save_hid_cs (bool): If True, will save the HID CS file before merging KDK.
                                 Required for USB 1.1 downgrades on Ventura and newer.
         """
-        logging.debug(f"Merging KDK with root volume (save_hid_cs={save_hid_cs})")
-        self.kdk_path = KernelDebugKitMerge(
-            self.constants,
-            self.mount_location,
-            self.skip_root_kmutil_requirement
-        ).merge(save_hid_cs)
+        try:
+            logging.debug(f"Merging KDK with root volume (save_hid_cs={save_hid_cs})")
+            self.kdk_path = KernelDebugKitMerge(
+                self.constants,
+                self.mount_location,
+                self.skip_root_kmutil_requirement
+            ).merge(save_hid_cs)
+        except Exception as e:
+            logging.error("Merging KDK with root volume failed")
+            logging.exception("Stack Trace:")
+            return
 
 
     def _unpatch_root_vol(self):
