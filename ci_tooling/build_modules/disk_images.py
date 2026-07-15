@@ -6,8 +6,8 @@ import subprocess
 
 from pathlib import Path
 
-from opencore_legacy_patcher import constants
-from opencore_legacy_patcher.support import subprocess_wrapper
+from oclp_plus import constants
+from oclp_plus.support import subprocess_wrapper
 
 
 
