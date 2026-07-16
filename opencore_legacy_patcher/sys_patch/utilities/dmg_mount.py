@@ -49,9 +49,10 @@ class PatcherSupportPkgMount:
         )
         
         if output.returncode != 0:
-            logging.info("- Failed to mount Universal-Binaries.dmg")
+            logging.error("- Failed to mount Universal-Binaries.dmg")
+            logging.exception("Stack Trace:")
             subprocess_wrapper.log(output)
-            return False
+            sys.exit(3)
 
         logging.info("- Mounted Universal-Binaries.dmg")
         return True
@@ -74,7 +75,7 @@ class PatcherSupportPkgMount:
             )
             
             if output.returncode != 0:
-                logging.info("- Failed to mount DortaniaInternal resources")
+                logging.error("- Failed to mount DortaniaInternal resources")
                 subprocess_wrapper.log(output)
                 if "Authentication error" not in output.stdout.decode():
                     self._display_authentication_error()
