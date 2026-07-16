@@ -48,7 +48,7 @@ def request_elevation_and_exit():
 
     # Get the path to the app bundle
     # If not running as a bundle, fall back to current executable
-    app_path = "/Applications/OpenCore-Patcher2.app"
+    app_path = "/Applications/OpenCore-Patcher.app"
     
     try:
         script = f'do shell script "open {app_path}" with administrator privileges'
