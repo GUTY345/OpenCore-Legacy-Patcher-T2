@@ -383,12 +383,18 @@ class MainFrame(wx.Frame):
     def on_post_install_root_patch(self, event: wx.Event = None):
         try:
             if os.geteuid() == 0:
-                gui_sys_patch_display.SysPatchDisplayFrame(parent=self, ...)
+                # You must pass all required arguments explicitly
+                gui_sys_patch_display.SysPatchDisplayFrame(
+                    parent=self, 
+                    title=self.title, 
+                    global_constants=self.constants, 
+                    screen_location=self.GetPosition()
+                )
             else:
-                # Prompt for password to perform only this task as root
                 logging.info("Requesting elevation for root patching...")
+                # Ensure the path to your app/script is correct
                 applescript.AppleScript(
-                    f'do shell script "open /path/to/app --args --root-patch" with administrator privileges'
+                    f'do shell script "open /Applications/OpenCore-Patcher.app" with administrator privileges'
                 ).run()
         except Exception as e:
             logging.error(f"We failed to open up Install drivers and patches: {e}")
