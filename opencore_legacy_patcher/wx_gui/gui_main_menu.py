@@ -14,6 +14,7 @@ import threading
 import webbrowser
 import shutil
 import os
+import applescript
 from pathlib import Path
 from packaging import version
 
