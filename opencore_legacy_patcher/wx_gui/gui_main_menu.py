@@ -13,8 +13,6 @@ import markdown2
 import threading
 import webbrowser
 import shutil
-import os
-import applescript
 from pathlib import Path
 from packaging import version
 
@@ -38,29 +36,6 @@ from ..wx_gui import (
     gui_update,
 )
 
-def request_elevation_and_exit():
-    if os.geteuid() == 0:
-        return True
-
-    # Use a raw string for the path (r"...")
-    app_path = r"/Library/Application Support/Dortania/OpenCore-Patcher.app"
-    
-    # Check if the file exists first!
-    if not os.path.exists(app_path):
-        print(f"CRITICAL: Cannot find application at {app_path}")
-        return False
-
-    try:
-        # Use a triple-quoted string for the script to make escaping easier
-        # We need to escape the internal double quotes for the shell
-        script = f'do shell script "open \\"{app_path}\\"" with administrator privileges'
-        
-        print(f"DEBUG: Running script: {script}") # Useful to see what is being sent
-        applescript.AppleScript(script).run()
-        sys.exit(0)
-    except Exception as e:
-        print(f"Failed to elevate: {e}")
-        return False
 
 class MainFrame(wx.Frame):
     def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None):
@@ -407,17 +382,7 @@ class MainFrame(wx.Frame):
 
     def on_post_install_root_patch(self, event: wx.Event = None):
         try:
-            if os.geteuid() == 0:
-                # You must pass all required arguments explicitly
-                gui_sys_patch_display.SysPatchDisplayFrame(
-                    parent=self, 
-                    title=self.title, 
-                    global_constants=self.constants, 
-                    screen_location=self.GetPosition()
-                )
-            else:
-                logging.info("Requesting elevation for root patching...")
-                request_elevation_and_exit()
+            gui_sys_patch_display.SysPatchDisplayFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
         except Exception as e:
             logging.error(f"We failed to open up Install drivers and patches: {e}")
 
