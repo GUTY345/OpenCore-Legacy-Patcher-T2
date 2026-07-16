@@ -83,7 +83,7 @@ class PatcherSupportPkgMount:
                     self._display_too_many_attempts()
                     return False
                 logging.exception("Stack Trace:")
-                continue
+                sys.exit(3)
             break
 
         logging.info("- Mounted DortaniaInternal resources")
