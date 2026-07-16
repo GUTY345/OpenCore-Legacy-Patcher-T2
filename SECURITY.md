@@ -19,7 +19,7 @@ Ensure you are running one of the latest up-to-date versions:
 | ------- | ------------------ |
 | 4.0.0 | :white_check_mark: |
 
-Version 3.1.0 and older are completely unsupported since May 8 2026. No technical support will be provided to anyone including forks that are using versions this old.
+Version 3.1.0 and older are completely unsupported since May 8 2026. No technical support will be provided to anyone including forks that are using versions this old. Some projects may claim they are using 4.0.0 alpha 1 or 4.0.0 alpha 15 while they are using modified 3.0.0 alpha 4.1 without patching the associated vulnerabilities - watch out for these - for these forks, no technical support will be provided as well.
 
 ## Reporting a Vulnerability
 
