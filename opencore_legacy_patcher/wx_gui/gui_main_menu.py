@@ -13,6 +13,7 @@ import markdown2
 import threading
 import webbrowser
 import shutil
+import os
 from pathlib import Path
 from packaging import version
 
