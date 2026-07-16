@@ -39,21 +39,25 @@ from ..wx_gui import (
 )
 
 def request_elevation_and_exit():
-    """
-    Checks if running as root. If not, prompts for password,
-    relaunches the app as root, and exits the current process.
-    """
     if os.geteuid() == 0:
-        return True # Already root
+        return True
 
-    # Get the path to the app bundle
-    # If not running as a bundle, fall back to current executable
+    # Use a raw string for the path (r"...")
     app_path = r"/Library/Application Support/Dortania/OpenCore-Patcher.app"
     
+    # Check if the file exists first!
+    if not os.path.exists(app_path):
+        print(f"CRITICAL: Cannot find application at {app_path}")
+        return False
+
     try:
-        script = f'do shell script "open {app_path}" with administrator privileges'
+        # Use a triple-quoted string for the script to make escaping easier
+        # We need to escape the internal double quotes for the shell
+        script = f'do shell script "open \\"{app_path}\\"" with administrator privileges'
+        
+        print(f"DEBUG: Running script: {script}") # Useful to see what is being sent
         applescript.AppleScript(script).run()
-        sys.exit(0) # Exit the non-privileged process
+        sys.exit(0)
     except Exception as e:
         print(f"Failed to elevate: {e}")
         return False
