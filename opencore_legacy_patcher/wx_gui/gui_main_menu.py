@@ -38,6 +38,25 @@ from ..wx_gui import (
     gui_update,
 )
 
+def request_elevation_and_exit():
+    """
+    Checks if running as root. If not, prompts for password,
+    relaunches the app as root, and exits the current process.
+    """
+    if os.geteuid() == 0:
+        return True # Already root
+
+    # Get the path to the app bundle
+    # If not running as a bundle, fall back to current executable
+    app_path = "/Applications/OpenCore-Patcher2.app"
+    
+    try:
+        script = f'do shell script "open {app_path}" with administrator privileges'
+        applescript.AppleScript(script).run()
+        sys.exit(0) # Exit the non-privileged process
+    except Exception as e:
+        print(f"Failed to elevate: {e}")
+        return False
 
 class MainFrame(wx.Frame):
     def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None):
@@ -394,10 +413,7 @@ class MainFrame(wx.Frame):
                 )
             else:
                 logging.info("Requesting elevation for root patching...")
-                # Ensure the path to your app/script is correct
-                applescript.AppleScript(
-                    f'do shell script "open /Applications/OpenCore-Patcher.app" with administrator privileges'
-                ).run()
+                request_elevation_and_exit()
         except Exception as e:
             logging.error(f"We failed to open up Install drivers and patches: {e}")
 
