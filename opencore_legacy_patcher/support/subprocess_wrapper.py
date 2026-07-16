@@ -94,4 +94,3 @@ def __format_output(output: str) -> str:
     if not _result.endswith("\n"):
         _result += "\n"
     return _result
-
