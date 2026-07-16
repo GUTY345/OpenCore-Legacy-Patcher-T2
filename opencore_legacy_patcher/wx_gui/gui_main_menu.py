@@ -48,7 +48,7 @@ def request_elevation_and_exit():
 
     # Get the path to the app bundle
     # If not running as a bundle, fall back to current executable
-    app_path = "/Library/Application\ Support/Dortania/OpenCore-Patcher.app"
+    app_path = r"/Library/Application Support/Dortania/OpenCore-Patcher.app"
     
     try:
         script = f'do shell script "open {app_path}" with administrator privileges'
