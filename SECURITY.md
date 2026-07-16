@@ -19,6 +19,8 @@ Ensure you are running one of the latest up-to-date versions:
 | ------- | ------------------ |
 | 4.0.0 | :white_check_mark: |
 
+Version 3.1.0 and older are completely unsupported since May 8 2026. No technical support will be provided to anyone including forks that are using versions this old.
+
 ## Reporting a Vulnerability
 
 We strongly encourage using **Private Vulnerability Reporting** to disclose security issues to maintainers securely and privately.
