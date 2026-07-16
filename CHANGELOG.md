@@ -1,4 +1,51 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.13031 - 4.0.0 Voralpha 9.1 für Alpha 16 / 4.0.0 pre-alpha 9.1 for alpha 16:
+Thanks @jasondillontech-lgtm for again reporting an issue where Universal-Binaries.dmg fails to mount due to using -passphrase instead of -stdinpass!
+This release:
+- updates NvmExpressDxe.efi and XhciDxe.efi to the latest version for better stability and security
+- fixes a bug where Universal-Binaries.dmg fails to mount due to using -passphrase instead of -stdinpass
+sys.patch.py:
+- fixes a vulnerability that lets attackers execute arbitary code
+dmg_mount.py (in sys_patch -> Utilities):
+- fixes a vulnerability where upon an error, the script treats it as if everything is fine. This makes the process continue instead of halting for a critical error. This allows attackers to execute arbitary code or launch DoS attacks.
+
+                if output.returncode != 0:
+                            logging.info("- Failed to mount Universal-Binaries.dmg") # <- this is a vulnerability - the process thinks everything is fine despite facing a critical error
+                            subprocess_wrapper.log(output)
+                            return False # <- this is a vulnerability that can lead to the process continuing to execute instead of exiting. This could lead to an unexpected behavior, the process to crash and attackers to execute arbitary code rather than quitting gracefully
+- fixes a vulnerability that lets attackers launch brute force attacks against Universal-Binaries.dmg, so that attackers later on inject malware into patches for the patcher
+
+      if output.returncode != 0:
+                      logging.error("- Failed to mount DortaniaInternal resources")
+                      subprocess_wrapper.log(output)
+                      if "Authentication error" not in output.stdout.decode():
+                          self._display_authentication_error()
+                      if i == 2:
+                          self._display_too_many_attempts()
+                          return False
+                      logging.exception("Stack Trace:")
+                      continue <- this allows attackers to perform infinite attempts of guessing the password, despite failing already 2 times. They can later on inject malware into patches afterwards.
+                  break
+- In case of an error, this process raises the error using `raise RuntimeError` instead of `logging.error`, `logging exception`, and then `sys.exit(3)`. This allows the process to continue despite the error. This allows attackers to execute arbitrary code, launch denial-of-service (DoS) attacks, or even crash the process instead of exiting smoothly.
+
+- This is the other vulnerability:
+
+            if self.xnu_major == os_data.os_data.catalina.value: # <- missing try/except. This allows attackers to set a suspicious variable to False, then check if it's True, and if not, execute arbitrary code.
+                    result = subprocess_wrapper.run_as_root(["/sbin/mount", "-uw", "/"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    if result.returncode != 0:
+                                  logging.error("Failed to mount root volume")
+                                  logging.exception("Stack Trace:")
+                                  subprocess_wrapper.log(result)
+                                  sys.exit(3)
+                                  return "/"
+
+Because try/except blocks are missing, this allows attackers to set a suspicious variable to False, then check if it's True, and if not, execute arbitrary code. Furthermore, if an error occurs, the process crashes instead of exiting smoothly. This also allows attackers to execute arbitrary code.
+snapshot.py:
+This fixes the following security vulnerability:
+        if result.returncode != 0:
+                logging.error("Failed to revert APFS snapshot")
+                subprocess_wrapper.log(result)
+                return False # <- this allows attackers to execute arbitrary code or even launch DoS attacks
 
 ## 4.0.0.13030 - 4.0.0 Voralpha 9 für Alpha 16 / 4.0.0 pre-alpha 9 for alpha 15 Pre-release
 Thanks @jasondillontech-lgtm for reporting a bug that upon trying to mount Universal-Binaries.dmg will fail due to using deprecated feature!
