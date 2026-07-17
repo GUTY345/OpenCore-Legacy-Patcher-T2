@@ -43,21 +43,25 @@ get_font_face.font_face = None
 def font_factory(size: int, weight):
     return wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, weight, False, get_font_face())
 
-def check_full_disk_access():
+def check_full_disk_access() -> bool:
     """
-    Checks for Full Disk Access by attempting to list contents of a restricted directory.
-    Returns True if accessible, False otherwise.
+    Checks for Full Disk Access by attempting to access a path 
+    protected specifically by Full Disk Access.
     """
-    try:
-        # TCC protected path example
-        result = subprocess.run(
-            ["/bin/ls", "/Library/Application Support/com.apple.TCC/"],
-            capture_output=True,
-            text=True
-        )
-        return result.returncode == 0
-    except Exception:
-        return False
+    # Attempt to read a file from the user's Library/Application Support 
+    # that is explicitly protected by Full Disk Access.
+    test_path = "/Library/Application Support/com.apple.TCC/TCC.db"
+    
+    # We attempt to copy it to /tmp to see if we have read permission.
+    # If this fails, we definitively do not have Full Disk Access.
+    result = subprocess.run(
+        ["/usr/bin/sudo", "-n", "/bin/ls", test_path], # '-n' prevents sudo from asking for a password
+        capture_output=True,
+        text=True
+    )
+    
+    # If returncode is 0, we have access.
+    return result.returncode == 0
 
 class AutoUpdateStages:
     INACTIVE = 0
