@@ -399,12 +399,21 @@ class MainFrame(wx.Frame):
     def on_post_install_root_patch(self, event: wx.Event = None):
         # 1. Run the check
         if not gui_support.check_full_disk_access():
-        msg = (
-            "OpenCore Legacy Patcher T2 requires 'Full Disk Access' to perform root volume patching.\n\n"
-            "Would you like to open System Settings now to enable it?\n\n"
-            "Otherwise it cannot perform the patching process properly due to Universal-Binaries.dmg not being able to mount./n/n"
-            "(You may need to toggle the switch off and on again if it is already listed.)"
-        )
+            msg = (
+                "OpenCore Legacy Patcher T2 requires 'Full Disk Access' to perform root volume patching.\n\n"
+                "Would you like to open System Settings now to enable it?\n\n"
+                "Otherwise it cannot perform the patching process properly due to Universal-Binaries.dmg not being able to mount.\n\n"
+                "(You may need to toggle the switch off and on again if it is already listed.)"
+            )
+            
+            dialog = wx.MessageDialog(self, msg, "Permission Required", wx.YES_NO | wx.CANCEL | wx.ICON_ERROR)
+            dialog.SetYesNoLabels("Open Settings", "Cancel")
+            
+            if dialog.ShowModal() == wx.ID_YES:
+                webbrowser.open("x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")
+            
+            dialog.Destroy()
+            return
         
         # Use YES_NO for better user choice
         dialog = wx.MessageDialog(self, msg, "Full Disk Access Required", wx.YES_NO | wx.CANCEL | wx.ICON_ERROR)
