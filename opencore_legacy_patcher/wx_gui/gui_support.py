@@ -9,6 +9,8 @@ import logging
 import plistlib
 import threading
 import subprocess
+import os
+import webbrowser
 import applescript
 import packaging.version
 
