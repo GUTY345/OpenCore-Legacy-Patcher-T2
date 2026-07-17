@@ -383,6 +383,8 @@ class MainFrame(wx.Frame):
     def on_post_install_root_patch(self, event: wx.Event = None):
         # 1. Suchen ob Festplatte-Berechtigungen ins Systemeinstellungen da sind
         if not gui_support.check_full_disk_access():
+            logging.info("Festplattenberechtigungen in Systemeinstellungen fehlen")
+            logging.info("Disk permissions via System Settings are missing")
             msg = (
                 "OpenCore Legacy Patcher T2 requires 'Full Disk Access' to perform root volume patching.\n\n"
                 "Would you like to open System Settings now to enable it?\n\n"
@@ -398,11 +400,14 @@ class MainFrame(wx.Frame):
             
             dialog.Destroy()
             return
-        # 2. Falls ja, denn fährt mit Root-Patching fort    
-        try:
-            gui_sys_patch_display.SysPatchDisplayFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
-        except Exception as e:
-            logging.error(f"We failed to open up Install drivers and patches: {e}")
+        # 2. Falls ja, nur denn fährt mit Root-Patching fort    
+        else:
+            try:
+                logging.info("Festplattenberechtigungen in Systemeinstellungen sind eingeschaltet")
+                logging.info("Disk permissions via System Settings are enabled")
+                gui_sys_patch_display.SysPatchDisplayFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+            except Exception as e:
+                logging.error(f"We failed to open up Install drivers and patches: {e}")
 
     def on_create_macos_installer(self, event: wx.Event = None):
         try:
