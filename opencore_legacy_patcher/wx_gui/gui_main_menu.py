@@ -13,6 +13,7 @@ import markdown2
 import threading
 import webbrowser
 import shutil
+import os
 from pathlib import Path
 from packaging import version
 
@@ -36,6 +37,21 @@ from ..wx_gui import (
     gui_update,
 )
 
+def check_full_disk_access():
+    """
+    Checks for Full Disk Access by attempting to list contents of a restricted directory.
+    Returns True if accessible, False otherwise.
+    """
+    try:
+        # TCC protected path example
+        result = subprocess.run(
+            ["/bin/ls", "/Library/Application Support/com.apple.TCC/"],
+            capture_output=True,
+            text=True
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
 
 class MainFrame(wx.Frame):
     def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None):
@@ -381,6 +397,25 @@ class MainFrame(wx.Frame):
             logging.error(f"We failed to open up Build and Install OpenCore: {e}")
 
     def on_post_install_root_patch(self, event: wx.Event = None):
+        # 1. Run the check
+        if not gui_support.check_full_disk_access():
+        msg = (
+            "OpenCore Legacy Patcher T2 requires 'Full Disk Access' to perform root volume patching.\n\n"
+            "Would you like to open System Settings now to enable it?\n\n"
+            "Otherwise it cannot perform the patching process properly due to Universal-Binaries.dmg not being able to mount./n/n"
+            "(You may need to toggle the switch off and on again if it is already listed.)"
+        )
+        
+        # Use YES_NO for better user choice
+        dialog = wx.MessageDialog(self, msg, "Full Disk Access Required", wx.YES_NO | wx.CANCEL | wx.ICON_ERROR)
+        dialog.SetYesNoLabels("Open Settings", "Cancel")
+        
+        if dialog.ShowModal() == wx.ID_YES:
+            # This deep-link opens the specific 'Full Disk Access' pane in macOS
+            webbrowser.open("x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")
+            
+        dialog.Destroy()
+        return
         try:
             gui_sys_patch_display.SysPatchDisplayFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
         except Exception as e:
