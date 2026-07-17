@@ -41,6 +41,21 @@ get_font_face.font_face = None
 def font_factory(size: int, weight):
     return wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, weight, False, get_font_face())
 
+def check_full_disk_access():
+    """
+    Checks for Full Disk Access by attempting to list contents of a restricted directory.
+    Returns True if accessible, False otherwise.
+    """
+    try:
+        # TCC protected path example
+        result = subprocess.run(
+            ["/bin/ls", "/Library/Application Support/com.apple.TCC/"],
+            capture_output=True,
+            text=True
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
 
 class AutoUpdateStages:
     INACTIVE = 0
@@ -316,4 +331,6 @@ class RestartHost:
                 applescript.AppleScript('tell app "loginwindow" to «event aevtrrst»').run()
             except applescript.ScriptError as e:
                 logging.error(f"Error while trying to reboot: {e}")
+                logging.exception("Stack Trace:")
+                logging.info("Go to Apple Logo > Restart and click on Restart to fix this issue.")
             sys.exit(0)
