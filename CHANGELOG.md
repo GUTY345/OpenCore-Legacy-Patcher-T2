@@ -1,4 +1,78 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.13040 - 4.0.0 Voralpha 10 für Alpha 16 / 4.0.0 pre-alpha 10 for alpha 16
+This release:
+- for those who are still using 4.0.0 alpha 15.7.1, this release fixes all issues that were already fixed in the previous pre-alphas too: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/blob/main/CHANGELOG.md
+- now patches are confirmed working on 2017 iMac, tested by @jasondillontech-lgtm
+- fixes an issue where Installing drivers and patches may continue without enabling full disk access to OpenCore Legacy Patcher, which may result in Permission denied error:
+<img width="3024" height="4032" alt="621701350-d4a42d00-e654-460c-9f72-22462657c63b" src="https://github.com/user-attachments/assets/b56cb483-aa72-488e-83db-ef475170dab7" />
+This is fixed by asking the user to grant full disk access:
+<img width="632" height="415" alt="Bildschirmfoto 2026-07-17 um 20 52 31" src="https://github.com/user-attachments/assets/c5c0b1dc-11f5-4ed1-8c19-17ab542d7a77" />
+Known issues:
+- despite gaining the patcher full disk access, to ask for full disk access again while they are already gained
+<img width="1440" height="900" alt="Bildschirmfoto 2026-07-17 um 20 54 38" src="https://github.com/user-attachments/assets/c57116a5-6dae-4256-855a-a6352420f2e7" />
+
+
+Diese Version:
+
+- Für alle, die noch Version 4.0.0 Alpha 15.7.1 verwenden: Diese Version behebt alle Probleme, die bereits in den vorherigen Pre-Alpha-Versionen behoben wurden: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/blob/main/CHANGELOG.md
+
+- Die Patches funktionieren nun nachweislich auf dem 2017er iMac, getestet von @jasondillontech-lgtm
+
+- Behebt ein Problem, bei dem die Installation von Treibern und Patches fortgesetzt werden konnte, ohne dem OpenCore Legacy Patcher vollen Festplattenzugriff zu gewähren. Dies konnte zu einem Zugriffsfehler führen:
+
+<img width="3024" height="4032" alt="621701350-d4a42d00-e654-460c-9f72-22462657c63b" src="https://github.com/user-attachments/assets/b56cb483-aa72-488e-83db-ef475170dab7" /> Das Problem wird behoben, indem der Benutzer um vollständigen Festplattenzugriff gebeten wird:
+
+<img width="632" height="415" alt="Bildschirmfoto 2026-07-17 um 20 52 31" src="https://github.com/user-attachments/assets/c5c0b1dc-11f5-4ed1-8c19-17ab542d7a77" />
+Bekannte Probleme:
+
+- Obwohl dem Patcher bereits vollständiger Festplattenzugriff gewährt wurde, wird erneut um vollständigen Festplattenzugriff gebeten.
+<img width="1440" height="900" alt="Bildschirmfoto 2026-07-17 um 20 54 38" src="https://github.com/user-attachments/assets/c57116a5-6dae-4256-855a-a6352420f2e7" />
+
+## 4.0.0.12041 - 4.0.0 alpha 15.7.1 & 4.0.0.13032 - Voralpha 9.2 für Alpha 16 / pre-alpha 9.2 for alpha 16:
+Restoring Privilege Separation
+
+A lot of users, including @YBronst and others, inlcuding in InsanelyMac here: https://www.insanelymac.com/forum/topic/362543-the-oclp-plus-3x-tahoe-patch-set/page/5/ reported frustration with osascript -a spawning sudo for every command. Thanks for sharing the frustration! I'm definately frustrated from osascript -a too.
+
+Improvements:
+
+Reintroduced Privileged Helper Tool: We have moved away from the osascript implementation used in 3.0.0 builds. The new Helper Tool restores a cleaner, more reliable XPC-based architecture, removing the repeated password prompts that caused significant friction.
+
+Note on make debug: This build currently utilizes a debug-signed helper for development purposes. While this configuration is technically less restrictive than a production-signed binary, we have prioritized usability to stabilize the platform.
+
+Known Issues & Status:
+
+Root Patching & Login Stability: We are investigating reports regarding authentication issues following root patch application. I am currently working on a fix but will not push it to the main branch until the solution is verified stable.
+
+Call for Testing: Version 4.0.0 Pre-Alpha 9.2 is available here for those who wish to assist in debugging: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/tag/4.0.0.13032
+
+Recommended Workflow: Until login stability is confirmed, I recommend using this release to Build OpenCore only, while avoiding the "Install Drivers and Patches" module.
+
+As I do not have a non-T2 system for dedicated testing, I am relying on the community to help identify the specific regression causing these login issues. Please report your findings on the tracker. Thank you for your patience as we rebuild the foundation of this project.
+
+Why was the Priveleged Helper Tool removed in alpha 15.7 and then restored in alpha 15.7.1? The answer is: it wasn't in use since 3.0.0 alpha 5, it was a forgotten item that was still installing anyways - which was dangerous. In 3.0.0 alpha 5, the helper tool was abandoned in favor of sudo -v, which works only in the Terminal. In 4.0.0 alpha 11, this patcher migrated away from sudo -v, because now people were using GUI instead of running from source.
+
+Wiederherstellung der Privilegientrennung
+
+Viele Benutzer, darunter @YBronst und andere, auch im InsanelyMac-Forum (siehe: https://www.insanelymac.com/forum/topic/362543-the-oclp-plus-3x-tahoe-patch-set/page/5/), berichteten von Frustration darüber, dass osascript -a für jeden Befehl sudo auslöste. Danke fürs Teilen dieser Frustration! Ich bin von osascript -a ebenfalls auch frustriert.
+
+Verbesserungen:
+
+Wiedereinführung des Privileged Helper Tools: Wir haben die in Version 3.0.0 verwendete osascript-Implementierung durch das neue Helper Tool ersetzt. Das neue Helper Tool stellt eine sauberere und zuverlässigere XPC-basierte Architektur wieder her und beseitigt die wiederholten Passwortabfragen, die erhebliche Probleme verursachten.
+
+Hinweis zu make debug: Dieser Build verwendet aktuell ein für Entwicklungszwecke signiertes Debug-Helper-Tool. Obwohl diese Konfiguration technisch weniger restriktiv ist als eine für die Produktion signierte Binärdatei, haben wir der Benutzerfreundlichkeit Priorität eingeräumt, um die Plattform zu stabilisieren.
+
+Bekannte Probleme & Status:
+
+Root-Patching & Login-Stabilität: Wir untersuchen Berichte über Authentifizierungsprobleme nach der Anwendung des Root-Patches. Ich arbeite derzeit an einer Lösung, werde diese aber erst in den Hauptzweig übernehmen, wenn die Stabilität der Lösung bestätigt ist.
+
+Aufruf zum Testen: Version 4.0.0 Pre-Alpha 9.2 steht hier für alle zur Verfügung, die beim Debuggen helfen möchten: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/tag/4.0.0.13032
+
+Empfohlener Workflow: Bis die Login-Stabilität bestätigt ist, empfehle ich, diese Version nur zum Erstellen von OpenCore zu verwenden und das Modul „Treiber und Patches installieren“ zu vermeiden.
+
+Da ich kein Nicht-T2-System für dedizierte Tests habe, bin ich auf die Hilfe der Community angewiesen, um die spezifische Regression zu identifizieren, die diese Login-Probleme verursacht. Bitte melden Sie Ihre Ergebnisse im Tracker. Vielen Dank für Ihre Geduld, während wir das Fundament dieses Projekts wieder aufbauen.
+
+Warum wurde das privilegierte Hilfstool in Alpha 15.7 entfernt und dann in Alpha 15.7.1 wiederhergestellt? Die Antwort: Es wurde seit 3.0.0 Alpha 5 nicht mehr verwendet und war ein vergessenes Element, das sich trotzdem weiterhin installierte – was gefährlich war. In 3.0.0 Alpha 5 wurde das Hilfstool zugunsten von sudo -v aufgegeben, das nur im Terminal funktioniert. In 4.0.0 Alpha 11 wurde dieser Patcher von sudo -v entfernt, da nun vermehrt die grafische Benutzeroberfläche anstelle der Ausführung aus dem Quellcode verwendet wurde.
+
 ## 4.0.0.13031 - 4.0.0 Voralpha 9.1 für Alpha 16 / 4.0.0 pre-alpha 9.1 for alpha 16:
 Thanks @jasondillontech-lgtm for again reporting an issue where Universal-Binaries.dmg fails to mount due to using -passphrase instead of -stdinpass!
 This release:
