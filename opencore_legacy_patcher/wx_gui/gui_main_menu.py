@@ -37,22 +37,6 @@ from ..wx_gui import (
     gui_update,
 )
 
-def check_full_disk_access():
-    """
-    Checks for Full Disk Access by attempting to list contents of a restricted directory.
-    Returns True if accessible, False otherwise.
-    """
-    try:
-        # TCC protected path example
-        result = subprocess.run(
-            ["/bin/ls", "/Library/Application Support/com.apple.TCC/"],
-            capture_output=True,
-            text=True
-        )
-        return result.returncode == 0
-    except Exception:
-        return False
-
 class MainFrame(wx.Frame):
     def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None):
         logging.info("Initializing Main Menu Frame")
