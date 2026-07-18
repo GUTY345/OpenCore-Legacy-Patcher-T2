@@ -249,14 +249,17 @@ class BuildSecurity:
         try:
             gfx["framebuffer-patch-enable"] = binascii.unhexlify("01000000")
             
-            if self.is_mac_mini or self.is_ice_lake:
+            if self.model in _T2_UHD630_MODELS:
+                # Connector-less ig-platform-id (0x3E9B0006) has no connectors defined,
+                # so con0 must stay in headless isolation for ALL UHD630 T2 models —
+                # this includes Macmini8,1 (no dGPU) as well as the MBP15/16 models (dGPU present).
+                gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
+                gfx["framebuffer-con0-type"]    = binascii.unhexlify("00000000")  
+                logging.info(f"  > {self.model}: Enforced strict headless isolation structure on con0 (connector-less platform-id)")
+            elif self.is_mac_mini or self.is_ice_lake:
                 gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
                 gfx["framebuffer-con0-type"]    = binascii.unhexlify("00040000")  
                 logging.info(f"  > {self.model}: Enforced active physical mapping layout on con0 (iGPU-only fix)")
-            elif self.model in _T2_UHD630_MODELS:
-                gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
-                gfx["framebuffer-con0-type"]    = binascii.unhexlify("00000000")  
-                logging.info(f"  > {self.model}: Enforced strict headless isolation structure on con0 (dGPU Present)")
             else:
                 gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
                 gfx["framebuffer-con0-type"]    = binascii.unhexlify("00040000")  
