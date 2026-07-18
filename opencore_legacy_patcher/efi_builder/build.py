@@ -141,8 +141,9 @@ class BuildOpenCore:
                 logging.info("Please try again later.")
                 sys.exit(3)
 
+            try:
                 logging.info("- Adding T2-specific bypass NVRAM variables")
-                
+
                 if "NVRAM" not in self.config:
                     self.config["NVRAM"] = {"Add": {}, "Delete": {}}
                 if "Delete" not in self.config["NVRAM"]:
@@ -154,7 +155,7 @@ class BuildOpenCore:
                 # Ensure we strictly clean out legacy variables from NVRAM to prevent corecrypto mismatch
                 if "7C436110-AB2A-4BBB-A880-FE41995C9F82" not in self.config["NVRAM"]["Delete"]:
                     self.config["NVRAM"]["Delete"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"] = []
-                
+
                 for target_arg in ["boot-args", "csr-active-config", "amfi-allow-arguments"]:
                     if target_arg not in self.config["NVRAM"]["Delete"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]:
                         self.config["NVRAM"]["Delete"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"].append(target_arg)
@@ -162,17 +163,16 @@ class BuildOpenCore:
                 # Fetch template boot-args, scrub any accidental Lilu flags inherited from template plists
                 raw_args = self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"].get("boot-args", "")
                 scrubbed_args = " ".join([arg for arg in raw_args.split() if not arg.startswith("-lilu")])
-                
+
                 # Append required T2 args safely without compounding spaces
                 t2_args = "-ibtcompatbeta -amfipassbeta"
                 self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] = f"{scrubbed_args} {t2_args}".strip()
-                
+
                 # Ensure WriteFlash is enabled to commit changes to SPI ROM
                 self.config["NVRAM"]["WriteFlash"] = True
-                
+
                 # Force DisableIoMapper for stability
                 self.config["Kernel"]["Quirks"]["DisableIoMapper"] = True
-
             except Exception as e:
                 logging.error("Whoops, the app failed to inject the required kexts because of the following error:")
                 logging.exception("Stack Trace:")
