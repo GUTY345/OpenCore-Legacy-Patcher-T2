@@ -436,20 +436,14 @@ class BuildMiscellaneous:
         logging.info("If you want to enable optional patches that haven't been tested yet, you should download go to releases")
         logging.info(", then download the zip file, extract it, and then, open up misc.py.")
         logging.info("And afterwards, you need manually to set enable_experimental_patches from False to True")
-        logging.info("Wenn Sie möchten, optionale Patches zu aktivieren, die nicht getestet wurden, Sie müssen nach Releases gehen")
-        logging.info(", denn die Zip-Datei herunterladen, und denn dies zu extrahieren. Und denn misc.py zu öffnen.")
-        logging.info("Und denn, manuell die Funktion enable_experimental_patches von False auf True setzen.")
         builder = support.BuildSupport(self.model, self.constants, self.config)
         self.config.setdefault("Kernel", {}).setdefault("Patch", [])
 
         if enable_experimental_patches==False:
-            logging.info("Das Injizieren von optionale Patches sind nicht aktiviert. Das ist Standard-Verhalten.")
             logging.info("Injecting optional patches are not enabled. That's the standard behavior.")
         elif enable_experimental_patches==True:
-            logging.info("ACHTUNG! Injizieren von optionale Patches sind aktiviert. Diese Patches sind noch nicht getestet und können Fehler enthalten, wie z.B Kernel Panics verursachen.")
             logging.info("ATTENTION! Injecting optional patches are enabled. These patches haven't been tested yet and may have bugs, which could lead to for example kernel panics.")
         else:
-            logging.error("Wir könnten nicht bestimmen, ob das Injizieren von optionale Patches eingeschaltet sind oder nicht, aber normalerweise sollte das ausgeschaltet sein, falls den Variable nicht auf True gesetzt sein.")
             logging.error("We couldn't verify if injecting optional patcges are enabled or not, but they must be disabled if the variable is not set to True.")
         
         
@@ -528,10 +522,8 @@ class BuildMiscellaneous:
             logging.info("- Set SIP to 0x803")
             self._set_nvram_value(APPLE_NVRAM_UUID, "csr-active-config", binascii.unhexlify("03080000"), overwrite=True)
         except Exception as e:
-            logging.error("Einstellen von SIP auf 0x803 schlägt fehl wegen das folgende Fehler:")
             logging.error("Setting SIP to 0x803 failed due to the following error:")
             logging.exception("Stack Trace:")
-            logging.info("Bitte versuchen Sie später noch einmal.")
             logging.info("Please try again later.")
             sys.exit(3)
         
@@ -560,12 +552,10 @@ class BuildMiscellaneous:
                     "Skip": 0
                 }
                 if self._validate_patch(new_patch):
-                    logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                     logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
                     logging.info("- Injecting Bypass XARTDisableLog limits patch")
                     kernel_patches.append(new_patch)
                 else:
-                    logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
                     logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                     sys.exit(3)
 
@@ -588,13 +578,10 @@ class BuildMiscellaneous:
                     "Skip": 0
             }
                 if self._validate_patch(new_patch):
-                    logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                     logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
-                    logging.info("- Hardcode SEP OOL Max Send Pages Limit patch injizieren")
                     logging.info("- Injecting Hardcode SEP OOL Max Send Pages Limit patch")
                     kernel_patches.append(new_patch)
                 else:
-                    logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
                     logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                     sys.exit(3)
 
@@ -621,12 +608,10 @@ class BuildMiscellaneous:
                     "Skip": 0
                 }
                 if self._validate_patch(new_patch):
-                    logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                     logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
                     logging.info("  > Injecting AppleKeyStore Tahoe deadline check bypass")
                     kernel_patches.append(new_patch)
                 else:
-                    logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
                     logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                     sys.exit(3)
 
@@ -649,12 +634,10 @@ class BuildMiscellaneous:
                     "Replace": binascii.unhexlify("31C0C39090909090909090909090")
                 }
                 if self._validate_patch(new_patch):
-                    logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                     logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
                     logging.info("- Injecting modernized AppleUSBXHCI T2 handshake bypass")
                     kernel_patches.append(new_patch)
                 else:
-                    logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
                     logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                     sys.exit(3)
 
@@ -672,11 +655,9 @@ class BuildMiscellaneous:
                         "Replace": binascii.unhexlify("C39090909090909090909090909090")
                     }
                     if self._validate_patch(new_patch):
-                        logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                         logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
                         kernel_patches.append(new_patch)
                     else:
-                        logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
                         logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                         sys.exit(3)
 
@@ -696,7 +677,6 @@ class BuildMiscellaneous:
                         logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
                         kernel_patches.append(new_patch)
                     else:
-                        logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
                         logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                         sys.exit(3)
         except Exception as e:
@@ -768,11 +748,9 @@ class BuildMiscellaneous:
                         }
                     ])
                 if self._validate_patch(new_patch):
-                    logging.info("Wir haben erfolgreich die Prüfung abgeschlossen, ob die Bytes zwischen Find und Replace gleich lang sind.")
                     logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
                     kernel_patches.append(new_patch)
                 else:
-                    logging.error("Wir haben einen Problem, die Bytes-Länge zwischen Find und Replace zu vergleichen")
                     logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                     sys.exit(3)
             except Exception as e:
