@@ -83,7 +83,7 @@ class GenerateMenubar:
         menubar = wx.MenuBar()
         fileMenu = wx.Menu()
 
-        aboutItem = fileMenu.Append(wx.ID_ABOUT, "&About OpenCore Legacy Patcher")
+        aboutItem = fileMenu.Append(wx.ID_ABOUT, "&About OpenCore Legacy Patcher T2")
         fileMenu.AppendSeparator()
         revealLogItem = fileMenu.Append(wx.ID_ANY, "&Reveal Log File")
 
