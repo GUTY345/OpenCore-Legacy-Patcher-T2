@@ -171,8 +171,11 @@ class BuildOpenCore:
                 # Ensure WriteFlash is enabled to commit changes to SPI ROM
                 self.config["NVRAM"]["WriteFlash"] = True
 
-                # Force DisableIoMapper for stability
-                self.config["Kernel"]["Quirks"]["DisableIoMapper"] = True
+                # T2 Macs: do NOT disable the IOMMU. The T2 bridge talks to the host
+                # over an internal XHCI link that depends on IOMMU-mapped DMA — forcing
+                # this True causes "Unresponsive firmware or bridge unresponsive" panics
+                # (AppleUSBXHCICommandRing::abortCommand / setPowerStateGated failures).
+                self.config["Kernel"]["Quirks"]["DisableIoMapper"] = False
             except Exception as e:
                 logging.error("Whoops, the app failed to inject the required kexts because of the following error:")
                 logging.exception("Stack Trace:")
