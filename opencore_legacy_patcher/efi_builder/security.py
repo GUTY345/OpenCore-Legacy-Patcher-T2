@@ -358,12 +358,6 @@ class BuildSecurity:
             logging.info("Einbinden einer einheitlichen Tahoe-Funktionstokenzuordnung.")
             logging.info("Injecting unified Tahoe capability token mapping.")
             self._update_nvram_string(apple_nvram_uuid, "boot-args", "ipc_control_port_options=0 cs_unrestricted_cs=1 cs_allow_invalid=1")
-
-    def _apply_t2_kernel_patches_tahoe(self) -> None:
-        logging.info("The use of the function _apply_t2_kernel_patches_tahoe is retired. This function remains there to ensure compatability so the app doesn't crash.")
-        logging.info("The goal of this is to make the code clearer.")
-        logging.info("Die Funktion _apply_t2_kernel_patches_tahoe ist eingestellt. Diese Funktion nur bleibt für Kompabilität, um sicherzustellen, dass die App nicht abstürzt.")
-        logging.info("Das Ziel ist es den Code klarer zu machen.")
     
     # ------------------------------------------------------------------
     # Main build entry point
@@ -385,7 +379,6 @@ class BuildSecurity:
             
             # 2. Grafik- & Kernel-Injektionen (Unabhängig von Variablen-Fluktuatuationen absichern)
             self._apply_t2_graphics_injection()
-            self._apply_t2_kernel_patches_tahoe()
 
             # 3. Ergänzende kosmetische Argumente sauber anhängen
             self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-disable_sidecar_mac -disable_media_analysis")
