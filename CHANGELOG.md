@@ -1,4 +1,9 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.13043 - 4.0.0 pre-alpha 10.3 for alpha 16 / 4.0.0 Voralpha 10.3 für Alpha 16 Latest
+This release fixes a bug where when closing the app via clicking the red circle or when granting full disk permissions to restart, it crashes.
+Mit dieser Version wird ein Fehler behoben, der zum Absturz der App führte, wenn diese durch Anklicken des roten Kreises geschlossen oder durch Erteilen der Berechtigung für den vollständigen Festplattenzugriff zum Neustart neu gestartet wurde.
+<img width="532" height="407" alt="Bildschirmfoto 2026-07-19 um 23 36 54" src="https://github.com/user-attachments/assets/c5a68310-6133-44a9-81bc-600d3e7d2b55" />
+
 ## 4.0.0.13042 - 4.0.0 pre-alpha 10.2 for alpha 16 / 4.0.0 Voralpha 10.2 für Alpha 16
 This release fixes a bug where the window was still saying Nightly.
 Diese Version behebt einen Fehler, bei dem im Fenster immer noch „Nightly“ angezeigt wurde.
