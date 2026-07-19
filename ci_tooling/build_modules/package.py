@@ -58,7 +58,7 @@ class GeneratePackage:
         _welcome = ""
 
         _welcome += "# Application Uninstaller\n"
-        _welcome += "This package will uninstall the OpenCore Legacy Patcher application and its Privileged Helper Tool from your system."
+        _welcome += "This package will uninstall the OpenCore Legacy Patcher T2 application and its Privileged Helper Tool from your system."
         _welcome += "\n\n"
         _welcome += "This will not remove any root patches or OpenCore configurations that you may have installed using OpenCore Legacy Patcher."
         _welcome += "\n\n"
@@ -73,10 +73,10 @@ class GeneratePackage:
         """
         _welcome = ""
 
-        _welcome += "# DO NOT RUN AUTOPKG-ASSETS MANUALLY!\n\n"
-        _welcome += "## THIS CAN BREAK YOUR SYSTEM'S INSTALL!\n\n"
-        _welcome += "This package should only ever be invoked by the Patcher itself, never downloaded or run by the user. Download the OpenCore-Patcher.pkg on the Github Repository.\n\n"
-        _welcome += f"[OpenCore Legacy Patcher GitHub Release]({constants.Constants().repo_link})"
+        _welcome += "# PLEASE DO NOT RUN AUTOPKG-ASSETS MANUALLY!\n\n"
+        _welcome += "## THIS WILL CORRUPT THE OPERATING SYSTEM!\n\n"
+        _welcome += "This package is intented to be used only by the Patcher application itslef, not run manually by a user. Download the OpenCore-Patcher.pkg on the Github Repository.\n\n"
+        _welcome += f"[OpenCore Legacy Patcher T2 GitHub Release]({constants.Constants().repo_link})"
 
         return _welcome
 
@@ -97,7 +97,7 @@ class GeneratePackage:
             pkg_background="./ci_tooling/pkg_assets/PkgBackground-Uninstaller.png",
             pkg_preinstall_script=_tmp_uninstall.name,
             pkg_as_distribution=True,
-            pkg_title="OpenCore Legacy Patcher Uninstaller",
+            pkg_title="OpenCore Legacy Patcher T2 Uninstaller",
             pkg_welcome=self._generate_uninstaller_welcome(),
         ).build() is True
 
@@ -120,7 +120,7 @@ class GeneratePackage:
             pkg_preinstall_script=_tmp_pkg_preinstall.name,
             pkg_postinstall_script=_tmp_pkg_postinstall.name,
             pkg_file_structure=self._files,
-            pkg_title="OpenCore Legacy Patcher",
+            pkg_title="OpenCore Legacy Patcher T2",
             pkg_welcome=self._generate_installer_welcome(),
         ).build() is True
 
