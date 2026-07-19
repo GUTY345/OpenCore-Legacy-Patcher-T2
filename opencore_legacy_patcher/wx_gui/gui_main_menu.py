@@ -381,8 +381,9 @@ class MainFrame(wx.Frame):
             logging.error(f"We failed to open up Build and Install OpenCore: {e}")
 
     def on_post_install_root_patch(self, event: wx.Event = None):
+        Festplattenberechtigungen=False
         # 1. Suchen ob Festplatte-Berechtigungen ins Systemeinstellungen da sind
-        if not gui_support.check_full_disk_access():
+        if not gui_support.check_full_disk_access() and if Festplattenberechtigungen==False:
             logging.info("Festplattenberechtigungen in Systemeinstellungen fehlen")
             logging.info("Disk permissions via System Settings are missing")
             msg = (
