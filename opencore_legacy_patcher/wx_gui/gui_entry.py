@@ -75,7 +75,7 @@ class EntryPoint:
 
         self.frame = entry(
             None,
-            title=f"{self.constants.patcher_name} {self.constants.patcher_version}{' (Nightly)' if not self.constants.commit_info[0].startswith('refs/tags') else ''}",
+            title=f"{self.constants.patcher_name} {self.constants.patcher_version}",
             global_constants=self.constants,
             screen_location=None,
             **({"patches": patches} if is_patching_mode else {})
