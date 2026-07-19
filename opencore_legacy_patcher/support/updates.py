@@ -22,14 +22,11 @@ class CheckBinaryUpdates:
     def __init__(self, global_constants: constants.Constants) -> None:
         self.constants: constants.Constants = global_constants
         try:
-            logging.info("Suchen ob die Version valid ist")
             logging.info("Checking if the version is valid")
             self.binary_version = version.parse(self.constants.patcher_version)
         except version.InvalidVersion:
-            logging.error("Da die Version nicht valid ist, werden keine automatische Updates durchgeführt.")
             logging.error("Since the version is not valid, we will not install any automatic updates.")
             logging.exception("Stack Trace:")
-            logging.info("Bitte manuell nach Updates in GitHub suchen.")
             logging.info("Please check for updates in GitHub manually.")
             assert self.constants.special_build is True, "Invalid version number for binary"
             # Special builds will not have a proper version number
@@ -111,7 +108,6 @@ class CheckBinaryUpdates:
 
         if not network_handler.NetworkUtilities(REPO_LATEST_RELEASE_URL).verify_network_connection():
             logging.error("It failed to connect with the GitHub page")
-            logging.info("Bitte sehen Sie, ob Ihr Computer mit den Internet verbunden ist.")
             logging.info("Please check if your computer is connected to the internet.")
             logging.exception("Stack Trace:")
             logging.info("If your computer is connected to the internet, it may be due to invalid syntax.")
