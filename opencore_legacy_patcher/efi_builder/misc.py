@@ -615,32 +615,6 @@ class BuildMiscellaneous:
                     logging.error("We have a problem comparing the byte length between Find and Replace operations.")
                     sys.exit(3)
 
-            # 4. Bypass AppleIntelUSBXHCI T2 handshake (Modernized for Tahoe vtable shifts)
-            if not any(p.get("Comment") == "Bypass T2 USB handshake (Tahoe fix)" for p in kernel_patches):
-                new_patch = {
-                    "Arch": "x86_64",
-                    "Base": "",  # Suche über Byte-Signatur, da Symbole gestrippt sind
-                    "Comment": "Bypass T2 USB handshake (Tahoe fix)",
-                    "Count": 1,   # Verhindert Kollateralschäden durch Mehrfachtreffer
-                    "Enabled": True,
-                    "Identifier": "com.apple.driver.usb.AppleUSBXHCI",
-                    "MinKernel": "24.0.0",
-                    "MaxKernel": "",
-                    "Limit": 0,
-                    "Skip": 0,
-                    "Mask": b"",
-                    "ReplaceMask": b"",
-                    "Find": binascii.unhexlify("554889E54156534883EC10488B05"),
-                    "Replace": binascii.unhexlify("31C0C39090909090909090909090")
-                }
-                if self._validate_patch(new_patch):
-                    logging.info("We have successfully finished checking if the bytes between Find and Replace are equally long.")
-                    logging.info("- Injecting modernized AppleUSBXHCI T2 handshake bypass")
-                    kernel_patches.append(new_patch)
-                else:
-                    logging.error("We have a problem comparing the byte length between Find and Replace operations.")
-                    sys.exit(3)
-
             # Experimental Patches
             if enable_experimental_patches == True:
                 # Experimental Patch 1: processInterrupts
