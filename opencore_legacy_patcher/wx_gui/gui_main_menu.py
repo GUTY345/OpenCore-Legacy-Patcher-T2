@@ -60,9 +60,6 @@ class MainFrame(wx.Frame):
         self.Centre()
         self.Show()
 
-        # FIX: Sauberes Schließen abfangen, um macOS Autorelease-Pool-Crashes zu verhindern
-        self.Bind(wx.EVT_CLOSE, self.on_close_window)
-
         self._preflight_checks()
 
     def _generate_elements(self) -> None:
@@ -440,17 +437,3 @@ class MainFrame(wx.Frame):
             gui_help.HelpFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
         except Exception as e:
             logging.error(f"We failed to open up Help: {e}")
-
-    def on_close_window(self, event: wx.Event):
-        """ Sauberes Entladen aller Cocoa-Ressourcen beim Schließen """
-        self.exiting_app = True
-        
-        # FIX: Offenes Gemini-Fenster vor App-Terminierung im Speicher killen
-        if getattr(self, 'active_gemini_frame', None):
-            try:
-                self.active_gemini_frame.Destroy()
-            except Exception:
-                pass
-                
-        wx.GetApp().SafeYield(None, True)
-        self.Destroy()
