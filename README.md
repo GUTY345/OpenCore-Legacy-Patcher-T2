@@ -40,7 +40,7 @@ Our goal of this project is to add support for T2 Macs so unsupported T2 Macs ca
 
 Noteworthy features of OpenCore Legacy Patcher:
 
-* Support for macOS Big Sur, Monterey, Ventura, Sonoma, Sequoia and eventually add support for Tahoe.
+* Support for macOS Monterey, Ventura, Sonoma, Sequoia and eventually add support for Tahoe.
 * Native Over the Air (OTA) System Updates
 * Supports Penryn and newer Macs
 * Full support for WPA Wi-Fi and Personal Hotspot on BCM943224 and newer wireless chipsets
@@ -57,7 +57,7 @@ Note: Only clean-installs and upgrades are supported. macOS Big Sur installs alr
 
 * You can, however, reinstall macOS with this patcher and retain your original data
 
-Note 2: Currently, OpenCore Legacy Patcher officially supports patching to run macOS Big Sur through Tahoe installs. For older OSes, OpenCore may function; however, support is currently not provided from Albert Müller.
+Note 2: Currently, OpenCore Legacy Patcher officially supports patching to run macOS Monterey through Tahoe installs. For older OSes, OpenCore may function; however, support is currently not provided from Albert Müller.
 
 * For macOS Mojave and Catalina support, we recommend the use of [dosdude1's patchers](http://dosdude1.com)
 
