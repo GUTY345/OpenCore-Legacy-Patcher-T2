@@ -518,7 +518,6 @@ class BuildMiscellaneous:
         # Injizieren von bypass für library validation enforcement auf T2 hardware übersprungen, um frühe Kernel Panics zu vermeiden, bevor die Betriebssystem überhaupt startet
 
         try:
-            logging.info("- SIP auf 0x803 einstellen")
             logging.info("- Set SIP to 0x803")
             self._set_nvram_value(APPLE_NVRAM_UUID, "csr-active-config", binascii.unhexlify("03080000"), overwrite=True)
         except Exception as e:
