@@ -217,10 +217,8 @@ class BuildOpenCore:
             try:
                 function(self.model, self.constants, self.config)
             except Exception as e:
-                logging.error("Es gibt einen schwerwiegenden Fehler")
                 logging.error("There is a serious error")
-                logger.exception(f"Fehler, die Funktion, die heißt {function.__name__} zu starten")
-                logger.exception(f"Failed to initialize the function called {function.__name__}")
+                logging.exception(f"Failed to initialize the function called {function.__name__}")
                 logging.exception("Stack Trace:")
                 sys.exit(3)
 
