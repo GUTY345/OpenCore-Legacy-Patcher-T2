@@ -381,34 +381,47 @@ class MainFrame(wx.Frame):
             logging.error(f"We failed to open up Build and Install OpenCore: {e}")
 
     def on_post_install_root_patch(self, event: wx.Event = None):
-        Festplattenberechtigungen=False
-        # 1. Suchen ob Festplatte-Berechtigungen ins Systemeinstellungen da sind
-        if not gui_support.check_full_disk_access() and if Festplattenberechtigungen==False:
-            logging.info("Festplattenberechtigungen in Systemeinstellungen fehlen")
-            logging.info("Disk permissions via System Settings are missing")
+        # 1. Check if Full Disk Access is granted
+        has_full_disk_access = gui_support.check_full_disk_access()
+    
+        if not has_full_disk_access:
+            logging.info("Disk permissions via System Settings are missing or not detected.")
+            
             msg = (
                 "OpenCore Legacy Patcher T2 requires 'Full Disk Access' to perform root volume patching.\n\n"
-                "Would you like to open System Settings now to enable it?\n\n"
-                "Otherwise it cannot perform the patching process properly due to Universal-Binaries.dmg not being able to mount.\n\n"
-                "(You may need to toggle the switch off and on again if it is already listed.)"
+                "If you have already granted this permission and are still seeing this message, "
+                "you can click 'Proceed Anyway' to try to continue.\n\n"
+                "(You may need to toggle the switch off and on again in System Settings if it fails.)"
             )
             
+            # Create dialog with an extra button for the workaround
             dialog = wx.MessageDialog(self, msg, "Permission Required", wx.YES_NO | wx.CANCEL | wx.ICON_ERROR)
-            dialog.SetYesNoLabels("Open Settings", "Cancel")
+            dialog.SetYesNoLabels("Open Settings", "Proceed Anyway")
             
-            if dialog.ShowModal() == wx.ID_YES:
-                webbrowser.open("x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")
-            
+            result = dialog.ShowModal()
             dialog.Destroy()
-            return
-        # 2. Falls ja, nur denn fährt mit Root-Patching fort    
-        else:
-            try:
-                logging.info("Festplattenberechtigungen in Systemeinstellungen sind eingeschaltet")
-                logging.info("Disk permissions via System Settings are enabled")
-                gui_sys_patch_display.SysPatchDisplayFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
-            except Exception as e:
-                logging.error(f"We failed to open up Install drivers and patches: {e}")
+            
+            if result == wx.ID_YES:
+                webbrowser.open("x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")
+                return
+            elif result != wx.ID_NO:
+                # User clicked Cancel or closed the dialog
+                return
+            
+            # If ID_NO (Proceed Anyway), we continue to the try block below
+            logging.info("User chose to proceed despite permission check failure.")
+    
+        # 2. Proceed with Root Patching
+        try:
+            logging.info("Launching System Patch Display.")
+            gui_sys_patch_display.SysPatchDisplayFrame(
+                parent=self, 
+                title=self.title, 
+                global_constants=self.constants, 
+                screen_location=self.GetPosition()
+            )
+        except Exception as e:
+            logging.error(f"Failed to open Install drivers and patches: {e}")
 
     def on_create_macos_installer(self, event: wx.Event = None):
         try:
