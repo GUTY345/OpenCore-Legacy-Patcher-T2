@@ -1,50 +1,41 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
 ## 4.0.0.13041 - 4.0.0 pre-alpha 10.1 for alpha 16 / 4.0.0 Voralpha 10.1 für Alpha 16
+Thanks for @TheRaddish1313 contributing to this project!
 This release:
-
 - improves KDK handling
-
 - fixes framebuffer patching issues on T2 Macs
-
 - implements a temporary workaround for root patching - even if full disk permissions were allowed, it would still ask to enable full disk permissions via System Settings. Now, as a workaround, this release adds Proceed Anyway button, which will let you through.
-
 - improves boot-args
-
 - fixes a bug where Sidecar and other continuity features won't work
-
 - Adds T2-specific NVRAM variables handling
-
 - enables IOMMU on T2 Macs
-
 - removes German logs from debugging in the GUI so non-German speaking developers don't get confused
-
 - fixes the following vulnerabilities:
 install.py:
+- Fixes a security vulnerability that allows attackers to trick an SD card into thinking it's a hard drive when checking whether it's in use, in order to launch DoS attacks to damage it:
 
-- Fixes a vulnerability that allows attackers to trick an SD card into thinking it's a hard drive when checking whether it's in use, in order to launch DoS attacks to damage it:
-
-  def _determine_sd_card(self, media_name: str):
-          if any(x in media_name for x in ("SD Card", "SD/MMC", "SDXC Reader", "SD Reader", "Card Reader")):
-              logging.info("You're using an SD card, MMC, SDXC Reader or Card Reader")
-              return True
-          return False # <- this is a vulnerability
+        def _determine_sd_card(self, media_name: str):
+                if any(x in media_name for x in ("SD Card", "SD/MMC", "SDXC Reader", "SD Reader", "Card Reader")):
+                    logging.info("You're using an SD card, MMC, SDXC Reader or Card Reader")
+                    return True
+                return False # <- this is a vulnerability
 security.py:
-
 - fixes a vulnerability that calls a deprecated function. This allows attackers to execute arbitrary code:
 
-      def _apply_t2_kernel_patches_tahoe(self) -> None: # <- this is a vulnerability
-              logging.info("The use of the function _apply_t2_kernel_patches_tahoe is retired. This function remains there to ensure compatability so the app doesn't crash.")
-              logging.info("The goal of this is to make the code clearer.")
-              logging.info("Die Funktion _apply_t2_kernel_patches_tahoe ist eingestellt. Diese Funktion nur bleibt für Kompabilität, um sicherzustellen, dass die App nicht abstürzt.")
-              logging.info("Das Ziel ist es den Code klarer zu machen.")
-      
-          # ------------------------------------------------------------------
-          # Main build entry point
-      @@ -385,7 +379,6 @@ def _build(self) -> None:
-      
-                  # 2. Grafik- & Kernel-Injektionen (Unabhängig von Variablen-Fluktuatuationen absichern)
-                  self._apply_t2_graphics_injection()
-                  self._apply_t2_kernel_patches_tahoe() # <- this is also a vulnerability
+            def _apply_t2_kernel_patches_tahoe(self) -> None: # <- this is a vulnerability
+                    logging.info("The use of the function _apply_t2_kernel_patches_tahoe is retired. This function remains there to ensure compatability so the app doesn't crash.")
+                    logging.info("The goal of this is to make the code clearer.")
+                    logging.info("Die Funktion _apply_t2_kernel_patches_tahoe ist eingestellt. Diese Funktion nur bleibt für Kompabilität, um sicherzustellen, dass die App nicht abstürzt.")
+                    logging.info("Das Ziel ist es den Code klarer zu machen.")
+            
+                # ------------------------------------------------------------------
+                # Main build entry point
+            @@ -385,7 +379,6 @@ def _build(self) -> None:
+            
+                        # 2. Grafik- & Kernel-Injektionen (Unabhängig von Variablen-Fluktuatuationen absichern)
+                        self._apply_t2_graphics_injection()
+                        self._apply_t2_kernel_patches_tahoe() # <- this is also a vulnerability
+
 With the next pre-alpha release, 4.0.0.1350, for T2 Macs, patches will be written with Claude instead of NotebookLM due to being known to be buggy, cause gray screens and kernel panics: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/discussions/122
 
 ## 4.0.0.13040 - 4.0.0 Voralpha 10 für Alpha 16 / 4.0.0 pre-alpha 10 for alpha 16
