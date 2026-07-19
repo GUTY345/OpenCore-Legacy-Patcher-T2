@@ -93,8 +93,10 @@ class tui_disk_installation:
 
     def _determine_sd_card(self, media_name: str):
         if any(x in media_name for x in ("SD Card", "SD/MMC", "SDXC Reader", "SD Reader", "Card Reader")):
+            logging.info("You're using an SD card, MMC, SDXC Reader or Card Reader")
             return True
-        return False
+        else:
+            return False
 
     def install_opencore(self, full_disk_identifier: str):
         # TODO: Apple Script schlägt in Yosemite und älter fehl
@@ -117,6 +119,7 @@ class tui_disk_installation:
         sd_type = drive_host_info.get("MediaName", "Disk")
         
         try:
+            logging.info("Checking hard disk type")
             ssd_type = drive_host_info["SolidState"]
         except KeyError:
             ssd_type = False
@@ -190,7 +193,6 @@ class tui_disk_installation:
         # Bereinigung & Unmount
         logging.info("Cleaning up installation site")
         if not self.constants.recovery_status:
-            logging.info("Werfe EFI-Partition aus (Unmount)")
             logging.info("Unmounting the EFI partition")
             # FIX 4: Auch unmount als Root ausführen, da wir es als Root gemountet haben
             subprocess_wrapper.run_as_root(["/usr/sbin/diskutil", "umount", mount_path])
