@@ -90,7 +90,9 @@ To run the project from source, see here: [Build and run from source](./SOURCE.m
   * Great amounts of help with debugging, and code suggestions
 * [Ausdauersportler](https://github.com/Ausdauersportler)
   * iMacs Metal GPUs Upgrade Patch set and documentation
-* [TheRaddish1313]
+* [nxvid](https://github.com/nxvid/OpenCore-Legacy-Patcher-T2/)
+  * for documenting and fixing an issue where sbvmm might not have been injected on T2 Macs
+* [TheRaddish1313](https://github.com/TheRaddish1313)
     * for fixing framebuffer issues and boot args
 * [vit9696](https://github.com/vit9696)
 * [Albert Müller](https://github.com/albert-mueller/)
