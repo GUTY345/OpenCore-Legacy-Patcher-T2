@@ -40,7 +40,7 @@ class PatcherSupportPkgMount:
         if not dmg_path.exists():
             logging.error("- PatcherSupportPkg resources missing, Patcher likely corrupted!!!")
             logging.exception("Stack Trace:")
-            sys.exit(3)
+            return False
 
         output = self._run_hdiutil(
             dmg_path, 
@@ -50,10 +50,9 @@ class PatcherSupportPkgMount:
         )
         
         if output.returncode != 0:
-            logging.error("- Failed to mount Universal-Binaries.dmg")
-            logging.exception("Stack Trace:")
+            logging.info("- Failed to mount Universal-Binaries.dmg")
             subprocess_wrapper.log(output)
-            sys.exit(3)
+            return False
 
         logging.info("- Mounted Universal-Binaries.dmg")
         return True
@@ -76,14 +75,13 @@ class PatcherSupportPkgMount:
             )
             
             if output.returncode != 0:
-                logging.error("- Failed to mount DortaniaInternal resources")
+                logging.info("- Failed to mount DortaniaInternal resources")
                 subprocess_wrapper.log(output)
                 if "Authentication error" not in output.stdout.decode():
                     self._display_authentication_error()
                 if i == 2:
                     self._display_too_many_attempts()
                     sys.exit(3)
-                logging.exception("Stack Trace:")
                 continue
             break
 
