@@ -287,80 +287,11 @@ class BuildSecurity:
         # FIX: Keyword-Typo korrigiert
         self._apply_t2_amfi_boot_args(apple_nvram_uuid)
         self._update_nvram_string(apple_nvram_uuid, "boot-args", "ipc_control_port_options=0 -v keepsyms=1 nvme_shutdown_timestamp=0")
-
-        if self.constants.detected_os >= os_data.os_data.tahoe:
-            self.is_tahoe_target = True
-            self._apply_cryptex_patches(apple_nvram_uuid)
-        elif self.is_tahoe_target is False and self.constants.detected_os >= os_data.os_data.catalina and self.constants.detected_os < os_data.os_data.tahoe:
-            logging.info("Popping up a popup to ask if the OS target is Tahoe or not since we couldn't identify...")
-            self._unknown_target(apple_nvram_uuid)
-        else:
-            logging.error("Upgrading from macOS High Sierra or Mojave straight to Tahoe is not possible. Please, upgrade to macOS Sequoia first.")
-            logging.info("Aborting any patch injection so you can upgrade first to Sequoia or another newer macOS release.")
-            webbrowser.open("https://support.apple.com/en-us/102662")
-            webbrowser.open("https://apps.apple.com/us/app/macos-sequoia/id6596773750?mt=12")
-            sys.exit(3)
-
-    def _unknown_target(self, apple_nvram_uuid: str) -> None:
-        app = wx.GetApp()
-        if app and app.IsMainLoopRunning():
-            logging.info("  > Active GUI environment detected. Thread proxying to Main Thread.")
-            evt = threading.Event()
-            wx.CallAfter(self._unknown_target_gui, apple_nvram_uuid, evt)
-            evt.wait()
-        else:
-            logging.info("  > Headless/CLI environment detected. Falling back to terminal input.")
-            user_input = input("Target OS is macOS 26 Tahoe or newer? (y/n): ").strip().lower()
-            if user_input == 'y':
-                self.is_tahoe_target = True
-                self._apply_cryptex_patches(apple_nvram_uuid)
-            else:
-                self.is_tahoe_target = False
-
-    def _unknown_target_gui(self, apple_nvram_uuid: str, event: threading.Event) -> None:
-        try:
-            parent = wx.GetApp().GetTopWindow()
-            dlg = wx.Dialog(parent, title="Unknown Target", size=(450, 250))
-            sizer = wx.BoxSizer(wx.VERTICAL)
-
-            msg = wx.StaticText(dlg, label="What version would you like to run on your unsupported T2 Mac?")
-            sizer.Add(msg, 0, wx.ALL | wx.CENTER, 20)
-
-            btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-            
-            macOS26_btn = wx.Button(dlg, label="macOS 26 Tahoe or newer")
-            macOS26_btn.Bind(wx.EVT_BUTTON, lambda e: self._handle_selection(dlg, apple_nvram_uuid, target_is_tahoe=True))
-            
-            macOS15_btn = wx.Button(dlg, label="macOS 15 Sequoia or older")
-            macOS15_btn.Bind(wx.EVT_BUTTON, lambda e: self._handle_selection(dlg, apple_nvram_uuid, target_is_tahoe=False))
-            
-            btn_sizer.Add(macOS26_btn, 0, wx.ALL, 5)
-            btn_sizer.Add(macOS15_btn, 0, wx.ALL, 5)
-            
-            sizer.Add(btn_sizer, 0, wx.CENTER)
-            dlg.SetSizer(sizer)
-            
-            dlg.ShowModal()
-            dlg.Destroy()
-        finally:
-            event.set()
-
-    def _handle_selection(self, dialog: wx.Dialog, apple_nvram_uuid: str, target_is_tahoe: bool) -> None:
-        if target_is_tahoe:
-            logging.info("GUI Selection: macOS 26 Tahoe target path validated.")
-            self.is_tahoe_target = True
-            self._apply_cryptex_patches(apple_nvram_uuid)
-            dialog.EndModal(wx.ID_OK)
-        else:
-            logging.info("GUI Selection: Skipping Tahoe-specific patches (Sequoia or older).")
-            self.is_tahoe_target = False
-            dialog.EndModal(wx.ID_CANCEL)
+        self._apply_cryptex_patches(apple_nvram_uuid)
     
     def _apply_cryptex_patches(self, apple_nvram_uuid: str) -> None:
-        if self.is_tahoe_target is True:
-            logging.info("Einbinden einer einheitlichen Tahoe-Funktionstokenzuordnung.")
-            logging.info("Injecting unified Tahoe capability token mapping.")
-            self._update_nvram_string(apple_nvram_uuid, "boot-args", "ipc_control_port_options=0 cs_unrestricted_cs=1 cs_allow_invalid=1")
+        logging.info("Injecting unified capability token mapping.")
+        self._update_nvram_string(apple_nvram_uuid, "boot-args", "cs_unrestricted_cs=1 cs_allow_invalid=1")
     
     # ------------------------------------------------------------------
     # Main build entry point
