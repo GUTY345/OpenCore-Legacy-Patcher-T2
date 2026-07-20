@@ -526,8 +526,7 @@ class PatchSysVolume:
     
             self._rebuild_root_volume()
         except Exception as e:
-            logging.error("Wir haben ein Problem, Patches auszuführen und das Kernel-Cache erneut zu builden.")
-            logging.error("We have a problem ti execute patches and rebuild the Kernel-Cache.")
+            logging.error("We have a problem to execute patches and rebuild the Kernel Cache.")
             logging.exception("Stack Trace:")
             return
 
