@@ -82,9 +82,9 @@ class PatcherSupportPkgMount:
                     self._display_authentication_error()
                 if i == 2:
                     self._display_too_many_attempts()
-                    return False
+                    sys.exit(3)
                 logging.exception("Stack Trace:")
-                sys.exit(3)
+                continue
             break
 
         logging.info("- Mounted DortaniaInternal resources")
