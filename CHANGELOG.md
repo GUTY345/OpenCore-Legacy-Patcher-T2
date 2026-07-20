@@ -1,4 +1,30 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.13047 - 4.0.0 pre-alpha 10.6.1 for alpha 16 / 4.0.0 Voralpha 10.6.1 für Alpha 16 4.0.0.13046 
+This release:
+dmg_mount.py:
+
+- fixes a bug where if if output.returncode != 0, it would always sys.exit(3)
+- fixes other bugs as well
+
+validation.py:
+
+- if the dmg file for PatcherSupportPkg doesn't exist, there was a bug that would download the wrong PatcherSupportPkg. This is fixed.
+
+Diese Version:
+dmg_mount.py:
+
+- Behebt einen Fehler, der dazu führte, dass bei output.returncode != 0 immer sys.exit(3) aufgerufen wurde.
+
+- Behebt weitere Fehler.
+
+validation.py:
+
+- Falls die DMG-Datei für PatcherSupportPkg nicht existierte, wurde fälschlicherweise das falsche PatcherSupportPkg heruntergeladen. Dieser Fehler wurde behoben.
+
+## 4.0.0.13046 - 4.0.0 pre-alpha 10.6 for alpha 16 / 4.0.0 Voralpha 10.6 für Alpha 16 
+This update contains Python bug fixes
+Dieses Update enthält Fehlerbehebungen für Python
+
 ## 4.0.0.13045 - 4.0.0 pre-alpha 10.5 for alpha 16 / 4.0.0 Voralpha 10.5 für Alpha 16 Latest
 Thanks to @nxvid for contributing to this project!
 
