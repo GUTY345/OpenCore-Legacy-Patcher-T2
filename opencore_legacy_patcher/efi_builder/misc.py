@@ -162,9 +162,18 @@ class BuildMiscellaneous:
         return re_block_args
     
     def _re_generate_patch_arguments(self) -> list:
-        """Generate RestrictEvents patch arguments."""
+        """Generate RestrictEvents patch arguments.
+
+        sbvmm must be injected for T2 Macs regardless of serial_settings because
+        macOS Tahoe's installer preflight checks SupportedDeviceModels via
+        RestrictEvents at install time.  When serial_settings is "Advanced" the
+        original condition (serial_settings == "None" or secure_status is False)
+        never fires, leaving revpatch=sbvmm absent from the 4D1FDA02 NVRAM key
+        and causing BIPreflightError Code 9 (J680AP / MacBookPro15,1 confirmed).
+        """
+        
         re_patch_args = []
-        if self.constants.allow_oc_everywhere is False and (self.constants.serial_settings == "None" or self.constants.secure_status is False):
+        if self.constants.allow_oc_everywhere is False and (self.constants.serial_settings == "None" or self.constants.secure_status is False or self._is_t2_mac()):
             re_patch_args.append("sbvmm")
 
         if self.model in smbios_data.smbios_dictionary:
