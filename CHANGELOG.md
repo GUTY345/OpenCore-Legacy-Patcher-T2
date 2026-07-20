@@ -1,4 +1,12 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.13045 - 4.0.0 pre-alpha 10.5 for alpha 16 / 4.0.0 Voralpha 10.5 für Alpha 16 Latest
+Thanks to @nxvid for contributing to this project!
+
+This version fixes a documented issue from a fork that prevented sbvmm from being injected on T2 Macs. The issue is documented here: https://github.com/nxvid/OpenCore-Legacy-Patcher-T2/commit/7888cc23bf4870e6539b746661fea90829e81eed
+
+Danke an @nxvid, dass Sie zu dieser Projekt beigetragen haben!
+Diese Version behebt von einer dokumentierter in einen Fork Problem, der verursacht, nicht sbvmm auf T2 Macs injiziert. Hier ist das Problem dokumentiert: https://github.com/nxvid/OpenCore-Legacy-Patcher-T2/commit/7888cc23bf4870e6539b746661fea90829e81eed
+
 ## 4.0.0.13044 - 4.0.0 pre-alpha 10.4 for alpha 16 / 4.0.0 Voralpha 10.4 für Alpha 16
 This releases fixes a bug that may prevent updating OpenCore due to invalid syntax
 Diese Version behebt einen Fehler, der aufgrund ungültiger Syntax die Aktualisierung von OpenCore verhindern konnte
