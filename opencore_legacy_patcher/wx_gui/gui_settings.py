@@ -819,7 +819,7 @@ class SettingsFrame(wx.Frame):
                     "description": [
                         "This disables automatic updates for",
                         "OpenCore Legacy Patcher T2",
-                        "Not recommended as disabling app updates makes",
+                        "NOT recommended as disabling app updates makes",
                         "you vulnerable to newly discovered vulnerabilities that",
                         "have been already patched."
                     ],
