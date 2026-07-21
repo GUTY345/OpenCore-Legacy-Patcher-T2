@@ -83,9 +83,7 @@ class CheckBinaryUpdates:
                 return False
 
         if first_version == second_version:
-            if not self.constants.commit_info[0].startswith("refs/tags"):
-                # Check for nightly builds
-                return True
+            logging.info("You are on the latest version available already.")
 
         return first_version > second_version
 
