@@ -1,5 +1,5 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
-## 4.0.0.15900 - 4.0.0 pre-alpha 10.7 for alpha 16 / 4.0.0 Voralpha 10.7 für Alpha 16 Latest
+## 4.0.0.15900 - 4.0.0 pre-alpha 10.7 for alpha 16 / 4.0.0 Voralpha 10.7 für Alpha 16
 This release:
 
 switches from 4.0.0.random numbers to:
