@@ -86,21 +86,20 @@ class BuildOpenCore:
         logging.info("---OpenCore Legacy Patcher T2 by Albert Müller---")
         try:
             if self.constants.detected_os >= os_data.os_data.golden_gate:
-                webbrowser.open("https://www.apple.com/os/macos/")
-                logging.error("macOS 27 Golden Gate is not available for Intel Macs. Apple Silicon required. Please do not try to upgrade to Golden Gate on Intel Macs.")
-                logging.error("macOS 27 Golden Gate ist nicht für Intel Macs verfügbar, Apple Silicon ist erforderlich. Bitte nicht probieren, auf Golden Gate auf Intel Macs umzusteigen.")
-                logging.info("macOS 27 Golden Gate is compiled only for arm64, specifically for Apple Silicon.")
-                logging.info("macOS 27 Golden Gate ist nur für arm64, spezifischer für Apple Silicon kompiliert.")
-                logging.info("Please select macOS 26 Tahoe or older version.")
-                logging.info("Bitte wählen Sie macOS 26 oder ältere Version.")
-                sys.exit(0)
+                if not self.constants.custom_model:
+                    webbrowser.open("https://www.apple.com/os/macos/")
+                    logging.error("macOS 27 Golden Gate is not available for Intel Macs. Apple Silicon required. Please do not try to upgrade to Golden Gate on Intel Macs.")
+                    logging.info("macOS 27 Golden Gate is compiled only for arm64, specifically for Apple Silicon.")
+                    logging.info("Please select macOS 26 Tahoe or older version.")
+                    sys.exit(0)
+                else:
+                    logging.info("You're not building OpenCore on your target system that is running macOS 27 Golden Gate. Continuing.")
+                    continue
             else:
                 logging.info("You're not targeting macOS 27 Golden Gate, this is good.")
-                logging.info("Sie haben nicht macOS 27 Golden Gate ausgewählt, das ist gut.")
                 pass
         except Exception as e:
             logging.error("We couldn't make sure if you are targeting macOS 27 Golden Gate or newer. Skip checking...")
-            logging.error("Wir könnten nicht feststellen, ob Sie macOS 27 Golden Gate installieren möchten oder nicht. Das wird übersprungen")
             logging.exception("Stack Trace:")
             pass
                 
