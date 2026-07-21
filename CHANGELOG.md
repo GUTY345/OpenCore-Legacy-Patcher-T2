@@ -1,4 +1,22 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.15900 - 4.0.0 pre-alpha 10.7 for alpha 16 / 4.0.0 Voralpha 10.7 für Alpha 16 Latest
+This release:
+
+switches from 4.0.0.random numbers to:
+4.0.0.16000 for alpha 16, for example
+4.0.0.15900 for pre-alpha 16 to indicate that it's released before alpha 16
+fixes a bug where on T2 Macs, duplicate boot arguments were injected that would prevent booting into macOS 26's installer
+fixes a vulnerability where inside gui_macos_installer_flash.py, when it fails to download AutoPkg-Asstes.pkg, it falls back to Nightly, which checks for AutoPkg-Assets.pkg inside GitHub Actions. Like this, an attacker could supply a supply chain attack via a compromised account or a malicious GitHub repository
+fixes a vulnerability where an attacker could supply a malicious update via GitHub Actions by tricking users into downloading 'Nightly' release that is actually malware via a compromised account or a malicious GitHub Repository
+Diese Version:
+
+Wechselt von 4.0.0.random-Nummern zu:
+4.0.0.16000 für Alpha 16, z. B.
+4.0.0.15900 für Pre-Alpha 16, um anzuzeigen, dass sie vor Alpha 16 veröffentlicht wurde
+Behebt einen Fehler, der auf T2-Macs zu doppelten Boot-Argumenten führte und den Start des macOS-26-Installationsprogramms verhinderte
+Behebt eine Sicherheitslücke in gui_macos_installer_flash.py, die dazu führte, dass bei einem Fehler beim Herunterladen von AutoPkg-Assets.pkg auf Nightly zurückgegriffen wurde, welches AutoPkg-Assets.pkg in GitHub Actions prüft. Auf diese Weise könnte ein Angreifer über ein kompromittiertes Konto oder ein manipuliertes GitHub-Repository einen Cyberangriff durchführen.
+– Behebt eine Sicherheitslücke, durch die ein Angreifer über GitHub Actions ein schädliches Update verbreiten konnte, indem er Benutzer dazu verleitete, eine „Nightly“-Version herunterzuladen, die in Wirklichkeit Schadsoftware enthielt. Dies geschah über ein kompromittiertes Konto oder ein manipuliertes GitHub-Repository.
+
 ## 4.0.0.13047 - 4.0.0 pre-alpha 10.6.1 for alpha 16 / 4.0.0 Voralpha 10.6.1 für Alpha 16 4.0.0.13046 
 This release:
 dmg_mount.py:
