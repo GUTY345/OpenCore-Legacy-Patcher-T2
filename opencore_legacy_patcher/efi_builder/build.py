@@ -94,7 +94,6 @@ class BuildOpenCore:
                     sys.exit(0)
                 else:
                     logging.info("You're not building OpenCore on your target system that is running macOS 27 Golden Gate. Continuing.")
-                    continue
             else:
                 logging.info("You're not targeting macOS 27 Golden Gate, this is good.")
                 pass
