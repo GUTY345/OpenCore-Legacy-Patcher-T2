@@ -331,15 +331,6 @@ class BuildSMBIOS:
         self.config["PlatformInfo"]["UpdateSMBIOS"] = True
         self.config["PlatformInfo"]["UpdateDataHub"] = True
 
-        # Without this, OpenCore writes spoofed values into its DataHub dictionary but
-        # the platform's own (T2-controlled) DataHub protocol keeps serving the real
-        # values — OpenCore needs to actually own the protocol surface for its writes
-        # to be what's read at boot. This does NOT touch Automatic/Generic/serial/MLB/ROM,
-        # so genuine hardware identity used for T2 SEP pairing remains untouched.
-        if "ProtocolOverrides" not in self.config["UEFI"]:
-            self.config["UEFI"]["ProtocolOverrides"] = {}
-        self.config["UEFI"]["ProtocolOverrides"]["DataHub"] = True
-
         if self.constants.custom_serial_number != "" and self.constants.custom_board_serial_number != "":
             logging.info("- Adding custom serial numbers")
             sn = self.constants.custom_serial_number
