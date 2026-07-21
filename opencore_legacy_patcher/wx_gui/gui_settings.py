@@ -817,7 +817,8 @@ class SettingsFrame(wx.Frame):
                     "variable": "IgnoreAppUpdates",
                     "constants_variable": "ignore_updates",
                     "description": [
-                        "This disables automatic updates for OpenCore Legacy Patcher T2.",
+                        "This disables automatic updates for",
+                        "OpenCore Legacy Patcher T2",
                         "Not recommended as disabling app updates makes",
                         "you vulnerable to newly discovered vulnerabilities that",
                         "have been already patched."
@@ -861,15 +862,6 @@ class SettingsFrame(wx.Frame):
             "Developer": {
                 "Validation": {
                     "type": "title",
-                },
-                "Install latest nightly build 🧪": {
-                    "type": "button",
-                    "function": self.on_nightly,
-                    "description": [
-                        "If you're already here, I assume you're ok",
-                        "bricking your system 🧱.",
-                        "Check CHANGELOG before blindly updating.",
-                    ],
                 },
                 "Trigger Exception": {
                     "type": "button",
