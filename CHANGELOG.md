@@ -1,4 +1,9 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.15900.1 - 4.0.0 pre-alpha 10.7.1 for alpha 16 / 4.0.0 Voralpha 10.7.1 für Alpha 16 Latest
+This release fixes a bug where Mac users with Apple Silicon can't build EFIs for Intel Macs if they are running macOS 27 Golden Gate. By this bug, currently, only a few testers are impacted.
+
+Dieses Update behebt einen Fehler, der verhindert, dass Mac-Nutzer mit Apple Silicon EFI-Dateien für Intel-Macs erstellen können, wenn sie macOS 27 Golden Gate verwenden. Aktuell sind nur wenige Tester von diesem Fehler betroffen.
+
 ## 4.0.0.15900 - 4.0.0 pre-alpha 10.7 for alpha 16 / 4.0.0 Voralpha 10.7 für Alpha 16
 This release:
 
