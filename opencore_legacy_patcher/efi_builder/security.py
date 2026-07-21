@@ -287,11 +287,6 @@ class BuildSecurity:
         # FIX: Keyword-Typo korrigiert
         self._apply_t2_amfi_boot_args(apple_nvram_uuid)
         self._update_nvram_string(apple_nvram_uuid, "boot-args", "ipc_control_port_options=0 -v keepsyms=1 nvme_shutdown_timestamp=0")
-        self._apply_cryptex_patches(apple_nvram_uuid)
-    
-    def _apply_cryptex_patches(self, apple_nvram_uuid: str) -> None:
-        logging.info("Injecting unified capability token mapping.")
-        self._update_nvram_string(apple_nvram_uuid, "boot-args", "cs_unrestricted_cs=1 cs_allow_invalid=1")
     
     # ------------------------------------------------------------------
     # Main build entry point
