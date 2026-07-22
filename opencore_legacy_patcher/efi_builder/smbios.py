@@ -1,7 +1,6 @@
 """
 smbios.py: Class for handling SMBIOS Patches, invocation from build.py
 """
-
 import ast
 import uuid
 import logging
@@ -9,13 +8,9 @@ import binascii
 import plistlib
 import subprocess
 import sys
-
 from pathlib import Path
-
 from . import support
-
 from .. import constants
-
 from ..support import (
     utilities,
     generate_smbios
@@ -25,28 +20,20 @@ from ..datasets import (
     cpu_data,
     model_array
 )
-
-
 class BuildSMBIOS:
     """
     Build Library for SMBIOS Support
-
     Invoke from build.py
     """
-
     def __init__(self, model: str, global_constants: constants.Constants, config: dict) -> None:
         self.model: str = model
         self.config: dict = config
         self.constants: constants.Constants = global_constants
-
         self._build()
-
-
     def _build(self) -> None:
         """
         Kick off SMBIOS Build Process
         """
-
         if self.constants.allow_oc_everywhere is False or self.constants.allow_native_spoofs is True:
                 if self.constants.serial_settings == "None":
                     try:
@@ -58,7 +45,6 @@ class BuildSMBIOS:
                         logging.exception("Stack Trace:") # This prints the full technical error
                         logging.info("Please try again later.")
                         sys.exit(3)
-
         else:
             try:
                 logging.info("- Enabling SMC exemption patch")
@@ -69,7 +55,6 @@ class BuildSMBIOS:
                 logging.exception("Stack Trace:") # This prints the full technical error
                 logging.info("Please try again later.")
                 sys.exit(3)
-
         if self.constants.serial_settings in ["Moderate", "Advanced"]:
             try:
                 logging.info("- Enabling USB Rename Patches")
@@ -81,20 +66,17 @@ class BuildSMBIOS:
                 logging.exception("Stack Trace:") # This prints the full technical error
                 logging.info("Please try again later.")
                 sys.exit(3)
-
         if self.model == self.constants.override_smbios:
             logging.info("- Adding -no_compat_check")
             self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] += " -no_compat_check"
-
     def _strip_usb_map(self, map_path, model, spoofed_model, serial_settings):
         target_path = Path(map_path)
-        
+
         # Guard clause to handle missing staged USB maps during cross-model spoofing
         if not target_path.exists():
             logging.info(f"- Staged map asset not found at {target_path}, skipping strip operation.")
             logging.info("Don't worry, this means that no USB port mapping is being injected and as such nothing is available to strip.")
             return
-
         config = plistlib.load(target_path.open("rb"))
         for entry in list(config["IOKitPersonalities_x86_64"]):
             if not entry.startswith(model):
@@ -112,14 +94,22 @@ class BuildSMBIOS:
                 except KeyError:
                     continue
         plistlib.dump(config, target_path.open("wb"), sort_keys=True)
+    def _is_t2_chip(self) -> bool:
+        """
+        Determine if the real host model shipped with a T2 chip.
 
+        smbios_data's "Secure Boot Model" field is only populated (e.g. "j680")
+        for T2/Apple Silicon capable boards and is None otherwise, so it doubles
+        as a reliable T2-presence flag. Deliberately checks self.model (the real
+        host), not self.spoofed_model — T2 presence is a hardware fact about the
+        machine being patched, not about the identity it's being spoofed as.
+        """
+        return bool(smbios_data.smbios_dictionary.get(self.model, {}).get("SecureBootModel"))
     def set_smbios(self) -> None:
         """
         SMBIOS Handler
         """
-
         spoofed_model = self.model
-
         if self.constants.override_smbios == "Default":
             if self.constants.serial_settings != "None":
                 try:
@@ -136,19 +126,15 @@ class BuildSMBIOS:
         else:
             spoofed_model = self.constants.override_smbios
         logging.info(f"- Using Model ID: {spoofed_model}")
-
         spoofed_board = ""
         if spoofed_model in smbios_data.smbios_dictionary:
             if "Board ID" in smbios_data.smbios_dictionary[spoofed_model]:
                 spoofed_board = smbios_data.smbios_dictionary[spoofed_model]["Board ID"]
         logging.info(f"- Using Board ID: {spoofed_board}")
-
         self.spoofed_model = spoofed_model
         self.spoofed_board = spoofed_board
-
         if self.constants.allow_oc_everywhere is False or self.constants.allow_native_spoofs is True:
             self.config["#Revision"]["Spoofed-Model"] = f"{self.spoofed_model} - {self.constants.serial_settings}"
-
         if self.constants.serial_settings == "Moderate":
             try:
                 logging.info("- Using Moderate SMBIOS patching")
@@ -185,18 +171,20 @@ class BuildSMBIOS:
             # macOS Monterey will sometimes not present the boardIdentifier in the DeviceTree on UEFI 1.2 or older Mac,
             # Thus resulting in an infinite loop as Lilu tries to request the Board ID
             # To resolve this, set PlatformInfo -> DataHub -> BoardProduct and enable UpdateDataHub
-
             # Note 1: Only apply if system is UEFI 1.2, this is generally Ivy Bridge and older
             # Note 2: Flipping 'UEFI -> ProtocolOverrides -> DataHub' will break hibernation
+            # Note 3: Ivy Bridge and older boards predate T2 entirely, so no T2 guard is needed here.
             if (smbios_data.smbios_dictionary[self.model]["CPU Generation"] <= cpu_data.CPUGen.ivy_bridge.value and self.model):
                 logging.info("- Detected UEFI 1.2 or older Mac, updating BoardProduct")
                 self.config["PlatformInfo"]["DataHub"]["BoardProduct"] = self.spoofed_board
                 self.config["PlatformInfo"]["UpdateDataHub"] = True
-
             if self.constants.custom_serial_number != "" and self.constants.custom_board_serial_number != "":
                 logging.info("- Adding custom serial numbers")
                 self.config["PlatformInfo"]["Automatic"] = True
-                self.config["PlatformInfo"]["UpdateDataHub"] = True
+                # DataHub isn't needed on T2 hardware and flipping it can interfere with
+                # SEP pairing, so only enable it for non-T2 Macs.
+                if not self._is_t2_chip():
+                    self.config["PlatformInfo"]["UpdateDataHub"] = True
                 self.config["PlatformInfo"]["UpdateNVRAM"] = True
                 self.config["PlatformInfo"]["UpdateSMBIOS"] = True
                 self.config["UEFI"]["ProtocolOverrides"]["DataHub"] = True
@@ -206,7 +194,6 @@ class BuildSMBIOS:
                 self.config["PlatformInfo"]["Generic"]["SystemProductName"] = self.spoofed_model
                 self.config["NVRAM"]["Add"]["4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102"]["OCLP-Spoofed-SN"] = self.constants.custom_serial_number
                 self.config["NVRAM"]["Add"]["4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102"]["OCLP-Spoofed-MLB"] = self.constants.custom_board_serial_number
-
         # USB Map and CPUFriend Patching
         if (
             self.constants.allow_oc_everywhere is False
@@ -217,7 +204,6 @@ class BuildSMBIOS:
             new_map_ls_tahoe = Path(self.constants.map_contents_folder_tahoe) / Path("Info.plist")
             self._strip_usb_map(new_map_ls, self.model, self.spoofed_model, self.constants.serial_settings)
             self._strip_usb_map(new_map_ls_tahoe, self.model, self.spoofed_model, self.constants.serial_settings)
-
         if self.constants.allow_oc_everywhere is False and self.model not in ["iMac7,1", "Xserve2,1", "Dortania1,1"] and self.constants.disallow_cpufriend is False and self.constants.serial_settings != "None":
             # Adjust CPU Friend Data to correct SMBIOS
             new_cpu_ls = Path(self.constants.pp_contents_folder) / Path("Info.plist")
@@ -227,7 +213,6 @@ class BuildSMBIOS:
             string_stuff = ast.literal_eval(string_stuff)
             cpu_config["IOKitPersonalities"]["CPUFriendDataProvider"]["cf-frequency-data"] = string_stuff
             plistlib.dump(cpu_config, Path(new_cpu_ls).open("wb"), sort_keys=True)
-
         if self.constants.allow_oc_everywhere is False and self.constants.serial_settings != "None":
             try:
                 if self.model == "MacBookPro9,1":
@@ -250,11 +235,11 @@ class BuildSMBIOS:
                         for gpu in ["Vendor10deDevice0a34", "Vendor10deDevice0a29"]:
                             agpm_config["IOKitPersonalities"]["AGPM"]["Machines"][self.spoofed_board][gpu]["BoostPState"] = [2, 2, 2, 2]
                             agpm_config["IOKitPersonalities"]["AGPM"]["Machines"][self.spoofed_board][gpu]["BoostTime"] = [2, 2, 2, 2]
-    
+
                     for entry in list(agpm_config["IOKitPersonalities"]["AGPM"]["Machines"]):
                         if not entry.startswith(self.spoofed_board):
                             agpm_config["IOKitPersonalities"]["AGPM"]["Machines"].pop(entry)
-    
+
                     plistlib.dump(agpm_config, Path(new_agpm_ls).open("wb"), sort_keys=True)
                 if self.model in model_array.AGDPSupport:
                     new_agdp_ls = Path(self.constants.agdp_contents_folder) / Path("Info.plist")
@@ -271,37 +256,34 @@ class BuildSMBIOS:
                 logging.exception("Stack Trace:") # This prints the full technical error
                 logging.info("Please try again later.")
                 sys.exit(3)
-
-
     def _minimal_serial_patch(self) -> None:
         """
         Minimal SMBIOS Spoofing Handler
-
         This function will only spoof the following:
         - Board ID
         - Firmware Features
         - BIOS Version
         - Serial Numbers (if override requested)
         """
-
+        # T2 Macs must not have DataHub touched (see _is_t2_chip docstring) — the
+        # PlatformNVRAM/SMBIOS writes below already cover what Minimal needs to do.
+        is_t2 = self._is_t2_chip()
         # Generate Firmware Features
         fw_feature = generate_smbios.generate_fw_features(self.model, self.constants.custom_model)
         # fw_feature = self.patch_firmware_feature()
         fw_feature = hex(fw_feature).lstrip("0x").rstrip("L").strip()
         logging.info(f"- Setting Firmware Feature: {fw_feature}")
         fw_feature = utilities.string_to_hex(fw_feature)
-
         # FirmwareFeatures
         self.config["PlatformInfo"]["PlatformNVRAM"]["FirmwareFeatures"] = fw_feature
         self.config["PlatformInfo"]["PlatformNVRAM"]["FirmwareFeaturesMask"] = fw_feature
         self.config["PlatformInfo"]["SMBIOS"]["FirmwareFeatures"] = fw_feature
         self.config["PlatformInfo"]["SMBIOS"]["FirmwareFeaturesMask"] = fw_feature
-
         # Board ID
-        self.config["PlatformInfo"]["DataHub"]["BoardProduct"] = self.spoofed_board
+        if not is_t2:
+            self.config["PlatformInfo"]["DataHub"]["BoardProduct"] = self.spoofed_board
         self.config["PlatformInfo"]["PlatformNVRAM"]["BID"] = self.spoofed_board
         self.config["PlatformInfo"]["SMBIOS"]["BoardProduct"] = self.spoofed_board
-
         # Belt-and-suspenders: directly write the raw board-id EFI variable too.
         # PlatformNVRAM->BID + UpdateNVRAM is supposed to be sufficient, but has not
         # been reliably landing at runtime — this uses the same direct NVRAM->Add
@@ -314,48 +296,41 @@ class BuildSMBIOS:
             self.config["NVRAM"]["Delete"][board_id_guid] = []
         if "board-id" not in self.config["NVRAM"]["Delete"][board_id_guid]:
             self.config["NVRAM"]["Delete"][board_id_guid].append("board-id")
-
         # Model (report the spoofed model so the Installer app's own compatibility
         # check passes; genuine serial/MLB/ROM are untouched by this function, which
         # is what actually matters for T2 SEP pairing)
-        self.config["PlatformInfo"]["DataHub"]["SystemProductName"] = self.spoofed_model
+        if not is_t2:
+            self.config["PlatformInfo"]["DataHub"]["SystemProductName"] = self.spoofed_model
         self.config["PlatformInfo"]["SMBIOS"]["SystemProductName"] = self.spoofed_model
         self.config["PlatformInfo"]["SMBIOS"]["BoardVersion"] = self.spoofed_model
-
         # Avoid incorrect Firmware Updates
         self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["run-efi-updater"] = "No"
         self.config["PlatformInfo"]["SMBIOS"]["BIOSVersion"] = "9999.999.999.999.999"
-
         # Update tables
         self.config["PlatformInfo"]["UpdateNVRAM"] = True
         self.config["PlatformInfo"]["UpdateSMBIOS"] = True
-        self.config["PlatformInfo"]["UpdateDataHub"] = True
-
+        if not is_t2:
+            self.config["PlatformInfo"]["UpdateDataHub"] = True
         if self.constants.custom_serial_number != "" and self.constants.custom_board_serial_number != "":
             logging.info("- Adding custom serial numbers")
             sn = self.constants.custom_serial_number
             mlb = self.constants.custom_board_serial_number
-
             # Serial Number
             self.config["PlatformInfo"]["SMBIOS"]["ChassisSerialNumber"] = sn
             self.config["PlatformInfo"]["SMBIOS"]["SystemSerialNumber"] = sn
-            self.config["PlatformInfo"]["DataHub"]["SystemSerialNumber"] = sn
+            if not is_t2:
+                self.config["PlatformInfo"]["DataHub"]["SystemSerialNumber"] = sn
             self.config["PlatformInfo"]["PlatformNVRAM"]["SystemSerialNumber"] = sn
             self.config["NVRAM"]["Add"]["4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102"]["OCLP-Spoofed-SN"] = sn
-
             # Board Serial Number
             self.config["PlatformInfo"]["SMBIOS"]["BoardSerialNumber"] = mlb
             self.config["PlatformInfo"]["PlatformNVRAM"]["BoardSerialNumber"] = mlb
             self.config["NVRAM"]["Add"]["4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102"]["OCLP-Spoofed-MLB"] = mlb
-
-
     def _moderate_serial_patch(self) -> None:
         """
         Moderate SMBIOS Spoofing Handler
-
         Implements a full SMBIOS replacement, however retains original serial numbers (unless override requested)
         """
-
         if self.constants.custom_serial_number != "" and self.constants.custom_board_serial_number != "":
             logging.info("- Adding custom serial numbers")
             self.config["PlatformInfo"]["Generic"]["SystemSerialNumber"] = self.constants.custom_serial_number
@@ -364,20 +339,20 @@ class BuildSMBIOS:
             self.config["NVRAM"]["Add"]["4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102"]["OCLP-Spoofed-MLB"] = self.constants.custom_board_serial_number
         self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["run-efi-updater"] = "No"
         self.config["PlatformInfo"]["Automatic"] = True
-        self.config["PlatformInfo"]["UpdateDataHub"] = True
+        # DataHub isn't needed on T2 hardware and flipping it can interfere with
+        # SEP pairing (and, per the note in set_smbios, breaks hibernation), so only
+        # enable it for non-T2 Macs.
+        if not self._is_t2_chip():
+            self.config["PlatformInfo"]["UpdateDataHub"] = True
+            self.config["UEFI"]["ProtocolOverrides"]["DataHub"] = True
         self.config["PlatformInfo"]["UpdateNVRAM"] = True
         self.config["PlatformInfo"]["UpdateSMBIOS"] = True
-        self.config["UEFI"]["ProtocolOverrides"]["DataHub"] = True
         self.config["PlatformInfo"]["Generic"]["SystemProductName"] = self.spoofed_model
-
-
     def _advanced_serial_patch(self) -> None:
         """
         Advanced SMBIOS Spoofing Handler
-
         Implements a full SMBIOS replacement, including serial numbers
         """
-
         if self.constants.custom_serial_number == "" or self.constants.custom_board_serial_number == "":
             macserial_output = subprocess.run([self.constants.macserial_path, "--generate", "--model", self.spoofed_model, "--num", "1"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             macserial_output = macserial_output.stdout.decode().strip().split(" | ")
@@ -388,10 +363,14 @@ class BuildSMBIOS:
             mlb = self.constants.custom_board_serial_number
         self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["run-efi-updater"] = "No"
         self.config["PlatformInfo"]["Automatic"] = True
-        self.config["PlatformInfo"]["UpdateDataHub"] = True
+        # DataHub isn't needed on T2 hardware and flipping it can interfere with
+        # SEP pairing (and, per the note in set_smbios, breaks hibernation), so only
+        # enable it for non-T2 Macs.
+        if not self._is_t2_chip():
+            self.config["PlatformInfo"]["UpdateDataHub"] = True
+            self.config["UEFI"]["ProtocolOverrides"]["DataHub"] = True
         self.config["PlatformInfo"]["UpdateNVRAM"] = True
         self.config["PlatformInfo"]["UpdateSMBIOS"] = True
-        self.config["UEFI"]["ProtocolOverrides"]["DataHub"] = True
         self.config["PlatformInfo"]["Generic"]["ROM"] = binascii.unhexlify("0016CB445566")
         self.config["PlatformInfo"]["Generic"]["SystemProductName"] = self.spoofed_model
         self.config["PlatformInfo"]["Generic"]["SystemSerialNumber"] = sn
@@ -399,4 +378,3 @@ class BuildSMBIOS:
         self.config["PlatformInfo"]["Generic"]["SystemUUID"] = str(uuid.uuid4()).upper()
         self.config["NVRAM"]["Add"]["4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102"]["OCLP-Spoofed-SN"] = sn
         self.config["NVRAM"]["Add"]["4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102"]["OCLP-Spoofed-MLB"] = mlb
-
