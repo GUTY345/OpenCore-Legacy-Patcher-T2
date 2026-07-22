@@ -3,23 +3,24 @@
 Thanks @YBronsk for contributing to this project!
 This release:
 
-fixes a bug where when downloading PatcherSupportPkg, it may end up visiting the repository instead by accident
-improves support for Legacy Wireless on macOS 26 Tahoe
-improves support for macOS 26 Tahoe for Modern Audio
-improves support for legacy AMD GPUs on macOS 26 Tahoe
-improves support for AMD Polaris, AMD Navi, AMD Vega GPUs (and improve iMac Pro 2017 GPU support) for macOS 26 Tahoe
-improves support for Intel Broadwell, Iron Lake and Skylake GPUs for macOS 26 Tahoe
-Add patches for Metal 31001 GPUs to improve macOS 26 Tahoe support
+- fixes a bug where when downloading PatcherSupportPkg, it may end up visiting the repository instead by accident
+- improves support for Legacy Wireless on macOS 26 Tahoe
+- improves support for macOS 26 Tahoe for Modern Audio
+- improves support for legacy AMD GPUs on macOS 26 Tahoe
+- improves support for AMD Polaris, AMD Navi, AMD Vega GPUs (and improve iMac Pro 2017 GPU support) for macOS 26 Tahoe
+- improves support for Intel Broadwell, Iron Lake and Skylake GPUs for macOS 26 Tahoe
+- Add patches for Metal 31001 GPUs to improve macOS 26 Tahoe support
+
 Vielen Dank an @YBronsk für seinen Beitrag zu diesem Projekt!
 Diese Version:
 
-Behebt einen Fehler, der beim Herunterladen von PatcherSupportPkg versehentlich zum Repository führen konnte.
-Verbessert die Unterstützung für ältere WLAN-Verbindungen unter macOS 26 Tahoe.
-Verbessert die Unterstützung für Modern Audio unter macOS 26 Tahoe.
-Verbessert die Unterstützung für ältere AMD-GPUs unter macOS 26 Tahoe.
-Verbessert die Unterstützung für AMD Polaris-, AMD Navi- und AMD Vega-GPUs (sowie die GPU-Unterstützung des iMac Pro 2017) unter macOS 26 Tahoe.
-Verbessert die Unterstützung für Intel Broadwell-, Iron Lake- und Skylake-GPUs unter macOS 26 Tahoe.
-Fügt Patches für Metal 31001-GPUs hinzu, um die Unterstützung unter macOS 26 Tahoe zu verbessern.
+- Behebt einen Fehler, der beim Herunterladen von PatcherSupportPkg versehentlich zum Repository führen konnte.
+- Verbessert die Unterstützung für ältere WLAN-Verbindungen unter macOS 26 Tahoe.
+- Verbessert die Unterstützung für Modern Audio unter macOS 26 Tahoe.
+- Verbessert die Unterstützung für ältere AMD-GPUs unter macOS 26 Tahoe.
+- Verbessert die Unterstützung für AMD Polaris-, AMD Navi- und AMD Vega-GPUs (sowie die GPU-Unterstützung des iMac Pro 2017) unter macOS 26 Tahoe.
+- Verbessert die Unterstützung für Intel Broadwell-, Iron Lake- und Skylake-GPUs unter macOS 26 Tahoe.
+- Fügt Patches für Metal 31001-GPUs hinzu, um die Unterstützung unter macOS 26 Tahoe zu verbessern.
 
 ## 4.0.0.15900.1 - 4.0.0 pre-alpha 10.7.1 for alpha 16 / 4.0.0 Voralpha 10.7.1 für Alpha 16
 This release fixes a bug where Mac users with Apple Silicon can't build EFIs for Intel Macs if they are running macOS 27 Golden Gate. By this bug, currently, only a few testers are impacted.
