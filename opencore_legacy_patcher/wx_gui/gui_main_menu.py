@@ -376,39 +376,9 @@ class MainFrame(wx.Frame):
             wx.CallAfter(self.Destroy)
         except Exception as e:
             logging.error(f"We failed to open up Build and Install OpenCore: {e}")
+            logging.exception("Stack Trace:")
 
-    def on_post_install_root_patch(self, event: wx.Event = None):
-        # 1. Check if Full Disk Access is granted
-        has_full_disk_access = gui_support.check_full_disk_access()
-    
-        if not has_full_disk_access:
-            logging.info("Disk permissions via System Settings are missing or not detected.")
-            
-            msg = (
-                "OpenCore Legacy Patcher T2 requires 'Full Disk Access' to perform root volume patching.\n\n"
-                "If you have already granted this permission and are still seeing this message, "
-                "you can click 'Proceed Anyway' to try to continue.\n\n"
-                "(You may need to toggle the switch off and on again in System Settings if it fails.)"
-            )
-            
-            # Create dialog with an extra button for the workaround
-            dialog = wx.MessageDialog(self, msg, "Permission Required", wx.YES_NO | wx.CANCEL | wx.ICON_ERROR)
-            dialog.SetYesNoLabels("Open Settings", "Proceed Anyway")
-            
-            result = dialog.ShowModal()
-            dialog.Destroy()
-            
-            if result == wx.ID_YES:
-                webbrowser.open("x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")
-                return
-            elif result != wx.ID_NO:
-                # User clicked Cancel or closed the dialog
-                return
-            
-            # If ID_NO (Proceed Anyway), we continue to the try block below
-            logging.info("User chose to proceed despite permission check failure.")
-    
-        # 2. Proceed with Root Patching
+    def on_post_install_root_patch(self, event: wx.Event = None):    
         try:
             logging.info("Launching System Patch Display.")
             gui_sys_patch_display.SysPatchDisplayFrame(
@@ -419,21 +389,25 @@ class MainFrame(wx.Frame):
             )
         except Exception as e:
             logging.error(f"Failed to open Install drivers and patches: {e}")
+            logging.exception("Stack Trace:")
 
     def on_create_macos_installer(self, event: wx.Event = None):
         try:
             gui_macos_installer_download.macOSInstallerDownloadFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
         except Exception as e:
             logging.error(f"We failed to open up Download macOS: {e}")
+            logging.exception("Stack Trace:")
 
     def on_settings(self, event: wx.Event = None):
         try:
             gui_settings.SettingsFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
         except Exception as e:
             logging.error(f"We failed to open up Settings: {e}")
+            logging.exception("Stack Trace:")
 
     def on_help(self, event: wx.Event = None):
         try:
             gui_help.HelpFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
         except Exception as e:
             logging.error(f"We failed to open up Help: {e}")
+            logging.exception("Stack Trace:")
