@@ -380,13 +380,7 @@ class MainFrame(wx.Frame):
 
     def on_post_install_root_patch(self, event: wx.Event = None):    
         try:
-            logging.info("Launching System Patch Display.")
-            gui_sys_patch_display.SysPatchDisplayFrame(
-                parent=self, 
-                title=self.title, 
-                global_constants=self.constants, 
-                screen_location=self.GetPosition()
-            )
+            gui_sys_patch_display.SysPatchDisplayFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
         except Exception as e:
             logging.error(f"Failed to open Install drivers and patches: {e}")
             logging.exception("Stack Trace:")
