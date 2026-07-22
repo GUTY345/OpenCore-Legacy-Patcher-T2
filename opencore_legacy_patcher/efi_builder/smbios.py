@@ -170,10 +170,7 @@ class BuildSMBIOS:
         elif self.constants.serial_settings == "Minimal":
             try:
                 logging.info("- Using Minimal SMBIOS patching")
-                # Keep the spoofed model/board-id (needed for the Installer's compatibility
-                # check) — do NOT reset to the real model here. Minimal still avoids touching
-                # MLB/ROM/SystemSerialNumber/SmUUID (that's what _minimal_serial_patch does),
-                # which is what actually matters for preserving T2 SEP pairing.
+                self.spoofed_model = self.model
                 self._minimal_serial_patch()
             except Exception as e:
                 logging.error("Minimal SMBIOS spoofing failed because of the following error:")
@@ -302,25 +299,10 @@ class BuildSMBIOS:
         self.config["PlatformInfo"]["PlatformNVRAM"]["BID"] = self.spoofed_board
         self.config["PlatformInfo"]["SMBIOS"]["BoardProduct"] = self.spoofed_board
 
-        # Belt-and-suspenders: directly write the raw board-id EFI variable too.
-        # PlatformNVRAM->BID + UpdateNVRAM is supposed to be sufficient, but has not
-        # been reliably landing at runtime — this uses the same direct NVRAM->Add
-        # mechanism that already works reliably for boot-args elsewhere in this file.
-        board_id_guid = "4D1EDE05-38C7-4A6A-9CC6-4BCCA8B38C14"
-        if board_id_guid not in self.config["NVRAM"]["Add"]:
-            self.config["NVRAM"]["Add"][board_id_guid] = {}
-        self.config["NVRAM"]["Add"][board_id_guid]["board-id"] = self.spoofed_board
-        if board_id_guid not in self.config["NVRAM"]["Delete"]:
-            self.config["NVRAM"]["Delete"][board_id_guid] = []
-        if "board-id" not in self.config["NVRAM"]["Delete"][board_id_guid]:
-            self.config["NVRAM"]["Delete"][board_id_guid].append("board-id")
-
-        # Model (report the spoofed model so the Installer app's own compatibility
-        # check passes; genuine serial/MLB/ROM are untouched by this function, which
-        # is what actually matters for T2 SEP pairing)
-        self.config["PlatformInfo"]["DataHub"]["SystemProductName"] = self.spoofed_model
-        self.config["PlatformInfo"]["SMBIOS"]["SystemProductName"] = self.spoofed_model
-        self.config["PlatformInfo"]["SMBIOS"]["BoardVersion"] = self.spoofed_model
+        # Model (ensures tables are not mismatched, even if we're not spoofing)
+        self.config["PlatformInfo"]["DataHub"]["SystemProductName"] = self.model
+        self.config["PlatformInfo"]["SMBIOS"]["SystemProductName"] = self.model
+        self.config["PlatformInfo"]["SMBIOS"]["BoardVersion"] = self.model
 
         # Avoid incorrect Firmware Updates
         self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["run-efi-updater"] = "No"
@@ -330,15 +312,6 @@ class BuildSMBIOS:
         self.config["PlatformInfo"]["UpdateNVRAM"] = True
         self.config["PlatformInfo"]["UpdateSMBIOS"] = True
         self.config["PlatformInfo"]["UpdateDataHub"] = True
-
-        # Without this, OpenCore writes spoofed values into its DataHub dictionary but
-        # the platform's own (T2-controlled) DataHub protocol keeps serving the real
-        # values — OpenCore needs to actually own the protocol surface for its writes
-        # to be what's read at boot. This does NOT touch Automatic/Generic/serial/MLB/ROM,
-        # so genuine hardware identity used for T2 SEP pairing remains untouched.
-        if "ProtocolOverrides" not in self.config["UEFI"]:
-            self.config["UEFI"]["ProtocolOverrides"] = {}
-        self.config["UEFI"]["ProtocolOverrides"]["DataHub"] = True
 
         if self.constants.custom_serial_number != "" and self.constants.custom_board_serial_number != "":
             logging.info("- Adding custom serial numbers")
