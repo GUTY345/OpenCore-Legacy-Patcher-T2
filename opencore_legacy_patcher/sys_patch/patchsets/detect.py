@@ -201,7 +201,7 @@ class HardwarePatchsetDetection:
         """
         Determine if System Integrity Protection is enabled
         """
-        return not amfi_detect.AmfiConfigurationDetection(xnu_major=self._xnu_major).SIP_SUITABLE
+        return utilities.csr_decode(configs)
 
 
     def _validation_check_secure_boot_model_enabled(self) -> bool:
@@ -215,7 +215,7 @@ class HardwarePatchsetDetection:
         """
         Determine if AMFI is enabled
         """
-        return not amfi_detect.AmfiConfigurationDetection(xnu_major=self._xnu_major).check_config(self._override_amfi_level(level))
+        return not amfi_detect.AmfiConfigurationDetection().check_config(self._override_amfi_level(level))
 
 
     def _validation_check_whatevergreen_missing(self) -> bool:
