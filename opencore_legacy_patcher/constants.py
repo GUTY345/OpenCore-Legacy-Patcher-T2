@@ -240,6 +240,7 @@ class Constants:
         self.disable_mediaanalysisd: bool = False  # Set mediaanalysisd to spawn
         self.force_quad_thread:      bool = False #  Force quad thread mode (cpus=4)
         self.set_alc_usage:          bool = True  #  Set AppleALC usage
+        self.allow_modern_audio:     bool = True  #  Restore AppleHDA.kext on macOS Tahoe (Apple dropped analog audio for non-T2 audio routing)
         self.allow_3rd_party_drives: bool = True  #  Allow ThridPartyDrives quirk
         self.allow_nvme_fixing:      bool = True  #  Allow NVMe Kernel Space Patches
         self.apfs_trim_timeout:      bool = True  #  Set APFS Trim timeout
