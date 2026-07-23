@@ -77,6 +77,20 @@ class GenerateMenubar:
         self.frame.Bind(wx.EVT_MENU, lambda event: subprocess.run(["/usr/bin/open", "--reveal", self.constants.log_filepath]), revealLogItem)
 
 
+_active_pulses: set = set()
+
+
+def stop_all_pulses() -> None:
+    """
+    Stops every currently-running gauge pulse thread. Called from
+    PatcherApp.OnExit() so a pulse thread never survives past the
+    point where its underlying wx.Gauge gets torn down (which is
+    what corrupts the autorelease pool when quitting mid-animation).
+    """
+    for pulse in list(_active_pulses):
+        pulse.stop_pulse()
+
+
 class GaugePulseCallback:
     """
     Uses an alternative Pulse() method for wx.Gauge() on macOS Monterey+ with non-Metal GPUs
@@ -109,6 +123,7 @@ class GaugePulseCallback:
         self.pulse_thread_active = True
         self.pulse_thread = threading.Thread(target=self._pulse)
         self.pulse_thread.start()
+        _active_pulses.add(self)
 
 
     def stop_pulse(self) -> None:
@@ -116,6 +131,7 @@ class GaugePulseCallback:
             return
         self.pulse_thread_active = False
         self.pulse_thread.join()
+        _active_pulses.discard(self)
 
 
     def _pulse(self) -> None:
