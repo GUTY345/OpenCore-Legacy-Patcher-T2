@@ -45,6 +45,10 @@ class PatcherApp(wx.App):
     """
 
     def OnExit(self) -> int:
+        # Signal first: any background thread checking is_app_exiting()
+        # (e.g. gui_main_menu's update check) should bail out rather than
+        # touch a frame that's being torn down.
+        gui_support.mark_app_exiting()
         # Stop any still-running gauge pulse thread before Cocoa tears
         # down the window it's animating -- letting it keep firing
         # wx.CallAfter() into a vanishing frame is what corrupts the
