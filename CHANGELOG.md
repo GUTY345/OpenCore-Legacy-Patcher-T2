@@ -1,10 +1,10 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
-## 4.0.0.15912 - 4.0.0 pre-alpha 10.8.2 for alpha 16 / 4.0.0 Voralpha 10.8.2 für Alpha 16
+## 4.0.0.15911 - 4.0.0 pre-alpha 10.8.2 for alpha 16 / 4.0.0 Voralpha 10.8.2 für Alpha 16
 This release fixes a bug where upon clicking Install Drivers and patches, the button crashes. This bug is fixed using Claude AI with Sonnet 5 Extra and configured a plugin called Composio, so if there is any bug that I or our contributors can't solve at all, with this plugin and Claude I can fix bugs.
 
 Diese Version behebt einen Fehler, der beim Klicken auf „Install drivers and patches“ zum Absturz der Schaltfläche führte. Dieser Fehler wurde mithilfe von Claude AI mit Sonnet 5 Extra und dem konfigurierten Plugin Composio behoben. Sollte es also einen Fehler geben, den ich oder unsere Mitwirkenden nicht beheben können, kann ich ihn mithilfe dieses Plugins und Claude beheben.
 
-## 4.0.0.15911 - 4.0.0 pre-alpha 10.8.1 for alpha 16 / 4.0.0 Voralpha 10.8.1 für Alpha 16
+## 4.0.0.15911/old - 4.0.0 pre-alpha 10.8.1 for alpha 16 / 4.0.0 Voralpha 10.8.1 für Alpha 16
 This release fixes a bug where upon trying to open Drivers and patches menu, it crashes.
 
 Diese Version behebt einen Fehler, der zum Absturz des Programms beim Versuch führte, das Menü „Drivers and patches“ zu öffnen.
