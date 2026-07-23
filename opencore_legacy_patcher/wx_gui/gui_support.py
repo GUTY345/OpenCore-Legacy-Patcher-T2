@@ -69,12 +69,22 @@ class GenerateMenubar:
         aboutItem = fileMenu.Append(wx.ID_ABOUT, "&About OpenCore Legacy Patcher T2")
         fileMenu.AppendSeparator()
         revealLogItem = fileMenu.Append(wx.ID_ANY, "&Reveal Log File")
+        fileMenu.AppendSeparator()
+        # wx.ID_EXIT is required on macOS for Cmd+Q to be handled through wx's
+        # own event/menu system. Without a registered ID_EXIT item, wxWidgets
+        # never moves a "Quit" item into the Application menu, so macOS falls
+        # back to its own default termination path -- which bypasses
+        # wx.App.OnExit() and the frame's EVT_CLOSE handler entirely and tears
+        # the process down directly. That's what was corrupting the
+        # autorelease pool: our cleanup code was simply never being reached.
+        quitItem = fileMenu.Append(wx.ID_EXIT, "&Quit OpenCore Legacy Patcher T2\tCtrl+Q")
 
         menubar.Append(fileMenu, "&File")
         self.frame.SetMenuBar(menubar)
 
         self.frame.Bind(wx.EVT_MENU, lambda event: gui_about.AboutFrame(self.constants), aboutItem)
         self.frame.Bind(wx.EVT_MENU, lambda event: subprocess.run(["/usr/bin/open", "--reveal", self.constants.log_filepath]), revealLogItem)
+        self.frame.Bind(wx.EVT_MENU, lambda event: self.frame.Close(), quitItem)
 
 
 _app_exiting: bool = False
