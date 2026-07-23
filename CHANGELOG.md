@@ -1,4 +1,21 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.15912 - 4.0.0 pre-alpha 10.8.3 for alpha 16 / 4.0.0 Voralpha 10.8.2 für Alpha 16 4.0.0.15911 - 4.0.0 pre-alpha 10.8.2 for alpha 16 / 4.0.0 Voralpha 10.8.3 für Alpha 16:
+This release:
+- fixes a bug where upon trying to close the app, it crashes
+<img width="1112" height="910" alt="Bildschirmfoto 2026-07-23 um 07 47 38" src="https://github.com/user-attachments/assets/ea28dcfc-0496-4ae9-9fa8-07a79c519b32" />
+- fixes Permission denied bug when trying to install drivers and patches - however this remains to be tested
+
+Both fixed by Claude.
+
+Diese Version:
+
+- Behebt einen Fehler, der beim Schließen der App zum Absturz führte.
+<img width="1112" height="910" alt="Bildschirmfoto 2026-07-23 um 07 47 38" src="https://github.com/user-attachments/assets/ea28dcfc-0496-4ae9-9fa8-07a79c519b32" />
+
+- Behebt einen Fehler, der beim Versuch, Treiber und Patches zu installieren, zu einer Zugriffsverweigerung führte. Dies muss jedoch noch getestet werden.
+
+Beide behoben von Claude.
+
 ## 4.0.0.15911 - 4.0.0 pre-alpha 10.8.2 for alpha 16 / 4.0.0 Voralpha 10.8.2 für Alpha 16
 This release fixes a bug where upon clicking Install Drivers and patches, the button crashes. This bug is fixed using Claude AI with Sonnet 5 Extra and configured a plugin called Composio, so if there is any bug that I or our contributors can't solve at all, with this plugin and Claude I can fix bugs.
 
