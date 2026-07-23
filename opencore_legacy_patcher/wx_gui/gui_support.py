@@ -77,6 +77,24 @@ class GenerateMenubar:
         self.frame.Bind(wx.EVT_MENU, lambda event: subprocess.run(["/usr/bin/open", "--reveal", self.constants.log_filepath]), revealLogItem)
 
 
+_app_exiting: bool = False
+
+
+def mark_app_exiting() -> None:
+    """
+    Marks that the app is in the process of quitting. Any background
+    thread that might otherwise touch a frame/widget while it's being
+    torn down (e.g. a network-bound update check finishing after the
+    user hit Cmd+Q) should check is_app_exiting() before doing so.
+    """
+    global _app_exiting
+    _app_exiting = True
+
+
+def is_app_exiting() -> bool:
+    return _app_exiting
+
+
 _active_pulses: set = set()
 
 
