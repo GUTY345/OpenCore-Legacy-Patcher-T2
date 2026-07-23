@@ -32,7 +32,8 @@ A Python-based project revolving around [Acidanthera's OpenCorePkg](https://gith
 - [X] Installer boots
 - [ ] MacBookAir8,1 and MacBookAir8,2 can boot the installer
 - [ ] Internal hard drive mounts properly on T2 Macs - https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues/69
-- [ ] Post-install + ability to reach the desktop
+- [ ] ability to reach the desktop
+- [ ] Post install - issues with second stage
 - [ ] GPU accelaration/WiFi - most T2 Macs will have WIFi and possibly GPU accelaration out of the box
 
 
