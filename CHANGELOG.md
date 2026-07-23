@@ -1,4 +1,9 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.15911 - 4.0.0 pre-alpha 10.8.1 for alpha 16 / 4.0.0 Voralpha 10.8 für Alpha 16 4.0.0.15910 - 4.0.0 pre-alpha 10.8 for alpha 16 / 4.0.0 Voralpha 10.8.1 für Alpha 16
+This release fixes a bug where upon trying to open Drivers and patches menu, it crashes.
+
+Diese Version behebt einen Fehler, der zum Absturz des Programms beim Versuch führte, das Menü „Drivers and patches“ zu öffnen.
+
 ## 4.0.0.15910 - 4.0.0 pre-alpha 10.8 for alpha 16 / 4.0.0 Voralpha 10.8 für Alpha 16
 Thanks @YBronsk for contributing to this project!
 This release:
