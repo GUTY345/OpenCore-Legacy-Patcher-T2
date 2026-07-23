@@ -6,6 +6,7 @@ import logging
 import subprocess
 import applescript
 import sys
+import shlex
 from pathlib import Path
 from ... import constants
 from ...support import subprocess_wrapper
@@ -20,18 +21,32 @@ class PatcherSupportPkgMount:
         """Helper to standardize hdiutil execution using -stdinpass"""
         # Ensure paths exist
         mount_point.parent.mkdir(parents=True, exist_ok=True)
-        
+
         cmd = ["/usr/bin/hdiutil", "attach", "-noverify", str(dmg_path), "-mountpoint", str(mount_point), "-nobrowse"]
         if shadow_path:
             shadow_path.parent.mkdir(parents=True, exist_ok=True)
             cmd.extend(["-shadow", str(shadow_path)])
-        
+
         cmd.append("-stdinpass")
-        
+
         # Execute with stdin input for the password
         process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         stdout, _ = process.communicate(input=password.encode() if password else None)
-        
+
+        if process.returncode != 0 and b"Permission denied" in stdout:
+            # macOS 26.4+ requires root privileges to mount disk images (regression; previously unprivileged mounts worked fine)
+            logging.info("- Unprivileged hdiutil attach denied, retrying with administrator privileges")
+            shell_cmd = f"echo {shlex.quote(password or '')} | " + " ".join(shlex.quote(str(arg)) for arg in cmd)
+            escaped_cmd = shell_cmd.replace("\\", "\\\\").replace('"', '\\"')
+            try:
+                applescript.AppleScript(
+                    f'do shell script "{escaped_cmd}" with administrator privileges'
+                ).run()
+                if mount_point.exists():
+                    return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=b"Mounted (elevated)")
+            except Exception as e:
+                logging.info(f"- Elevated hdiutil attach failed: {e}")
+
         return subprocess.CompletedProcess(args=cmd, returncode=process.returncode, stdout=stdout)
 
     def _mount_universal_binaries_dmg(self) -> bool:
@@ -43,12 +58,12 @@ class PatcherSupportPkgMount:
             return False
 
         output = self._run_hdiutil(
-            dmg_path, 
+            dmg_path,
             Path(self.constants.payload_path / "Universal-Binaries"),
             shadow_path=Path(self.constants.payload_path / "Universal-Binaries_overlay"),
             password="password"
         )
-        
+
         if output.returncode != 0:
             logging.info("- Failed to mount Universal-Binaries.dmg")
             subprocess_wrapper.log(output)
@@ -73,7 +88,7 @@ class PatcherSupportPkgMount:
                 Path(self.constants.payload_path / "DortaniaInternal"),
                 password=key
             )
-            
+
             if output.returncode != 0:
                 logging.info("- Failed to mount DortaniaInternal resources")
                 subprocess_wrapper.log(output)
