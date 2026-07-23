@@ -253,7 +253,7 @@ class MainFrame(wx.Frame):
             if remote_version_str == local_version_str:
                 return
     
-        if getattr(self, 'exiting_app', False):
+        if getattr(self, 'exiting_app', False) or gui_support.is_app_exiting():
             return
 
         logging.info(f"Newer version detected: {remote_version_str}")
@@ -268,11 +268,11 @@ class MainFrame(wx.Frame):
             logging.error(f"Failed to fetch changelog text: {e}")
             logging.error(f"Es hat fehlgeschlagen, den Changelog-Text anzuzeigen: {e}")
 
-        if not getattr(self, 'exiting_app', False):
+        if not getattr(self, 'exiting_app', False) and not gui_support.is_app_exiting():
             wx.CallAfter(self.on_update, update_dict["Link"], remote_version_str, update_dict["Github Link"], changelog)
         
     def on_update(self, oclp_url: str, oclp_version: str, oclp_github_url: str, changelog_text: str):
-        if not self:
+        if not self or gui_support.is_app_exiting():
             return
 
         ID_GITHUB = wx.NewIdRef() if hasattr(wx, "NewIdRef") else wx.NewId()
