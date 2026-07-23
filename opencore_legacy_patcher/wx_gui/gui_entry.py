@@ -17,6 +17,7 @@ from ..wx_gui import (
     gui_build,
     gui_install_oc,
     gui_sys_patch_start,
+    gui_support,
     gui_update,
 )
 
@@ -33,6 +34,25 @@ class SupportedEntryPoints:
     OS_CACHE   = gui_cache_os_update.OSUpdateFrame
 
 
+class PatcherApp(wx.App):
+    """
+    wx.App subclass so we have a reliable, single place to clean up on
+    quit -- OnExit() fires on every quit path (Cmd+Q, Dock > Quit, or the
+    last window closing), regardless of which frame is currently active.
+    A frame-level EVT_CLOSE handler only ever covers the one frame it was
+    bound to, which isn't enough since this app constantly destroys one
+    top-level frame and creates another as the user navigates.
+    """
+
+    def OnExit(self) -> int:
+        # Stop any still-running gauge pulse thread before Cocoa tears
+        # down the window it's animating -- letting it keep firing
+        # wx.CallAfter() into a vanishing frame is what corrupts the
+        # autorelease pool on quit.
+        gui_support.stop_all_pulses()
+        return super().OnExit()
+
+
 class EntryPoint:
 
     def __init__(self, global_constants: constants.Constants) -> None:
@@ -45,7 +65,7 @@ class EntryPoint:
 
 
     def _generate_base_data(self) -> None:
-        self.app = wx.App()
+        self.app = PatcherApp()
         self.app.SetAppName(self.constants.patcher_name)
 
         # Reference:
