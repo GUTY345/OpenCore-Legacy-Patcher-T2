@@ -44,11 +44,29 @@ class PatcherApp(wx.App):
     top-level frame and creates another as the user navigates.
     """
 
+    def __init__(self, global_constants: constants.Constants, *args, **kwargs) -> None:
+        self.constants: constants.Constants = global_constants
+        super().__init__(*args, **kwargs)
+
+
     def OnExit(self) -> int:
         # Signal first: any background thread checking is_app_exiting()
         # (e.g. gui_main_menu's update check) should bail out rather than
         # touch a frame that's being torn down.
         gui_support.mark_app_exiting()
+
+        # Startup kicks off a couple of background threads (payload
+        # unpacking, analytics) before any window even exists, so they
+        # never check is_app_exiting(). Quitting right after launch, while
+        # one of these is still doing disk/network work, tears the process
+        # down underneath it -- the same autorelease pool corruption
+        # trigger, just from a startup thread instead of a UI one. Give
+        # each a bounded window to finish rather than hanging quit forever.
+        for thread_attr in ("unpack_thread", "analytics_thread"):
+            thread = getattr(self.constants, thread_attr, None)
+            if thread and thread.is_alive():
+                thread.join(timeout=10)
+
         # Stop any still-running gauge pulse thread before Cocoa tears
         # down the window it's animating -- letting it keep firing
         # wx.CallAfter() into a vanishing frame is what corrupts the
@@ -69,7 +87,7 @@ class EntryPoint:
 
 
     def _generate_base_data(self) -> None:
-        self.app = PatcherApp()
+        self.app = PatcherApp(self.constants)
         self.app.SetAppName(self.constants.patcher_name)
 
         # Reference:
