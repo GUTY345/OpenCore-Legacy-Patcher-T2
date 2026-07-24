@@ -104,7 +104,7 @@ To run the project from source, see here: [Build and run from source](./SOURCE.m
   * [developing patches for the T2 chip](https://github.com/vytska69/OpenCore-Legacy-Patcher)
   * [Developing Secure Enclave Processor (SEP) timeout patches](https://github.com/vytska69/OpenCore-Legacy-Patcher)
   * [workflow files](https://github.com/vytska69/OpenCore-Legacy-Patcher)
-  *[peltorio](https://github.com/peltorio/)
+  * [peltorio](https://github.com/peltorio/)
     * Fix a critical bug in GitHub Actions by changing macos-version to macos-15
 * [kodeaqua](https://github.com/kodeaqua)
   * for research on MacBook Air 2018-2019 hardware to fix boot issues
