@@ -220,6 +220,14 @@ class DownloadObject:
                     )
                     time.sleep(wait)
 
+            # The retry/resume refactor above updates the running hash incrementally
+            # in _download_stream(), but never finalized it into self.checksum - so
+            # this stayed None forever and every _validate_installer() comparison
+            # against the expected checksum failed unconditionally, even for a
+            # perfectly good download. Finalize it here, once, after a full success.
+            if self._checksum_storage:
+                self.checksum = self._checksum_storage.hexdigest()
+
             self.download_complete = True
             logging.info(f"Herunterladen vollständig abgeschlossen: {self.filename}")
             logging.info(f"Successfully finished download: {self.filename}")
