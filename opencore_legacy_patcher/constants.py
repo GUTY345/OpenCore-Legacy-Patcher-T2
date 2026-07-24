@@ -19,9 +19,9 @@ class Constants:
         self.patcher_version:                 str = "4.0.0.15912"  # OpenCore-Legacy-Patcher
         self.patcher_version_label=self.patcher_version
         self.patcher_support_pkg_version:     str = "2.0.0"  # PatcherSupportPkg
-        self.copyright_date:                  str = "Copyright © 2020-2025 Dortania"
-        self.patcher_name:                    str = "OpenCore Legacy Patcher T2"
-        self.patcher_full_name:               str = f"{self.patcher_name} version {self.patcher_version_label}"
+        self.copyright_date:                  "Copyright © 2020-2025 Dortania"
+        self.patcher_name:                    "OpenCore Legacy Patcher T2"
+        self.patcher_full_name:               f"{self.patcher_name} version {self.patcher_version_label}"
 
         # URLs
         self.url_patcher_support_pkg:         str = "ttps://github.com/YBronst/PatcherSupportPkg/releases/download/"
