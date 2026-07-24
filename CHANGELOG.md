@@ -1,5 +1,5 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
-## 4.0.0.15912 - 4.0.0 pre-alpha 10.8.3 for alpha 16 / 4.0.0 Voralpha 10.8.2 für Alpha 16 4.0.0.15911 - 4.0.0 pre-alpha 10.8.2 for alpha 16 / 4.0.0 Voralpha 10.8.3 für Alpha 16:
+## 4.0.0.15912 - 4.0.0 pre-alpha 10.8.3 for alpha 16 / 4.0.0 Voralpha 10.8.3 für Alpha 16:
 This release:
 - fixes a bug where upon trying to close the app, it crashes
 <img width="1112" height="910" alt="Bildschirmfoto 2026-07-23 um 07 47 38" src="https://github.com/user-attachments/assets/ea28dcfc-0496-4ae9-9fa8-07a79c519b32" />
