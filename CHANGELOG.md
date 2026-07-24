@@ -1,4 +1,23 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.15913 - 4.0.0 pre-alpha 10.8.4 for alpha 16 / 4.0.0 Voralpha 10.8.4 für Alpha 16:
+This release:
+- fixes a bug where unconditionally when trying to download the macOS installer it throws an error:
+
+<img width="1600" height="900" alt="Bildschirmfoto 2026-07-24 um 19 21 54" src="https://github.com/user-attachments/assets/562c22a1-243e-4553-b021-984638cd34a1" />
+
+- fixes a vulnerability where an attacker (or a bad Hackintosh user) could trick a user into spoofing the SMBIOS (for example as Macmini8,1) on a Hackintosh or virtual machine into building OpenCore configs for real Macs, not Hackintoshes to launch DoS and corrupt the OS altogether
+- fixes a vulnerability that lets attackers when failing to download macOS installers, due to the lack of displaying the error inside the Terminal - to launch a ClickFix attack to execute arbitary commands to "fix" the error, which actually results in downloading malware
+
+Diese Version:
+
+- Behebt einen Fehler, der beim Herunterladen des macOS-Installationsprogramms immer zu einer Fehlermeldung führt:
+
+<img width="1600" height="900" alt="Bildschirmfoto 2026-07-24 um 19 21 54" src="https://github.com/user-attachments/assets/562c22a1-243e-4553-b021-984638cd34a1" />
+
+- Behebt eine Sicherheitslücke, durch die ein Angreifer (oder ein Hackintosh-Nutzer mit böswilligen Absichten) einen Benutzer dazu verleiten konnte, das SMBIOS (z. B. als Macmini8,1) auf einem Hackintosh oder einer virtuellen Maschine zu fälschen, um OpenCore-Konfigurationen für echte Macs (nicht Hackintoshs) zu erstellen und so einen Denial-of-Service-Angriff (DoS) durchzuführen und das Betriebssystem vollständig zu beschädigen.
+
+- Behebt eine Sicherheitslücke, die es Angreifern ermöglicht, bei einem fehlgeschlagenen Download des macOS-Installationsprogramms – da die Fehlermeldung im Terminal nicht angezeigt wird – einen ClickFix-Angriff durchzuführen. um beliebige Befehle auszuführen, um den Fehler zu „beheben“, was tatsächlich zum Herunterladen von Schadsoftware führt.
+
 ## 4.0.0.15912 - 4.0.0 pre-alpha 10.8.3 for alpha 16 / 4.0.0 Voralpha 10.8.3 für Alpha 16:
 This release:
 - fixes a bug where upon trying to close the app, it crashes
