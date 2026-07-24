@@ -155,6 +155,10 @@ class DownloadObject:
 
     def download(self, display_progress: bool = False, spawn_thread: bool = True) -> None:
         """Call this from your UI. If spawn_thread is False, it runs synchronously."""
+        # Set status synchronously before the worker thread is scheduled, so callers
+        # polling is_active() right after this call never see the pre-thread INACTIVE
+        # state and mistake "not started yet" for "failed".
+        self.status = DownloadStatus.DOWNLOADING
         if spawn_thread:
             import threading
             threading.Thread(target=self._download, args=(display_progress,), daemon=True).start()
