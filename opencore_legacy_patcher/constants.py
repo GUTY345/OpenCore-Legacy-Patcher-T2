@@ -16,18 +16,18 @@ class Constants:
     def __init__(self) -> None:
         # Patcher Versioning
         # Wenn eine Version mit s endet, es heißt, dass sie noch nicht fertig ist.
-        self.patcher_version:                 str = "4.0.0.15912"  # OpenCore-Legacy-Patcher
+        self.patcher_version:                 "4.0.0.15912"  # OpenCore-Legacy-Patcher
         self.patcher_version_label=self.patcher_version
-        self.patcher_support_pkg_version:     str = "2.0.0"  # PatcherSupportPkg
-        self.copyright_date:                  str = "Copyright © 2020-2025 Dortania"
-        self.patcher_name:                    str = "OpenCore Legacy Patcher T2"
-        self.patcher_full_name:               str = f"{self.patcher_name} version {self.patcher_version_label}"
+        self.patcher_support_pkg_version:     "2.0.0"  # PatcherSupportPkg
+        self.copyright_date:                  "Copyright © 2020-2025 Dortania"
+        self.patcher_name:                    "OpenCore Legacy Patcher T2"
+        self.patcher_full_name:               f"{self.patcher_name} version {self.patcher_version_label}"
 
         # URLs
-        self.url_patcher_support_pkg:         str = "ttps://github.com/YBronst/PatcherSupportPkg/releases/download/"
-        self.guide_link:                      str = "https://dortania.github.io/OpenCore-Legacy-Patcher/"
-        self.repo_link:                       str = "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"
-        self.installer_pkg_url:               str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
+        self.url_patcher_support_pkg:         "ttps://github.com/YBronst/PatcherSupportPkg/releases/download/"
+        self.guide_link:                      "https://dortania.github.io/OpenCore-Legacy-Patcher/"
+        self.repo_link:                       "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"
+        self.installer_pkg_url:               f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
 
         # OpenCore Versioning
         # https://github.com/acidanthera/OpenCorePkg
@@ -36,71 +36,71 @@ class Constants:
         # Kext Versioning
         ## Acidanthera
         ## https://github.com/acidanthera
-        self.lilu_version:               str = "1.7.2"  #      Lilu
-        self.whatevergreen_version:      str = "1.7.0"  #      WhateverGreen
-        self.whatevergreen_navi_version: str = "1.6.9-Navi"  # WhateverGreen (Navi Patch)
-        self.airportbcrmfixup_version:   str = "2.2.0"  #      AirPortBrcmFixup
-        self.nvmefix_version:            str = "1.1.3"  #      NVMeFix
-        self.applealc_version:           str = "1.6.7"  #      AppleALC
-        self.restrictevents_version:     str = "1.1.6"  #      RestrictEvents
-        self.featureunlock_version:      str = "1.1.8"  #      FeatureUnlock
-        self.debugenhancer_version:      str = "1.1.0"  #      DebugEnhancer
-        self.cpufriend_version:          str = "1.3.0"  #      CPUFriend
-        self.bluetool_version:           str = "2.7.2"  #      BlueToolFixup (BrcmPatchRAM)
-        self.cslvfixup_version:          str = "2.6.1"  #      CSLVFixup
-        self.autopkg_version:            str = "1.0.4"  #      AutoPkgInstaller
-        self.cryptexfixup_version:       str = "1.0.5"  #      CryptexFixup
+        self.lilu_version:               "1.7.2"  #      Lilu
+        self.whatevergreen_version:      "1.7.0"  #      WhateverGreen
+        self.whatevergreen_navi_version: "1.6.9-Navi"  # WhateverGreen (Navi Patch)
+        self.airportbcrmfixup_version:   "2.2.0"  #      AirPortBrcmFixup
+        self.nvmefix_version:            "1.1.3"  #      NVMeFix
+        self.applealc_version:           "1.6.7"  #      AppleALC
+        self.restrictevents_version:     "1.1.6"  #      RestrictEvents
+        self.featureunlock_version:      "1.1.8"  #      FeatureUnlock
+        self.debugenhancer_version:      "1.1.0"  #      DebugEnhancer
+        self.cpufriend_version:          "1.3.0"  #      CPUFriend
+        self.bluetool_version:           "2.7.2"  #      BlueToolFixup (BrcmPatchRAM)
+        self.cslvfixup_version:          "2.6.1"  #      CSLVFixup
+        self.autopkg_version:            "1.0.4"  #      AutoPkgInstaller
+        self.cryptexfixup_version:       "1.0.5"  #      CryptexFixup
 
         ## Apple
         ## https://www.apple.com
-        self.marvel_version:        str = "1.0.1"  #  MarvelYukonEthernet
-        self.nforce_version:        str = "1.0.1"  #  nForceEthernet
-        self.piixata_version:       str = "1.0.1"  #  AppleIntelPIIXATA
-        self.fw_kext:               str = "1.0.1"  #  IOFireWireFamily
-        self.apple_trackpad:        str = "1.0.1"  #  AppleUSBTrackpad
-        self.apple_isight_version:  str = "1.0.0"  #  AppleiSight
-        self.apple_raid_version:    str = "1.0.0"  #  AppleRAIDCard
-        self.apfs_zlib_version:     str = "12.3.1"  # NoAVXFSCompressionTypeZlib
-        self.apfs_zlib_v2_version:  str = "12.6"  #   NoAVXFSCompressionTypeZlib (patched with AVXpel)
-        self.multitouch_version:    str = "1.0.0"  #  AppleUSBMultitouch
-        self.topcase_version:       str = "1.0.0"  #  AppleUSBTopCase
-        self.topcase_inj_version:   str = "1.0.0"  #  AppleTopCaseInjector
-        self.intel_82574l_version:  str = "1.0.0"  #  Intel82574L
-        self.intel_8254x_version:   str = "1.0.0"  #  AppleIntel8254XEthernet
-        self.apple_usb_11_injector: str = "1.0.0"  #  AppleUSBUHCI/OHCI
-        self.aicpupm_version:       str = "1.0.0"  #  AppleIntelCPUPowerManagement/Client
-        self.s3x_nvme_version:      str = "1.0.0"  #  IONVMeFamily (14.0 Beta 1, S1X and S3X classes)
-        self.apple_camera_version:  str = "1.0.0"  #  AppleCameraInterface (14.0 Beta 1)
-        self.t1_sse_version:        str = "1.1.0"  #  AppleSSE      (13.6 - T1 support)
-        self.t1_key_store_version:  str = "1.1.0"  #  AppleKeyStore (13.6 - T1 support)
-        self.t1_credential_version: str = "1.0.0"  #  AppleCredentialManager (13.6 - T1 support)
-        self.t1_corecrypto_version: str = "1.0.1"  #  corecrypto    (13.6 - T1 support)
-        self.apple_spi_version:     str = "1.0.0"  #  AppleHSSPISupport   (14.4 Beta 1)
-        self.apple_spi_hid_version: str = "1.0.0"  #  AppleHSSPIHIDDriver (14.4 Beta 1)
-        self.kernel_relay_version:  str = "1.0.0"  #  KernelRelayHost (15.0 Beta 3)
+        self.marvel_version:        "1.0.1"  #  MarvelYukonEthernet
+        self.nforce_version:        "1.0.1"  #  nForceEthernet
+        self.piixata_version:       "1.0.1"  #  AppleIntelPIIXATA
+        self.fw_kext:               "1.0.1"  #  IOFireWireFamily
+        self.apple_trackpad:        "1.0.1"  #  AppleUSBTrackpad
+        self.apple_isight_version:  "1.0.0"  #  AppleiSight
+        self.apple_raid_version:    "1.0.0"  #  AppleRAIDCard
+        self.apfs_zlib_version:     "12.3.1"  # NoAVXFSCompressionTypeZlib
+        self.apfs_zlib_v2_version:  "12.6"  #   NoAVXFSCompressionTypeZlib (patched with AVXpel)
+        self.multitouch_version:    "1.0.0"  #  AppleUSBMultitouch
+        self.topcase_version:       "1.0.0"  #  AppleUSBTopCase
+        self.topcase_inj_version:   "1.0.0"  #  AppleTopCaseInjector
+        self.intel_82574l_version:  "1.0.0"  #  Intel82574L
+        self.intel_8254x_version:   "1.0.0"  #  AppleIntel8254XEthernet
+        self.apple_usb_11_injector: "1.0.0"  #  AppleUSBUHCI/OHCI
+        self.aicpupm_version:       "1.0.0"  #  AppleIntelCPUPowerManagement/Client
+        self.s3x_nvme_version:      "1.0.0"  #  IONVMeFamily (14.0 Beta 1, S1X and S3X classes)
+        self.apple_camera_version:  "1.0.0"  #  AppleCameraInterface (14.0 Beta 1)
+        self.t1_sse_version:        "1.1.0"  #  AppleSSE      (13.6 - T1 support)
+        self.t1_key_store_version:  "1.1.0"  #  AppleKeyStore (13.6 - T1 support)
+        self.t1_credential_version: "1.0.0"  #  AppleCredentialManager (13.6 - T1 support)
+        self.t1_corecrypto_version: "1.0.1"  #  corecrypto    (13.6 - T1 support)
+        self.apple_spi_version:     "1.0.0"  #  AppleHSSPISupport   (14.4 Beta 1)
+        self.apple_spi_hid_version: "1.0.0"  #  AppleHSSPIHIDDriver (14.4 Beta 1)
+        self.kernel_relay_version:  "1.0.0"  #  KernelRelayHost (15.0 Beta 3)
 
         ## Apple - Dortania Modified
-        self.bcm570_version:           str = "1.0.2"  # CatalinaBCM5701Ethernet
-        self.i210_version:             str = "1.0.0"  # CatalinaIntelI210Ethernet
-        self.corecaptureelcap_version: str = "1.0.2"  # corecaptureElCap
-        self.io80211elcap_version:     str = "2.0.1"  # IO80211ElCap
-        self.io80211legacy_version:    str = "1.0.0"  # IO80211FamilyLegacy (Ventura)
-        self.ioskywalk_version:        str = "1.2.0"  # IOSkywalkFamily (Ventura)
-        self.bigsursdxc_version:       str = "1.0.0"  # BigSurSDXC
-        self.monterey_ahci_version:    str = "1.0.0"  # CatalinaAHCI
+        self.bcm570_version:           "1.0.2"  # CatalinaBCM5701Ethernet
+        self.i210_version:             "1.0.0"  # CatalinaIntelI210Ethernet
+        self.corecaptureelcap_version: "1.0.2"  # corecaptureElCap
+        self.io80211elcap_version:     "2.0.1"  # IO80211ElCap
+        self.io80211legacy_version:    "1.0.0"  # IO80211FamilyLegacy (Ventura)
+        self.ioskywalk_version:        "1.2.0"  # IOSkywalkFamily (Ventura)
+        self.bigsursdxc_version:       "1.0.0"  # BigSurSDXC
+        self.monterey_ahci_version:    "1.0.0"  # CatalinaAHCI
 
         ## Apple - Jazzzny Modified
-        self.aquantia_version: str = "1.1.0"  # AppleEthernetAbuantiaAqtion
+        self.aquantia_version: "1.1.0"  # AppleEthernetAbuantiaAqtion
 
         ## Dortania
         ## https://github.com/dortania
-        self.backlight_injector_version:     str = "1.1.0"  # BacklightInjector
-        self.backlight_injectorA_version:    str = "1.0.0"  # BacklightInjector (iMac9,1)
-        self.smcspoof_version:               str = "1.0.0"  # SMC-Spoof
-        self.mce_version:                    str = "1.0.0"  # AppleMCEReporterDisabler
-        self.btspoof_version:                str = "1.0.0"  # Bluetooth-Spoof
-        self.aspp_override_version:          str = "1.0.1"  # ACPI_SMC_PlatformPlugin Override
-        self.ecm_override_version:           str = "1.0.0"  # AppleUSBECM Override
+        self.backlight_injector_version:     "1.1.0"  # BacklightInjector
+        self.backlight_injectorA_version:    "1.0.0"  # BacklightInjector (iMac9,1)
+        self.smcspoof_version:               "1.0.0"  # SMC-Spoof
+        self.mce_version:                    "1.0.0"  # AppleMCEReporterDisabler
+        self.btspoof_version:                "1.0.0"  # Bluetooth-Spoof
+        self.aspp_override_version:          "1.0.1"  # ACPI_SMC_PlatformPlugin Override
+        self.ecm_override_version:           "1.0.0"  # AppleUSBECM Override
         self.rsrhelper_version:              str = "1.0.2"  # RSRHelper
         self.amfipass_version:               str = "1.4.1"  # AMFIPass
         self.amfipass_compatibility_version: str = "1.2.1"  # Minimum AMFIPass version required
