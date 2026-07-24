@@ -125,7 +125,11 @@ class MainFrame(wx.Frame):
             button = wx.Button(self, label=button_name, pos=(button_x + 70, button_y), size=(180, 30))
             button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
             button.Bind(wx.EVT_BUTTON, lambda event, f=button_function["function"]: f(event))
-            
+
+            if button_name == "Build and Install OpenCore" and not gui_support.CheckProperties(self.constants).host_can_build():
+                button.Disable()
+                button.SetToolTip("Building OpenCore is not supported on Hackintoshes or Virtual Machines.")
+
             description_label = wx.StaticText(self, label='\n'.join(button_function["description"]), pos=(button_x + 75, button.GetPosition()[1] + 33))
             description_label.SetFont(gui_support.font_factory(10, wx.FONTWEIGHT_NORMAL))
 
