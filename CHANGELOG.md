@@ -1,4 +1,16 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.15914 - 4.0.0 pre-alpha 10.8.5 for alpha 16 / 4.0.0 Voralpha 10.8.5 für Alpha 16:
+This release fixes a bug where unconditionally, when downloading macOS through the patcher throws the following errors:
+<img width="1456" height="819" alt="image" src="https://github.com/user-attachments/assets/496984e0-2ad8-4b76-a134-19ccceebcfd7" />
+
+<img width="409" height="407" alt="image" src="https://github.com/user-attachments/assets/2da556f3-db3f-4e8b-bddd-13896a3b6b91" />
+
+Diese Version behebt einen Fehler, der beim Herunterladen von macOS über den Patcher die folgenden Fehlermeldungen ausgibt:
+
+<img width="1456" height="819" alt="image" src="https://github.com/user-attachments/assets/496984e0-2ad8-4b76-a134-19ccceebcfd7" />
+
+<img width="409" height="407" alt="image" src="https://github.com/user-attachments/assets/2da556f3-db3f-4e8b-bddd-13896a3b6b91" />
+
 ## 4.0.0.15913 - 4.0.0 pre-alpha 10.8.4 for alpha 16 / 4.0.0 Voralpha 10.8.4 für Alpha 16:
 This release:
 - fixes a bug where unconditionally when trying to download the macOS installer it throws an error:
