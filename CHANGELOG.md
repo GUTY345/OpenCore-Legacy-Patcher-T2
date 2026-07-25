@@ -1,4 +1,15 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.15915 - 4.0.0 pre-alpha 10.8.6 for alpha 16 / 4.0.0 Voralpha 10.8.6 für Alpha 16 Latest
+This release:
+
+fixes a bug where upon trying to flash macOS to the USB flash drive, the app crashes completely
+changes the Support icon from a book to a question mark to make it easier to understand by elderly people, non-techies and first-time OpenCore Legacy Patcher T2 users
+Diese Version:
+
+Behebt einen Fehler, der beim Versuch, macOS auf einen USB-Stick zu flashen, zum vollständigen Absturz der App führte.
+
+Ändert das Support-Symbol von einem Buch zu einem Fragezeichen, um es für ältere Menschen, technisch weniger versierte Nutzer und OpenCore Legacy Patcher T2-Erstbenutzer verständlicher zu machen.
+
 ## 4.0.0.15914 - 4.0.0 pre-alpha 10.8.5 for alpha 16 / 4.0.0 Voralpha 10.8.5 für Alpha 16:
 This release fixes a bug where unconditionally, when downloading macOS through the patcher throws the following errors:
 <img width="1456" height="819" alt="image" src="https://github.com/user-attachments/assets/496984e0-2ad8-4b76-a134-19ccceebcfd7" />
