@@ -530,7 +530,7 @@ class BuildMiscellaneous:
         self.config.setdefault('Kernel', {}).setdefault('Patch', [])
         kernel_patches = self.config['Kernel']['Patch']
 
-       if not any(p.get("Comment") == "Patch AppleKeyStore SEP retry limit" for p in kernel_patches):
+        if not any(p.get("Comment") == "Patch AppleKeyStore SEP retry limit" for p in kernel_patches):
             new_patch = {
                 "Arch": "x86_64",
                 "Identifier": "com.apple.driver.AppleKeyStore",
