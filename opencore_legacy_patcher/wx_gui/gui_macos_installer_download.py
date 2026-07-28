@@ -383,16 +383,21 @@ class macOSInstallerDownloadFrame(wx.Frame):
 
     def on_download(self, event: wx.Event) -> None:
         self.frame_modal.Close()
-        # Note: only Hide()-ing self.parent (the original MainFrame) here
-        # left it alive as a fully-initialized, invisible top-level window
-        # for the rest of the run - own menu bar, own update-check thread.
-        # If the app is quit directly from here (without ever passing
-        # through on_return_to_main_menu()), nothing else ever destroys it,
-        # and it gets torn down by the raw OS termination path at Cmd+Q
-        # instead of wx's controlled teardown, corrupting the autorelease
-        # pool. Destroy it immediately instead of just hiding it.
+        # Note: self.parent (the original MainFrame) is *this* frame's own
+        # wx parent (set in __init__), and self keeps running the download/
+        # catalog flow from here on. Calling self.parent.Destroy() directly
+        # would, per wx's window-deletion rules, also destroy self right
+        # along with it (child frames are destroyed together with their
+        # parent) - which was pulling the whole app down (zero top-level
+        # windows left -> auto-quit) the moment the parent's deferred
+        # Destroy() actually ran, usually while the AppleDB fetch thread
+        # below was still in flight. Hiding it and registering it for
+        # deferred destruction avoids that: it still gets torn down
+        # through wx's own controlled path, just at actual app exit
+        # (PatcherApp.OnExit()) instead of immediately - by which point
+        # self is going away too, so the cascade no longer matters.
         self.parent.Hide()
-        self.parent.Destroy()
+        gui_support.register_orphaned_frame(self.parent)
         self._generate_catalog_frame()
 
     def on_existing(self, event: wx.Event = None) -> None:

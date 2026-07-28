@@ -72,6 +72,14 @@ class PatcherApp(wx.App):
         # wx.CallAfter() into a vanishing frame is what corrupts the
         # autorelease pool on quit.
         gui_support.stop_all_pulses()
+
+        # Destroy any frame that was deliberately left alive-but-hidden
+        # instead of being torn down immediately (see
+        # gui_support.register_orphaned_frame() for why). Doing it here
+        # means it goes through wx's own controlled teardown as part of
+        # the same shutdown as everything else, rather than surviving
+        # until the OS kills the process out from under it.
+        gui_support.destroy_orphaned_frames()
         return super().OnExit()
 
 

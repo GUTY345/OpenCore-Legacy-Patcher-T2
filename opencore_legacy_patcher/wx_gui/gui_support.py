@@ -119,6 +119,43 @@ def stop_all_pulses() -> None:
         pulse.stop_pulse()
 
 
+_orphaned_frames: set = set()
+
+
+def register_orphaned_frame(frame: wx.Frame) -> None:
+    """
+    Registers a hidden, no-longer-needed top-level frame for destruction
+    at app exit, instead of destroying it right away.
+
+    This exists for cases like macOSInstallerDownloadFrame.on_download():
+    the frame being replaced (self.parent) is the wx *parent* of the
+    frame that keeps running (self). Per wx's own window-deletion rules,
+    destroying a window also destroys any child frames/dialogs parented
+    to it - so calling Destroy() on self.parent immediately would take
+    the still-in-use self down with it too, tearing down the whole app
+    out from under any download/fetch still in progress. Deferring the
+    Destroy() to PatcherApp.OnExit() (via destroy_orphaned_frames())
+    avoids that: by the time it actually runs, the app is shutting down
+    anyway, so the cascade no longer matters, and the frame still gets
+    torn down through wx's own controlled path rather than lingering
+    until the OS kills the process out from under it.
+    """
+    _orphaned_frames.add(frame)
+
+
+def destroy_orphaned_frames() -> None:
+    """
+    Destroys every frame registered via register_orphaned_frame().
+    Called from PatcherApp.OnExit().
+    """
+    for frame in list(_orphaned_frames):
+        try:
+            frame.Destroy()
+        except Exception:
+            pass
+        _orphaned_frames.discard(frame)
+
+
 class GaugePulseCallback:
     """
     Uses an alternative Pulse() method for wx.Gauge() on macOS Monterey+ with non-Metal GPUs
