@@ -1,5 +1,26 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
-## 4.0.0.15915 - 4.0.0 pre-alpha 10.8.6 for alpha 16 / 4.0.0 Voralpha 10.8.6 für Alpha 16 Latest
+## 4.0.0.16010 - alpha 16
+Anyone running the following versions should update immediately:
+
+4.0.0.16000
+4.0.0.16001
+These 2 versions are known to be buggy and I had to pull them down to avoid more people from installing these buggy releases that supposed to fix bugs.
+Alle Nutzer der folgenden Versionen sollten umgehend aktualisieren:
+
+4.0.0.16000
+4.0.0.16001
+Diese beiden Versionen sind bekanntermaßen fehlerhaft. Ich musste sie entfernen, um zu verhindern, dass weitere Nutzer diese fehlerhaften Versionen installieren, die eigentlich Fehler beheben sollten.
+This release:
+
+removes the Skip language selection patch due to this causing a grey screen, failing to load WindowServer but reaching macOS Recovery and kernel panics on certain T2 Macs when the SMBIOS is not spoofed
+fixes a bug where when launching Create macOS installer, followed by Return and then command + Q causes the app to crash
+Diese Version:
+
+Entfernt den Patch zum Überspringen der Sprachauswahl, da dieser auf bestimmten T2-Macs zu einem grauen Bildschirm, einem Fehlschlagen des Ladens von WindowServer und dem Erreichen der macOS-Wiederherstellung sowie zu Kernel-Panics führte, wenn SMBIOS nicht gefälscht wurde.
+
+Behebt einen Fehler, der beim Starten von „Create macOS Installer“ und anschließendem Drücken der Eingabetaste und dann Befehl + Q zum Absturz der Anwendung führte.
+
+## 4.0.0.15915 - 4.0.0 pre-alpha 10.8.6 for alpha 16 / 4.0.0 Voralpha 10.8.6 für Alpha 16
 This release:
 
 fixes a bug where upon trying to flash macOS to the USB flash drive, the app crashes completely
