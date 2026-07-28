@@ -482,18 +482,9 @@ class BuildMiscellaneous:
                 logging.info("You don't have to worry about this message.")
         try:
             APPLE_NVRAM_UUID = "7C436110-AB2A-4BBB-A880-FE41995C9F82"
-            logging.info("- Skipping Language and Region selection (all T2 models)")
-            
-            # Format 'en-US:0' as a raw byte sequence terminated by a null byte or written as exact hex data
-            prev_lang_bytes = b"en-US:0"
-            
-            self._set_nvram_value(APPLE_NVRAM_UUID, "prev-lang:kbd", prev_lang_bytes, overwrite=True)
-            
-            # Force the global language/locale environment variables to anchor the region
-            self._set_nvram_value(APPLE_NVRAM_UUID, "AppleLanguages", ["en-US"], overwrite=True)
-            self._set_nvram_value(APPLE_NVRAM_UUID, "AppleLocale", "en_US", overwrite=True)
+            logging.info("- Defining NVRAM variable APPLE_NVRAM_UUID")
         except Exception as e:
-            logging.error("We failed to skip language and region selection. It failed to do so because of the following error:")
+            logging.error("We failed to define APPLE_NVRAM_UUID. It failed to do so because of the following error:")
             logging.exception("Stack Trace:")
             logging.info("Please try again later.")
             sys.exit(3)
