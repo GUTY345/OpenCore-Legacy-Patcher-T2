@@ -398,6 +398,21 @@ class macOSInstallerDownloadFrame(wx.Frame):
         # self is going away too, so the cascade no longer matters.
         self.parent.Hide()
         gui_support.register_orphaned_frame(self.parent)
+        # Clean up that orphan the moment self itself is actually torn
+        # down - whether via Close() (Cmd+Q/menu Quit) or a direct
+        # Destroy() elsewhere (e.g. on_return_to_main_menu()) - rather
+        # than waiting for PatcherApp.OnExit(). Leaving self.parent alive-
+        # but-hidden until final app exit means it still counts as an
+        # open top-level window in the meantime, so closing self alone
+        # never brings the window count to zero and wx's own "quit once
+        # the last window closes" never fires on its own - that's why
+        # Cmd+Q needed a second, raw press to actually end things.
+        # wx.EVT_WINDOW_DESTROY fires only once self has *already* fully
+        # torn itself down, so destroying self.parent here can never
+        # cascade onto a still-in-use self - the exact problem that made
+        # destroying it immediately, back when this used to call
+        # self.parent.Destroy() directly, unsafe.
+        self.Bind(wx.EVT_WINDOW_DESTROY, lambda event: gui_support.destroy_orphaned_frames())
         self._generate_catalog_frame()
 
     def on_existing(self, event: wx.Event = None) -> None:
