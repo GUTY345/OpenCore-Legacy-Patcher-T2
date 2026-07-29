@@ -27,7 +27,12 @@ class PatcherSupportPkgMount:
             shadow_path.parent.mkdir(parents=True, exist_ok=True)
             cmd.extend(["-shadow", str(shadow_path)])
 
-        cmd.append("-stdinpass")
+        # Only request a passphrase over stdin when the image actually needs one (eg. DortaniaInternal).
+        # Universal-Binaries.dmg is unencrypted; unconditionally passing -stdinpass here made the
+        # elevated retry below fail with "hdiutil: attach failed - Authentication error (1)", since
+        # hdiutil handles a piped passphrase inconsistently once the command is re-run elevated.
+        if password is not None:
+            cmd.append("-stdinpass")
 
         # Execute with stdin input for the password
         process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -36,7 +41,10 @@ class PatcherSupportPkgMount:
         if process.returncode != 0 and b"Permission denied" in stdout:
             # macOS 26.4+ requires root privileges to mount disk images (regression; previously unprivileged mounts worked fine)
             logging.info("- Unprivileged hdiutil attach denied, retrying with administrator privileges")
-            shell_cmd = f"echo {shlex.quote(password or '')} | " + " ".join(shlex.quote(str(arg)) for arg in cmd)
+            if password is not None:
+                shell_cmd = f"echo {shlex.quote(password)} | " + " ".join(shlex.quote(str(arg)) for arg in cmd)
+            else:
+                shell_cmd = " ".join(shlex.quote(str(arg)) for arg in cmd)
             escaped_cmd = shell_cmd.replace("\\", "\\\\").replace('"', '\\"')
             try:
                 applescript.AppleScript(
@@ -61,7 +69,6 @@ class PatcherSupportPkgMount:
             dmg_path,
             Path(self.constants.payload_path / "Universal-Binaries"),
             shadow_path=Path(self.constants.payload_path / "Universal-Binaries_overlay"),
-            password="password"
         )
 
         if output.returncode != 0:
