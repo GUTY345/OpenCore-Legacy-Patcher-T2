@@ -222,6 +222,12 @@ class HardwarePatchsetDetection:
         """
         Determine if AMFI is enabled
         """
+        if getattr(self._constants, "host_is_vmware_vm", False) is True:
+            # Dev/test only: bypass the live AMFI validation gate inside VMware VMs, mirroring
+            # the SIP bypass above. host_is_vmware_vm is only ever set in application_entry.py
+            # when device_probe reports a VMware SMBIOS model - never reachable on a real Mac.
+            logging.info("Bypassing AMFI validation - host detected as VMware VM (test-only, see host_is_vmware_vm)")
+            return False
         return not amfi_detect.AmfiConfigurationDetection().check_config(self._override_amfi_level(level))
 
 
