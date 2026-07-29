@@ -551,147 +551,147 @@ class BuildMiscellaneous:
                 kernel_patches.append(new_patch)
 
         # APFS root hash validation bypass
-            # During Tahoe installer boot we see:
-            #   apfs_extract_root_hash_and_manifest_x86: populate_value_from_memory_descriptor
-            #   for root hash failed: 22
-            #   authenticate_efi_forwarded_roothash: failed with error: Invalid argument (22)
-            # This causes the installer to hang during disk enumeration after
-            # the language selection screen.  The normal macOS boot uses
-            # authenticate_root_hash (which works fine), but the USB installer
-            # boot path uses authenticate_efi_forwarded_roothash which fails
-            # because the T2 Secure Enclave can't verify the root hash of an
-            # unsupported USB installer.  We patch BOTH functions to cover
-            # whichever path the installer takes.
-            try:
-                logging.info(f"- {self.model}: Bypassing APFS root hash validation for installer disk enumeration")
-                new_patch = {
-                    "Arch": "x86_64",
-                    "Identifier": "com.apple.filesystems.apfs",
-                    "Base": "_authenticate_efi_forwarded_roothash",
-                    "Comment": "Bypass APFS EFI forwarded root hash validation for T2 installer",
-                    "Count": 1,
-                    "Enabled": True,
-                    "MinKernel": "24.0.0",
-                    "Find": b"",
-                    "Replace": binascii.unhexlify("B800000000C3"),
-                    "Mask": b"",
-                    "ReplaceMask": b"",
-                    "Limit": 0,
-                    "Skip": 0
-                }
-                if self._validate_patch(new_patch):
-                    logging.info("- Injecting APFS EFI forwarded root hash validation bypass patch")
-                    kernel_patches.append(new_patch)
-            except Exception as e:
-                logging.error("Failed to inject APFS root hash validation bypass patch:")
-                logging.exception("Stack Trace:")
+        # During Tahoe installer boot we see:
+        #   apfs_extract_root_hash_and_manifest_x86: populate_value_from_memory_descriptor
+        #   for root hash failed: 22
+        #   authenticate_efi_forwarded_roothash: failed with error: Invalid argument (22)
+        # This causes the installer to hang during disk enumeration after
+        # the language selection screen.  The normal macOS boot uses
+        # authenticate_root_hash (which works fine), but the USB installer
+        # boot path uses authenticate_efi_forwarded_roothash which fails
+        # because the T2 Secure Enclave can't verify the root hash of an
+        # unsupported USB installer.  We patch BOTH functions to cover
+        # whichever path the installer takes.
+        try:
+            logging.info(f"- {self.model}: Bypassing APFS root hash validation for installer disk enumeration")
+            new_patch = {
+                "Arch": "x86_64",
+                "Identifier": "com.apple.filesystems.apfs",
+                "Base": "_authenticate_efi_forwarded_roothash",
+                "Comment": "Bypass APFS EFI forwarded root hash validation for T2 installer",
+                "Count": 1,
+                "Enabled": True,
+                "MinKernel": "24.0.0",
+                "Find": b"",
+                "Replace": binascii.unhexlify("B800000000C3"),
+                "Mask": b"",
+                "ReplaceMask": b"",
+                "Limit": 0,
+                "Skip": 0
+            }
+            if self._validate_patch(new_patch):
+                logging.info("- Injecting APFS EFI forwarded root hash validation bypass patch")
+                kernel_patches.append(new_patch)
+        except Exception as e:
+            logging.error("Failed to inject APFS root hash validation bypass patch:")
+            logging.exception("Stack Trace:")
 
-            try:
-                new_patch = {
-                    "Arch": "x86_64",
-                    "Identifier": "com.apple.filesystems.apfs",
-                    "Base": "_authenticate_root_hash",
-                    "Comment": "Bypass APFS on-disk root hash validation for T2 installer",
-                    "Count": 1,
-                    "Enabled": True,
-                    "MinKernel": "24.0.0",
-                    "Find": b"",
-                    "Replace": binascii.unhexlify("B800000000C3"),
-                    "Mask": b"",
-                    "ReplaceMask": b"",
-                    "Limit": 0,
-                    "Skip": 0
-                }
-                if self._validate_patch(new_patch):
-                    logging.info("- Injecting APFS on-disk root hash validation bypass patch")
-                    kernel_patches.append(new_patch)
-            except Exception as e:
-                logging.error("Failed to inject APFS root hash validation bypass patch:")
-                logging.exception("Stack Trace:")
+        try:
+            new_patch = {
+                "Arch": "x86_64",
+                "Identifier": "com.apple.filesystems.apfs",
+                "Base": "_authenticate_root_hash",
+                "Comment": "Bypass APFS on-disk root hash validation for T2 installer",
+                "Count": 1,
+                "Enabled": True,
+                "MinKernel": "24.0.0",
+                "Find": b"",
+                "Replace": binascii.unhexlify("B800000000C3"),
+                "Mask": b"",
+                "ReplaceMask": b"",
+                "Limit": 0,
+                "Skip": 0
+            }
+            if self._validate_patch(new_patch):
+                logging.info("- Injecting APFS on-disk root hash validation bypass patch")
+                kernel_patches.append(new_patch)
+        except Exception as e:
+            logging.error("Failed to inject APFS root hash validation bypass patch:")
+            logging.exception("Stack Trace:")
 
-            # ----------------------------------------------------------------
-            # Phase 3: Attestation bypass patches (AppleKeyStore)
-            # ----------------------------------------------------------------
-            # The attestation chain in AppleKeyStore is:
-            #   gen_attestation_request() → encode_attestation()
-            #   → validate_attestation_nonce() → success
-            # If any step fails or hangs, the entire installer disk
-            # enumeration stalls because APFS volume verification
-            # depends on AppleKeyStore ↔ SEP communication.
-            # We patch the three core attestation functions to return
-            # 0 (success) immediately, bypassing the SEP round-trip.
+        # ----------------------------------------------------------------
+        # Phase 3: Attestation bypass patches (AppleKeyStore)
+        # ----------------------------------------------------------------
+        # The attestation chain in AppleKeyStore is:
+        #   gen_attestation_request() → encode_attestation()
+        #   → validate_attestation_nonce() → success
+        # If any step fails or hangs, the entire installer disk
+        # enumeration stalls because APFS volume verification
+        # depends on AppleKeyStore ↔ SEP communication.
+        # We patch the three core attestation functions to return
+        # 0 (success) immediately, bypassing the SEP round-trip.
 
-            # Phase 3.1: validate_attestation_nonce → return 0
-            # RE-VERIFIED 2026-07-27: symbol exists in Tahoe
-            # BootKernelExtensions.kc AppleKeyStore with prolog
-            # 55 48 89 e5 53 50 48 85 ff 0f 95 c0
-            if not any(p.get("Comment") == "Bypass attestation: validate_attestation_nonce (Phase 3)" for p in kernel_patches):
-                new_patch = {
-                    "Arch": "x86_64",
-                    "Identifier": "com.apple.driver.AppleKeyStore",
-                    "Base": "_validate_attestation_nonce",
-                    "Comment": "Bypass attestation: validate_attestation_nonce (Phase 3)",
-                    "Count": 1,
-                    "Enabled": True,
-                    "MinKernel": "24.0.0",
-                    "Find": binascii.unhexlify("554889E553504885FF0F95C0"),
-                    "Replace": binascii.unhexlify("31C0C3909090909090909090"),
-                    "Mask": b"",
-                    "ReplaceMask": b"",
-                    "Limit": 0,
-                    "Skip": 0
-                }
-                if self._validate_patch(new_patch):
-                    logging.info("- Phase 3: Injecting validate_attestation_nonce bypass")
-                    kernel_patches.append(new_patch)
+        # Phase 3.1: validate_attestation_nonce → return 0
+        # RE-VERIFIED 2026-07-27: symbol exists in Tahoe
+        # BootKernelExtensions.kc AppleKeyStore with prolog
+        # 55 48 89 e5 53 50 48 85 ff 0f 95 c0
+        if not any(p.get("Comment") == "Bypass attestation: validate_attestation_nonce (Phase 3)" for p in kernel_patches):
+            new_patch = {
+                "Arch": "x86_64",
+                "Identifier": "com.apple.driver.AppleKeyStore",
+                "Base": "_validate_attestation_nonce",
+                "Comment": "Bypass attestation: validate_attestation_nonce (Phase 3)",
+                "Count": 1,
+                "Enabled": True,
+                "MinKernel": "24.0.0",
+                "Find": binascii.unhexlify("554889E553504885FF0F95C0"),
+                "Replace": binascii.unhexlify("31C0C3909090909090909090"),
+                "Mask": b"",
+                "ReplaceMask": b"",
+                "Limit": 0,
+                "Skip": 0
+            }
+            if self._validate_patch(new_patch):
+                logging.info("- Phase 3: Injecting validate_attestation_nonce bypass")
+                kernel_patches.append(new_patch)
 
-            # Phase 3.2: gen_attestation_request → return 0 (NULL buffer)
-            # RE-VERIFIED 2026-07-27: symbol exists in Tahoe
-            # BootKernelExtensions.kc AppleKeyStore with prolog
-            # 55 48 89 e5 41 57 41 56 41 55 41 54 53 48 81 ec d8 01 00 00 (20B)
-            if not any(p.get("Comment") == "Bypass attestation: gen_attestation_request (Phase 3)" for p in kernel_patches):
-                new_patch = {
-                    "Arch": "x86_64",
-                    "Identifier": "com.apple.driver.AppleKeyStore",
-                    "Base": "_gen_attestation_request",
-                    "Comment": "Bypass attestation: gen_attestation_request (Phase 3)",
-                    "Count": 1,
-                    "Enabled": True,
-                    "MinKernel": "24.0.0",
-                    "Find": binascii.unhexlify("554889E54157415641554154534881ECD8010000"),
-                    "Replace": binascii.unhexlify("31C0C39090909090909090909090909090909090"),
-                    "Mask": b"",
-                    "ReplaceMask": b"",
-                    "Limit": 0,
-                    "Skip": 0
-                }
-                if self._validate_patch(new_patch):
-                    logging.info("- Phase 3: Injecting gen_attestation_request bypass")
-                    kernel_patches.append(new_patch)
+        # Phase 3.2: gen_attestation_request → return 0 (NULL buffer)
+        # RE-VERIFIED 2026-07-27: symbol exists in Tahoe
+        # BootKernelExtensions.kc AppleKeyStore with prolog
+        # 55 48 89 e5 41 57 41 56 41 55 41 54 53 48 81 ec d8 01 00 00 (20B)
+        if not any(p.get("Comment") == "Bypass attestation: gen_attestation_request (Phase 3)" for p in kernel_patches):
+            new_patch = {
+                "Arch": "x86_64",
+                "Identifier": "com.apple.driver.AppleKeyStore",
+                "Base": "_gen_attestation_request",
+                "Comment": "Bypass attestation: gen_attestation_request (Phase 3)",
+                "Count": 1,
+                "Enabled": True,
+                "MinKernel": "24.0.0",
+                "Find": binascii.unhexlify("554889E54157415641554154534881ECD8010000"),
+                "Replace": binascii.unhexlify("31C0C39090909090909090909090909090909090"),
+                "Mask": b"",
+                "ReplaceMask": b"",
+                "Limit": 0,
+                "Skip": 0
+            }
+            if self._validate_patch(new_patch):
+                logging.info("- Phase 3: Injecting gen_attestation_request bypass")
+                kernel_patches.append(new_patch)
 
-            # Phase 3.3: encode_attestation → return 0 (success)
-            # RE-VERIFIED 2026-07-27: symbol exists in Tahoe
-            # BootKernelExtensions.kc AppleKeyStore with prolog
-            # 55 48 89 e5 41 57 41 56 41 55 41 54 53 48 81 ec 88 00 00 00 (20B)
-            if not any(p.get("Comment") == "Bypass attestation: encode_attestation (Phase 3)" for p in kernel_patches):
-                new_patch = {
-                    "Arch": "x86_64",
-                    "Identifier": "com.apple.driver.AppleKeyStore",
-                    "Base": "_encode_attestation",
-                    "Comment": "Bypass attestation: encode_attestation (Phase 3)",
-                    "Count": 1,
-                    "Enabled": True,
-                    "MinKernel": "24.0.0",
-                    "Find": binascii.unhexlify("554889E54157415641554154534881EC88000000"),
-                    "Replace": binascii.unhexlify("31C0C39090909090909090909090909090909090"),
-                    "Mask": b"",
-                    "ReplaceMask": b"",
-                    "Limit": 0,
-                    "Skip": 0
-                }
-                if self._validate_patch(new_patch):
-                    logging.info("- Phase 3: Injecting encode_attestation bypass")
-                    kernel_patches.append(new_patch)
+        # Phase 3.3: encode_attestation → return 0 (success)
+        # RE-VERIFIED 2026-07-27: symbol exists in Tahoe
+        # BootKernelExtensions.kc AppleKeyStore with prolog
+        # 55 48 89 e5 41 57 41 56 41 55 41 54 53 48 81 ec 88 00 00 00 (20B)
+        if not any(p.get("Comment") == "Bypass attestation: encode_attestation (Phase 3)" for p in kernel_patches):
+            new_patch = {
+                "Arch": "x86_64",
+                "Identifier": "com.apple.driver.AppleKeyStore",
+                "Base": "_encode_attestation",
+                "Comment": "Bypass attestation: encode_attestation (Phase 3)",
+                "Count": 1,
+                "Enabled": True,
+                "MinKernel": "24.0.0",
+                "Find": binascii.unhexlify("554889E54157415641554154534881EC88000000"),
+                "Replace": binascii.unhexlify("31C0C39090909090909090909090909090909090"),
+                "Mask": b"",
+                "ReplaceMask": b"",
+                "Limit": 0,
+                "Skip": 0
+            }
+            if self._validate_patch(new_patch):
+                logging.info("- Phase 3: Injecting encode_attestation bypass")
+                kernel_patches.append(new_patch)
         
         # Bypass osinstallersetupd bridge device validation checks (Fixes Attestation Error -10000)
         try:
