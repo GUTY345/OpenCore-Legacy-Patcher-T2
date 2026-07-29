@@ -455,31 +455,6 @@ class BuildMiscellaneous:
         else:
             logging.error("We couldn't verify if injecting optional patcges are enabled or not, but they must be disabled if the variable is not set to True.")
         
-        # Aktivieren von Kexts von T1-Chip auf T2 Macs
-        # T2 Macs benötigen nicht corecrypto-Patches für T1 Macs, weil die ist gar nicht kompatibel sind mit den T2-Chip
-        # all die anderen Kexts sind von macOS selbst, und die funktionieren auch auf T2 Macs
-        try:
-            logging.info("Enabling certain T1 kexts that may be needed to boot on T2 Macs")
-            builder = support.BuildSupport(self.model, self.constants, self.config)
-            identifiers = ["com.apple.driver.AppleSSE", "com.apple.driver.AppleKeyStore", "com.apple.driver.AppleCredentialManager"]
-            
-            self.config.setdefault("Kernel", {}).setdefault("Block", [])
-            for identifier in identifiers:
-                item = builder.get_item_by_kv(self.config["Kernel"]["Block"], "Identifier", identifier)
-                if item: item["Enabled"] = True
-
-            kexts_to_enable = [
-                ("AppleKeyStore.kext", self.constants.t1_key_store_version, self.constants.t1_key_store_path),
-                ("KernelRelayHost.kext", self.constants.kernel_relay_version, self.constants.kernel_relay_path),
-            ]
-            for name, version, path in kexts_to_enable:
-                builder.enable_kext(name, version, path)
-        except Exception as e:
-            logging.error(f"CRITICAL: Failed to configure T1 Security Chip: {e}")
-            logging.exception("Stack Trace:")
-            logging.info("Please try again later.")
-            sys.exit(3)
-
         # Prerequisite kext checks
         for kext, ver, path in [
             ("WhateverGreen.kext", self.constants.whatevergreen_version, self.constants.whatevergreen_path),
