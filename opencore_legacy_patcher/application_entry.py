@@ -91,6 +91,18 @@ class OpenCoreLegacyPatcher:
         if self.constants.computer.real_model and self.constants.computer.real_model.startswith("VMware"):
             self.constants.host_is_vmware_vm = True
             logging.warning("Host detected as a VMware virtual machine - SIP validation for root patching will be bypassed (test-only, see host_is_vmware_vm)")
+            logging.info("This warning is only for developers testing the syntax inside a virtual machine.")
+            logging.info("This can be done only if you are running the code from source.")
+            logging.info("To test the syntax for installing drivers and patches inside a virtual machine, you need to do the following:")
+            logging.info("1. Open model_array.py inside Visual Studio Code")
+            logging.info("2. command+F")
+            logging.info("3. Search for VMWare20,1 - this is the SMBIOS for VMWare VMs")
+            logging.info("4. Remove # in front of VMWare20,1")
+            logging.info("5. Save the changes and quit Visual Studio Code")
+            logging.info("6. Then open the Terminal")
+            logging.info("7. Run python3, followed by the directory where is located the Build-Project.command.")
+            logging.info("8. Once successfully builds the project, you'll get Build successful")
+            logging.info("9. Then open the dist foler and install OpenCore Legacy Patcher T2 with the newly done changes")
 
         # Generate environment data
         self.constants.recovery_status = utilities.check_recovery()
@@ -174,3 +186,4 @@ def main():
     Main entry point
     """
     OpenCoreLegacyPatcher()
+
