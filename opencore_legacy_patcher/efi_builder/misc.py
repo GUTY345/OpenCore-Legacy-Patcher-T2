@@ -471,7 +471,6 @@ class BuildMiscellaneous:
             kexts_to_enable = [
                 ("AppleSSE.kext", self.constants.t1_sse_version, self.constants.t1_sse_path),
                 ("AppleKeyStore.kext", self.constants.t1_key_store_version, self.constants.t1_key_store_path),
-                ("AppleCredentialManager.kext", self.constants.t1_credential_version, self.constants.t1_credential_path),
                 ("KernelRelayHost.kext", self.constants.kernel_relay_version, self.constants.kernel_relay_path),
             ]
             for name, version, path in kexts_to_enable:
