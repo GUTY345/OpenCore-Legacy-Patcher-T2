@@ -579,9 +579,8 @@ class BuildMiscellaneous:
                 "Limit": 0,
                 "Skip": 0
             }
-            if self._validate_patch(new_patch):
-                logging.info("- Injecting APFS EFI forwarded root hash validation bypass patch")
-                kernel_patches.append(new_patch)
+            logging.info("- Injecting APFS EFI forwarded root hash validation bypass patch")
+            kernel_patches.append(new_patch)
         except Exception as e:
             logging.error("Failed to inject APFS root hash validation bypass patch:")
             logging.exception("Stack Trace:")
@@ -602,9 +601,8 @@ class BuildMiscellaneous:
                 "Limit": 0,
                 "Skip": 0
             }
-            if self._validate_patch(new_patch):
-                logging.info("- Injecting APFS on-disk root hash validation bypass patch")
-                kernel_patches.append(new_patch)
+            logging.info("- Injecting APFS on-disk root hash validation bypass patch")
+            kernel_patches.append(new_patch)
         except Exception as e:
             logging.error("Failed to inject APFS root hash validation bypass patch:")
             logging.exception("Stack Trace:")
