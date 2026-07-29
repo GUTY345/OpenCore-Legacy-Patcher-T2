@@ -23,8 +23,7 @@ A Python-based project revolving around [Acidanthera's OpenCorePkg](https://gith
 - [ ] Internal hard drive mounts properly on T2 Macs - https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues/69
 - [ ] ability to reach the desktop
 - [ ] Post install - issues with second stage
-- [ ] GPU accelaration/WiFi - most T2 Macs will have WIFi and possibly GPU accelaration out of the box
-
+- [ ] GPU accelaration/WiFi - most T2 Macs will have GPU accelaration out of the box, and on certain T2 Macs, also WiFi
 
 Our goal of this project is to add support for T2 Macs so unsupported T2 Macs can boot into Sequoia and Tahoe. This project may run on non-T2 Macs, but support is limited for those and that's not the focus of this project.
 
