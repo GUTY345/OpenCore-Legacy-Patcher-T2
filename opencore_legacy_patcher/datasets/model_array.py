@@ -110,7 +110,7 @@ SupportedSMBIOS = [
     # iMac Pro
     "iMacPro1,1",
     # virtuelle Maschinen zum Testen der Code
-    "VMWare20,1" # nur zum Testen der Syntax von der App, damit das erleichtert wird, weil ich habe keinen Mac, auf denen ich direkt Root Patches einspielen kann, nur der Syntax zu testen
+    # "VMWare20,1" # nur zum Testen der Syntax von der App, damit das erleichtert wird, weil ich habe keinen Mac, auf denen ich direkt Root Patches einspielen kann, nur der Syntax zu testen
 ]
 
 # Audio
@@ -153,7 +153,7 @@ LegacyAudio = [
     "iMac12,2",
     "MacPro3,1",
     "Dortania1,1",
-    "VMWare20,1" # nur zum Testen der Syntax von Root Patching, gar nicht für echte Root-Patching der virtuelle Maschine
+    # "VMWare20,1" # nur zum Testen der Syntax von Root Patching, gar nicht für echte Root-Patching der virtuelle Maschine
 ]
 
 # GPU
