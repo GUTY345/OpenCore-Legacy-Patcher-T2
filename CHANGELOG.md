@@ -13,6 +13,10 @@ commit_info.py:
 - import logging is missing despite logging.info being used. An attacker can abuse this by intentionally crashing the process to launch DoS and chain with other vulnerabilities so the attacker can do anything they want to - be it to connect to a malicious C2 server or download malware
 - fixes a vulnerability where an attacker could claim in a malicious website that it is running from source, distribute a malicious pkg file and execute malware
 
+gui_settings.py:
+
+– Fixes a vulnerability that allows an attacker to trick the user into disabling automatic updates. This enabled them to use a vulnerable version with already patched vulnerabilities to install malware, exploit known vulnerabilities, or launch denial-of-service (DoS) attacks.
+
 Vielen Dank an @DrDonk für seinen Beitrag zu diesem Projekt!
 
 Diese Version:
