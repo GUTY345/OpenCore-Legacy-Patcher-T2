@@ -1,3 +1,4 @@
+import logging
 import plistlib
 from pathlib import Path
 from typing import Tuple, Optional
@@ -11,7 +12,7 @@ class ParseCommitInfo:
         # Suche im selben Verzeichnis wie die Binärdatei oder im übergeordneten "Resources"-Ordner
         # Anstatt hartem .replace() suchen wir nach einer Info.plist in der Nähe
         possible_paths = [
-            self.binary_path.parent.parent / "Contents" / "Info.plist",
+            self.binary_path.parent.parent / "Info.plist",
             self.binary_path.parent / "Info.plist"
         ]
         for p in possible_paths:
