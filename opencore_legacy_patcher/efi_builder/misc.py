@@ -529,18 +529,6 @@ class BuildMiscellaneous:
         self.config.setdefault('Kernel', {}).setdefault('Patch', [])
         kernel_patches = self.config['Kernel']['Patch']
 
-        # BridgeOS version spoof
-        # From issue #39 community fix.  Spoofing the bridgeOS version
-        # and status prevents the T2 bridge from rejecting installer
-        # communication due to version mismatch.
-        try:
-            logging.info("- Phase 4: Spoofing bridgeOS version for T2 installer compatibility")
-            self._set_nvram_value(APPLE_NVRAM_UUID, "bridge-os-version", "23.16.15067.0.0,0", overwrite=True)
-            self._set_nvram_value(APPLE_NVRAM_UUID, "t2-bridge-status", "01", overwrite=True)
-        except Exception as e:
-            logging.error("Failed to spoof bridgeOS version:")
-            logging.exception("Stack Trace:")
-
         if not any(p.get("Comment") == "Patch AppleKeyStore SEP retry limit" for p in kernel_patches):
             new_patch = {
                 "Arch": "x86_64",
