@@ -92,6 +92,7 @@ class OpenCoreLegacyPatcher:
             self.constants.host_is_vmware_vm = True
             logging.warning("Host detected as a VMware virtual machine - SIP validation for root patching will be bypassed (test-only, see host_is_vmware_vm)")
             logging.info("This warning is only for developers testing the syntax inside a virtual machine.")
+            logging.info("Another note: when testing the syntax in a virtual machine, when trying to mount some volumes it will throw an error - and that's expected, since in VMs it's nearly impossible to disable SIP and AMFI.")
             logging.info("This can be done only if you are running the code from source.")
             logging.info("To test the syntax for installing drivers and patches inside a virtual machine, you need to do the following:")
             logging.info("1. Open model_array.py inside Visual Studio Code")
