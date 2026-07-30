@@ -1,4 +1,4 @@
-# Auto detect text files and perform LF normalizations
+# Auto detect text files and perform LF normalization
 * text=auto
 
 # Ensure these are always treated as binary so they don't corrupt
