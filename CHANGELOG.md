@@ -1,6 +1,8 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
 ## 4.0.0.16020 - alpha 16.1:
 Thanks @DrDonk for contributing to this project!
+This update is recommended to all users
+Dieses Update ist für alle Benutzer empfohlen
 This release:
 - adds a new AppleKeyStore timeout patch for T2 Macs to fix an issue where on MacBooks when not spoofing the SMBIOS due to AppleKeyStore timing out and when booting to the last natively supported OS, also fixes an issue where it activates Activation Lock - this time, it is done by extending the timeout time rather than passing raw sucess to the kernel by NOP-ing out
 - Changes the Support-OC icon with a better looking question mark that fits the application's UI design
