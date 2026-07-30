@@ -1,4 +1,42 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16020 - alpha 16.1:
+Thanks @DrDonk for contributing to this project!
+This release:
+- adds a new AppleKeyStore timeout patch for T2 Macs to fix an issue where on MacBooks when not spoofing the SMBIOS due to AppleKeyStore timing out and when booting to the last natively supported OS, also fixes an issue where it activates Activation Lock - this time, it is done by extending the timeout time rather than passing raw sucess to the kernel by NOP-ing out
+- Changes the Support-OC icon with a better looking question mark that fits the application's UI design
+- fixes a bug where upon trying to install drivers and patches, it throws Permission denied error unless manually mounted the Universal-Binaries.dmg - it is fixed by correcting the extremely fragile syntax and escalating privileges to mount it
+<img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/2408367b-4534-4f6f-a908-397fd4a2259f" />
+
+- for advanced developers, now you can test the syntax for root patching inside a virtual machine, but there's a catch:  you can test only certain things, you can't test if certain patches (like sound, graphics etc) do work or not due to not being able to disable SIP and AMFI inside a virtual machine easily, and also these patches aren't meant for virtual machines, however you need to compile the code from source and not use the precompiled binaries as you need to remove the # in front of the SMBIOS for VMWare20,1 inside model_array.py to avoid attackers abuse this for launching DoS against virtual machines
+- fixes the following vulnerabilities:
+commit_info.py:
+- import logging is missing despite logging.info being used. An attacker can abuse this by intentionally crashing the process to launch DoS and chain with other vulnerabilities so the attacker can do anything they want to - be it to connect to a malicious C2 server or download malware
+- fixes a vulnerability where an attacker could claim in a malicious website that it is running from source, distribute a malicious pkg file and execute malware
+
+Vielen Dank an @DrDonk für seinen Beitrag zu diesem Projekt!
+
+Diese Version:
+- Fügt einen neuen AppleKeyStore-Timeout-Patch für T2-Macs hinzu, um ein Problem zu beheben, das auf MacBooks auftrat, wenn SMBIOS nicht gefälscht wurde, da der AppleKeyStore einen Timeout verursachte und das letzte nativ unterstützte Betriebssystem gestartet wurde. Außerdem wird ein Problem behoben, das die Aktivierungssperre aktivierte. Dies geschieht nun durch Verlängerung des Timeout-Zeitraums, anstatt den Erfolg durch NOP-Befehle direkt an den Kernel zu übermitteln.
+
+- Ändert das Support-OC-Symbol durch ein ansprechenderes Fragezeichen, das besser zum UI-Design der Anwendung passt.
+
+- Behebt einen Fehler, der beim Versuch, Treiber und Patches zu installieren, zu einer Fehlermeldung „Zugriff verweigert“ führte, sofern die Universal-Binaries.dmg nicht manuell eingebunden wurde. Dies wurde durch Korrektur der extrem fehleranfälligen Syntax und Erhöhung der Berechtigungen zum Einbinden der Datei behoben.
+
+<img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/2408367b-4534-4f6f-a908-397fd4a2259f" />
+
+- Für fortgeschrittene Entwickler: Sie können nun die Syntax für Root-Patching in einer virtuellen Maschine testen. Allerdings gibt es einen Haken: Sie können nur bestimmte Dinge testen. Die Funktion bestimmter Patches (z. B. für Sound, Grafik usw.) lässt sich nicht testen, da SIP und AMFI in einer virtuellen Maschine nicht ohne Weiteres deaktiviert werden können. Außerdem sind diese Patches nicht für virtuelle Maschinen gedacht. Sie müssen den Code aus dem Quellcode kompilieren und dürfen keine vorkompilierten Binärdateien verwenden. Entfernen Sie das # vor dem SMBIOS für VMWare20,1 in model_array.py, um zu verhindern, dass Angreifer dies für Denial-of-Service-Angriffe auf virtuelle Maschinen missbrauchen.
+
+- Behebt die folgenden Sicherheitslücken:
+commit_info.py:
+
+- Der Import von logging fehlt, obwohl logging.info verwendet wird. Ein Angreifer kann dies ausnutzen, indem er den Prozess absichtlich zum Absturz bringt, um einen Denial-of-Service-Angriff (DoS) zu starten und diesen mit anderen Schwachstellen zu verknüpfen. Dadurch kann der Angreifer beliebige Aktionen ausführen – beispielsweise eine Verbindung zu einem bösartigen Command-and-Control-Server (C2) herstellen oder Schadsoftware herunterladen.
+
+– Behebt eine Schwachstelle, durch die ein Angreifer auf einer bösartigen Website behaupten konnte, sie laufe aus dem Quellcode, eine bösartige Paketdatei (PKG) verbreiten und Schadsoftware ausführen konnte.
+
+gui_settings.py:
+
+– Behebt eine Schwachstelle, durch die ein Angreifer den Benutzer auffordern konnte, automatische Updates zu deaktivieren. Dadurch konnte er eine anfällige Version mit bereits behobenen Schwachstellen verwenden, um Schadsoftware zu installieren, bekannte Schwachstellen auszunutzen oder DoS-Angriffe zu starten.
+
 ## 4.0.0.16010 - alpha 16
 Anyone running the following versions should update immediately:
 
