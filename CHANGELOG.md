@@ -1,5 +1,5 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
-## 4.0.0.16021 - alpha 16.1.1
+## 4.0.0.16021 - 4.0.0 alpha 16.1.1
 This release:
 
 fixes a bug where on T2 Macs, it may have not injected AMFIPass.kext because it didn't checked if the Mac is natively supported by macOS 26 Tahoe or not. It only checked if the maximum supported version is older than the version that is currently running. That could lead to kernel panics or erratic behavior due to passing -amfipassbeta as a boot argument while AMFIPass.kext is completely missing.
