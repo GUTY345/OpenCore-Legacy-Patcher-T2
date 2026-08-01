@@ -301,6 +301,9 @@ class BuildSecurity:
         # Branch A: T2 Mac Consolidated Security Configuration
         # ==============================================================
         if self._is_t2_mac():
+            if not self.model in model_array.T2Macs:
+                logging.error(f"By accident, we executed logic for T2 Macs while {self.model} doesn't have the T2 chip. We'll try again and will try injecting non-T2 config instead.")
+                return # verlässt die Funktion is_t2_mac, falls es nicht um einen T2 Mac handelt
             logging.info("- T2 Mac detected — applying consolidated T2 security settings")
             
             # 1. Base initialization & OS Target Checks (Zwingend als Erstes!)
@@ -387,7 +390,7 @@ class BuildSecurity:
         needs_amfipass = False
 
         if self._is_t2_mac():
-            if self.is_tahoe_target or smbios_data.smbios_dictionary[self.model]["Max OS Supported"] < self.constants.detected_os:
+            if self.is_tahoe_target or smbios_data.smbios_dictionary[self.model]["Max OS Supported"] < os_data.os_data.tahoe:
                 needs_amfipass = True
         else:
             if smbios_data.smbios_dictionary[self.model]["Max OS Supported"] < os_data.os_data.sonoma:
