@@ -305,6 +305,7 @@ class BuildSecurity:
                 logging.error(f"By accident, we executed logic for T2 Macs while {self.model} doesn't have the T2 chip. We'll try again and will try injecting non-T2 config instead.")
                 return # verlässt die Funktion is_t2_mac, falls es nicht um einen T2 Mac handelt
             logging.info("- T2 Mac detected — applying consolidated T2 security settings")
+            logging.info(f"{self.model} has a T2 chip.")
             
             # 1. Base initialization & OS Target Checks (Zwingend als Erstes!)
             self._apply_t2_memory_descriptor_overrides(APPLE_NVRAM_UUID)
@@ -331,7 +332,11 @@ class BuildSecurity:
         # Branch B: Non-T2 Mac Configuration (PROTECTED VIA ELSE)
         # ==============================================================
         else:
+            if self.model in model_array.T2Macs:
+                logging.error(f"By accident, we executed logic for non-T2 Macs while {self.model} has the T2 chip. Aborting. Try reinstalling OpenCore Legacy Patcher T2.")
+                sys.exit(3) # sollte normalerweise niemals hier erreichen - falls die Programme durch einen Angreifer ausgetrickst wurde, dass ein T2 Mac nicht ein T2 Mac ist, nur denn wird es hier erreichen
             logging.info("- Non-T2 Mac detected — isolating legacy environment execution chain")
+            logging.info(f"{self.model} has no T2 chip.")
             if self.constants.sip_status is False or self.constants.custom_sip_value:
                 logging.info("- Non-T2 Mac: SIP lowered — applying SIP-related settings")
                 
