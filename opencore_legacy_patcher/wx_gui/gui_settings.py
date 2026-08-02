@@ -811,21 +811,8 @@ class SettingsFrame(wx.Frame):
                     ],
                     "warning": "This option should only be used if your Mac natively supports the OSes you wish to run.\n\nIf you are currently running an unsupported OS, this option will break booting. Only toggle for enabling OS features on a native Mac.\n\nAre you certain you want to continue?",
                 },
-                # um zu sicherstellen, dass Benutzer auf den neuesten Stand bleiben, um die letzte Fehlerbehebungen zu erhalten und Sicherheitslücken zu schließen, dieses Menü ist standardmäßig deaktiviert
-                # "Disable automatic updates": {
-                    # "type": "checkbox",
-                    # "value": global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates") or self.constants.ignore_updates,
-                    # "variable": "IgnoreAppUpdates",
-                    # "constants_variable": "ignore_updates",
-                    # "description": [
-                        # "This disables automatic updates for",
-                        # "OpenCore Legacy Patcher T2",
-                        # "NOT recommended as disabling app updates makes",
-                        # "you vulnerable to newly discovered vulnerabilities that",
-                        # "have been already patched."
-                    # ],
-                    # "override_function": self._update_global_settings,
-                # },
+                # um zu sicherstellen, dass Benutzer auf den neuesten Stand bleiben, um die letzte Fehlerbehebungen zu erhalten und Sicherheitslücken zu schließen, das Menü zum Deaktivieren von automatische Updates ist entfernt
+               
                 "wrap_around 1": {
                     "type": "wrap_around",
                 },
