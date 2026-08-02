@@ -92,7 +92,7 @@ class BuildOpenCore:
                     logging.info("macOS 27 Golden Gate is compiled only for arm64, specifically for Apple Silicon.")
                     logging.info("Please select macOS 26 Tahoe or older version.")
                 else:
-                    logging.info("You're not building OpenCore on your target system that is running macOS 27 Golden Gate. Continuing.")
+                    logging.info("You're not building OpenCore on your target system that is running macOS 27 Golden Gate.")
             else:
                 logging.info("You're not targeting macOS 27 Golden Gate, this is good.")
                 pass
