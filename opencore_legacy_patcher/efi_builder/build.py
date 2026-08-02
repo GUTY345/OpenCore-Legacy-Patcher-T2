@@ -94,7 +94,6 @@ class BuildOpenCore:
                     logging.info("You're not building OpenCore on your target system that is running macOS 27 Golden Gate.")
             else:
                 logging.info("You're not targeting macOS 27 Golden Gate, this is good.")
-                pass
         except Exception as e:
             logging.error("We couldn't make sure if you are targeting macOS 27 Golden Gate or newer. Skip checking...")
             logging.exception("Stack Trace:")
