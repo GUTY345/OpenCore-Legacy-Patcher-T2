@@ -213,80 +213,84 @@ class BuildSecurity:
         if self._should_skip_t2_graphics_injection() or not self._requires_t2_graphics_injection():
             logging.info(f"- Skipping Intel graphics injection for {self.model} (no iGPU or not required)")
             return
-
-        graphics_path = self._get_graphics_device_properties_path()
-        if not graphics_path:
-            return
-
-        self._ensure_path("DeviceProperties", "Add", graphics_path)
-        gfx = self.config["DeviceProperties"]["Add"][graphics_path]
-
-        APPLE_NVRAM_UUID = "7C436110-AB2A-4BBB-A880-FE41995C9F82"
-
-        # ── 1. Platform & Device ID Allocation ────────────────────────────
-        if self.is_ice_lake:
-            logging.info(f"- {self.model}: Injecting connector-less Ice Lake Iris Plus DeviceProperties (Tahoe fix)")
-            gfx["AAPL,ig-platform-id"] = binascii.unhexlify("02005C8A")  # 0x8A5C0002 LE
-            gfx["device-id"]           = binascii.unhexlify("5C8A0000")  # 0x8A5C0000 LE
-            
-        elif self.model in _T2_LOW_POWER_MODELS or self.model in _T2_IRIS_PLUS_MODELS:
-            logging.info(f"- {self.model}: Injecting connector-less Iris Plus / Amber Lake DeviceProperties (Tahoe fix)")
-            gfx["AAPL,ig-platform-id"] = binascii.unhexlify("0900A53E")  # 0x3EA50009 LE
-            gfx["device-id"]           = binascii.unhexlify("A53E0000")  # 0x3EA50000 LE
-            
-            self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "igfxgl=1 igfxmetal=1")
-            logging.info("  > Appended LP display sync flags safely.")
-
-        elif self.model in _T2_UHD630_MODELS:
-            logging.info(f"- {self.model}: Injecting connector-less UHD630 DeviceProperties (Tahoe fix)")
-            gfx["AAPL,ig-platform-id"] = binascii.unhexlify("06009B3E")  # 0x3E9B0006 LE
-            gfx["device-id"]           = binascii.unhexlify("9B3E0000")  # 0x3E9B0000 LE
         else:
-            logging.error(f"FATAL: Model {self.model} lacks specific GPU patch data.")
-            sys.exit(3)
-
-        # ── 2. Structural Framebuffer Overrides ───────────────────────────
-        try:
-            gfx["framebuffer-patch-enable"] = binascii.unhexlify("01000000")
-            
-            if self.model in _T2_UHD630_MODELS:
-                # Connector-less ig-platform-id (0x3E9B0006) has no connectors defined,
-                # so con0 must stay in headless isolation for ALL UHD630 T2 models —
-                # this includes Macmini8,1 (no dGPU) as well as the MBP15/16 models (dGPU present).
-                gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
-                gfx["framebuffer-con0-type"]    = binascii.unhexlify("00000000")  
-                logging.info(f"  > {self.model}: Enforced strict headless isolation structure on con0 (connector-less platform-id)")
-            elif self.is_mac_mini or self.is_ice_lake:
-                gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
-                gfx["framebuffer-con0-type"]    = binascii.unhexlify("00040000")  
-                logging.info(f"  > {self.model}: Enforced active physical mapping layout on con0 (iGPU-only fix)")
+            graphics_path = self._get_graphics_device_properties_path()
+            if not graphics_path:
+                return
+    
+            self._ensure_path("DeviceProperties", "Add", graphics_path)
+            gfx = self.config["DeviceProperties"]["Add"][graphics_path]
+    
+            APPLE_NVRAM_UUID = "7C436110-AB2A-4BBB-A880-FE41995C9F82"
+    
+            # ── 1. Platform & Device ID Allocation ────────────────────────────
+            if self.is_ice_lake:
+                logging.info(f"- {self.model}: Injecting connector-less Ice Lake Iris Plus DeviceProperties (Tahoe fix)")
+                gfx["AAPL,ig-platform-id"] = binascii.unhexlify("02005C8A")  # 0x8A5C0002 LE
+                gfx["device-id"]           = binascii.unhexlify("5C8A0000")  # 0x8A5C0000 LE
+                
+            elif self.model in _T2_LOW_POWER_MODELS or self.model in _T2_IRIS_PLUS_MODELS:
+                logging.info(f"- {self.model}: Injecting connector-less Iris Plus / Amber Lake DeviceProperties (Tahoe fix)")
+                gfx["AAPL,ig-platform-id"] = binascii.unhexlify("0900A53E")  # 0x3EA50009 LE
+                gfx["device-id"]           = binascii.unhexlify("A53E0000")  # 0x3EA50000 LE
+                
+                self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "igfxgl=1 igfxmetal=1")
+                logging.info("  > Appended LP display sync flags safely.")
+    
+            elif self.model in _T2_UHD630_MODELS:
+                logging.info(f"- {self.model}: Injecting connector-less UHD630 DeviceProperties (Tahoe fix)")
+                gfx["AAPL,ig-platform-id"] = binascii.unhexlify("06009B3E")  # 0x3E9B0006 LE
+                gfx["device-id"]           = binascii.unhexlify("9B3E0000")  # 0x3E9B0000 LE
             else:
-                gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
-                gfx["framebuffer-con0-type"]    = binascii.unhexlify("00040000")  
-                logging.info(f"  > {self.model}: Standard physical connector mapping applied")
-
-            gfx["framebuffer-stolenmem"]    = binascii.unhexlify("00003001")  
-            gfx["framebuffer-fbmem"]        = binascii.unhexlify("00009000")  
-            logging.info("  > T2 iGPU configuration parameters applied successfully.")
-            
-        except Exception as e:
-            logging.error(f"Whoops, injecting common framebuffer patches for {self.model} failed because of the following error:")
-            logging.exception("Stack Trace:")
-            logging.info("Please try again later.")
-            sys.exit(3)
+                logging.error(f"FATAL: Model {self.model} lacks specific GPU patch data.")
+                sys.exit(3)
+    
+            # ── 2. Structural Framebuffer Overrides ───────────────────────────
+            try:
+                gfx["framebuffer-patch-enable"] = binascii.unhexlify("01000000")
+                
+                if self.model in _T2_UHD630_MODELS:
+                    # Connector-less ig-platform-id (0x3E9B0006) has no connectors defined,
+                    # so con0 must stay in headless isolation for ALL UHD630 T2 models —
+                    # this includes Macmini8,1 (no dGPU) as well as the MBP15/16 models (dGPU present).
+                    gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
+                    gfx["framebuffer-con0-type"]    = binascii.unhexlify("00000000")  
+                    logging.info(f"  > {self.model}: Enforced strict headless isolation structure on con0 (connector-less platform-id)")
+                elif self.is_mac_mini or self.is_ice_lake:
+                    gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
+                    gfx["framebuffer-con0-type"]    = binascii.unhexlify("00040000")  
+                    logging.info(f"  > {self.model}: Enforced active physical mapping layout on con0 (iGPU-only fix)")
+                else:
+                    gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
+                    gfx["framebuffer-con0-type"]    = binascii.unhexlify("00040000")  
+                    logging.info(f"  > {self.model}: Standard physical connector mapping applied")
+    
+                gfx["framebuffer-stolenmem"]    = binascii.unhexlify("00003001")  
+                gfx["framebuffer-fbmem"]        = binascii.unhexlify("00009000")  
+                logging.info("  > T2 iGPU configuration parameters applied successfully.")
+                
+            except Exception as e:
+                logging.error(f"Whoops, injecting common framebuffer patches for {self.model} failed because of the following error:")
+                logging.exception("Stack Trace:")
+                logging.info("Please try again later.")
+                sys.exit(3)
 
     def _apply_t2_memory_descriptor_overrides(self, apple_nvram_uuid: str) -> None:
-        """Apply mandatory security overrides required for T2 Macs to boot."""
-        logging.info("- Applying T2 memory descriptor overrides (T2 ONLY)")
-
-        # Configure raw boundaries cleanly
-        self.config["Misc"]["Security"]["SecureBootModel"] = "Disabled"
-        self.config["Misc"]["Security"]["DmgLoading"]      = "Any"
-        self.config["Misc"]["Security"]["ApECID"]          = 0
-
-        # FIX: Keyword-Typo korrigiert
-        self._apply_t2_amfi_boot_args(apple_nvram_uuid)
-        self._update_nvram_string(apple_nvram_uuid, "boot-args", "ipc_control_port_options=0 -v keepsyms=1 nvme_shutdown_timestamp=0")
+        if not self.model in model_array.T2Macs:
+            logging.error(f"By accident, we executed logic for T2 Macs while {self.model} doesn't have the T2 chip. Aborting.")
+            sys.exit(3) # # sollte normalerweise niemals hier erreichen - falls die Programme durch einen Angreifer ausgetrickst wurde, dass es nicht um T2 Mac handelt statt um ein T2 Mac, nur denn wird es hier erreichen
+        else:
+            """Apply mandatory security overrides required for T2 Macs to boot."""
+            logging.info("- Applying T2 memory descriptor overrides (T2 ONLY)")
+    
+            # Configure raw boundaries cleanly
+            self.config["Misc"]["Security"]["SecureBootModel"] = "Disabled"
+            self.config["Misc"]["Security"]["DmgLoading"]      = "Any"
+            self.config["Misc"]["Security"]["ApECID"]          = 0
+    
+            # FIX: Keyword-Typo korrigiert
+            self._apply_t2_amfi_boot_args(apple_nvram_uuid)
+            self._update_nvram_string(apple_nvram_uuid, "boot-args", "ipc_control_port_options=0 -v keepsyms=1 nvme_shutdown_timestamp=0")
     
     # ------------------------------------------------------------------
     # Main build entry point
@@ -302,31 +306,32 @@ class BuildSecurity:
         # ==============================================================
         if self._is_t2_mac():
             if not self.model in model_array.T2Macs:
-                logging.error(f"By accident, we executed logic for T2 Macs while {self.model} doesn't have the T2 chip. We'll try again and will try injecting non-T2 config instead.")
-                return # verlässt die Funktion is_t2_mac, falls es nicht um einen T2 Mac handelt
-            logging.info("- T2 Mac detected — applying consolidated T2 security settings")
-            logging.info(f"{self.model} has a T2 chip.")
-            
-            # 1. Base initialization & OS Target Checks (Zwingend als Erstes!)
-            self._apply_t2_memory_descriptor_overrides(APPLE_NVRAM_UUID)
-            
-            # 2. Grafik- & Kernel-Injektionen (Unabhängig von Variablen-Fluktuatuationen absichern)
-            self._apply_t2_graphics_injection()
-
-            # 3. Ergänzende kosmetische Argumente sauber anhängen
-            self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-disable_sidecar_mac -disable_media_analysis")
-
-            # 4. Scope graphics injection flags strictly to active valid targets
-            if self._requires_t2_graphics_injection():
-                self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "igfxonln=1 igfxfw=2 forceRenderStandby=0 agdpmod=vit9696")
-
-            # 5. Hard Structural Boundaries Pass
-            logging.info("- Final T2 verification pass (Enforcing absolute boundaries)")
-            self.config["Misc"]["Security"]["SecureBootModel"] = "Disabled"
-            self.config["Misc"]["Security"]["ApECID"]          = 0
-            self.config["Misc"]["Security"]["DmgLoading"]      = "Any"
-
-            logging.info("  > Final T2 verification complete. ")
+                logging.error(f"By accident, we executed logic for T2 Macs while {self.model} doesn't have the T2 chip. Aborting.")
+                sys.exit(3) # # sollte normalerweise niemals hier erreichen - falls die Programme durch einen Angreifer ausgetrickst wurde, dass es nicht um T2 Mac handelt statt um ein T2 Mac, nur denn wird es hier erreichen
+            else:
+                logging.info("- T2 Mac detected — applying consolidated T2 security settings")
+                logging.info(f"{self.model} has a T2 chip.")
+                
+                # 1. Base initialization & OS Target Checks (Zwingend als Erstes!)
+                self._apply_t2_memory_descriptor_overrides(APPLE_NVRAM_UUID)
+                
+                # 2. Grafik- & Kernel-Injektionen (Unabhängig von Variablen-Fluktuatuationen absichern)
+                self._apply_t2_graphics_injection()
+    
+                # 3. Ergänzende kosmetische Argumente sauber anhängen
+                self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-disable_sidecar_mac -disable_media_analysis")
+    
+                # 4. Scope graphics injection flags strictly to active valid targets
+                if self._requires_t2_graphics_injection():
+                    self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "igfxonln=1 igfxfw=2 forceRenderStandby=0 agdpmod=vit9696")
+    
+                # 5. Hard Structural Boundaries Pass
+                logging.info("- Final T2 verification pass (Enforcing absolute boundaries)")
+                self.config["Misc"]["Security"]["SecureBootModel"] = "Disabled"
+                self.config["Misc"]["Security"]["ApECID"]          = 0
+                self.config["Misc"]["Security"]["DmgLoading"]      = "Any"
+    
+                logging.info("  > Final T2 verification complete. ")
 
         # ==============================================================
         # Branch B: Non-T2 Mac Configuration (PROTECTED VIA ELSE)
@@ -335,59 +340,60 @@ class BuildSecurity:
             if self.model in model_array.T2Macs:
                 logging.error(f"By accident, we executed logic for non-T2 Macs while {self.model} has the T2 chip. Aborting. Try reinstalling OpenCore Legacy Patcher T2.")
                 sys.exit(3) # sollte normalerweise niemals hier erreichen - falls die Programme durch einen Angreifer ausgetrickst wurde, dass ein T2 Mac nicht ein T2 Mac ist, nur denn wird es hier erreichen
-            logging.info("- Non-T2 Mac detected — isolating legacy environment execution chain")
-            logging.info(f"{self.model} has no T2 chip.")
-            if self.constants.sip_status is False or self.constants.custom_sip_value:
-                logging.info("- Non-T2 Mac: SIP lowered — applying SIP-related settings")
+            else:
+                logging.info("- Non-T2 Mac detected — isolating legacy environment execution chain")
+                logging.info(f"{self.model} has no T2 chip.")
+                if self.constants.sip_status is False or self.constants.custom_sip_value:
+                    logging.info("- Non-T2 Mac: SIP lowered — applying SIP-related settings")
+                    
+                    self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "ipc_control_port_options=0")
+              
+                    if self.constants.wxpython_variant is True:
+                        support.BuildSupport(self.model, self.constants, self.config).enable_kext(
+                            "AutoPkgInstaller.kext", self.constants.autopkg_version, self.constants.autopkg_path
+                        )
+             
+                    if self.constants.custom_sip_value:
+                        logging.info(f"- Setting SIP value to: {self.constants.custom_sip_value}")
+                        sip_hex = utilities.string_to_hex(self.constants.custom_sip_value.lstrip("0x"))
+                        self._set_nvram_value(APPLE_NVRAM_UUID, "csr-active-config", sip_hex, overwrite=True)
+                    elif self.constants.sip_status is False:
+                        logging.info("- Set SIP to allow Root Volume patching")
+                        self._set_nvram_value(APPLE_NVRAM_UUID, "csr-active-config", binascii.unhexlify("03080000"), overwrite=True)
+              
+                    logging.info("- Allowing FileVault on Root Patched systems")
+                    support.BuildSupport(self.model, self.constants, self.config).get_item_by_kv(
+                        self.config["Kernel"]["Patch"], "Comment", "Force FileVault on Broken Seal"
+                    )["Enabled"] = True
+                    self._update_nvram_string(OCLP_NVRAM_UUID, "OCLP-Settings", "-allow_fv")
+               
+                    logging.info("- Enabling KC UUID mismatch patch")
+                    self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-nokcmismatchpanic")
+                    support.BuildSupport(self.model, self.constants, self.config).enable_kext(
+                        "RSRHelper.kext", self.constants.rsrhelper_version, self.constants.rsrhelper_path
+                    )
                 
-                self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "ipc_control_port_options=0")
-
-                if self.constants.wxpython_variant is True:
-                    support.BuildSupport(self.model, self.constants, self.config).enable_kext(
-                        "AutoPkgInstaller.kext", self.constants.autopkg_version, self.constants.autopkg_path
-                    )
-
-                if self.constants.custom_sip_value:
-                    logging.info(f"- Setting SIP value to: {self.constants.custom_sip_value}")
-                    sip_hex = utilities.string_to_hex(self.constants.custom_sip_value.lstrip("0x"))
-                    self._set_nvram_value(APPLE_NVRAM_UUID, "csr-active-config", sip_hex, overwrite=True)
-                elif self.constants.sip_status is False:
-                    logging.info("- Set SIP to allow Root Volume patching")
-                    self._set_nvram_value(APPLE_NVRAM_UUID, "csr-active-config", binascii.unhexlify("03080000"), overwrite=True)
-
-                logging.info("- Allowing FileVault on Root Patched systems")
-                support.BuildSupport(self.model, self.constants, self.config).get_item_by_kv(
-                    self.config["Kernel"]["Patch"], "Comment", "Force FileVault on Broken Seal"
-                )["Enabled"] = True
-                self._update_nvram_string(OCLP_NVRAM_UUID, "OCLP-Settings", "-allow_fv")
-
-                logging.info("- Enabling KC UUID mismatch patch")
-                self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-nokcmismatchpanic")
-                support.BuildSupport(self.model, self.constants, self.config).enable_kext(
-                    "RSRHelper.kext", self.constants.rsrhelper_version, self.constants.rsrhelper_path
-                )
-
-            # Shared: AMFI / Library Validation (Legacy Non-T2 verification targets)
-            if self.constants.disable_cs_lv is True:
-                if self.constants.disable_amfi is True:
-                    logging.info("- Disabling AMFI (non-T2 Mac)")
-                    self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "amfi=0x80")
-                else:
-                    logging.info("- Disabling Library Validation")
-                    support.BuildSupport(self.model, self.constants, self.config).get_item_by_kv(
-                        self.config["Kernel"]["Patch"], "Comment", "Disable Library Validation Enforcement"
-                    )["Enabled"] = True
-                    support.BuildSupport(self.model, self.constants, self.config).get_item_by_kv(
-                        self.config["Kernel"]["Patch"], "Comment", "Disable _csr_check() in _vnode_check_signature"
-                    )["Enabled"] = True
-                    self._update_nvram_string(OCLP_NVRAM_UUID, "OCLP-Settings", "-allow_amfi")
-                    support.BuildSupport(self.model, self.constants, self.config).enable_kext(
-                        "CSLVFixup.kext", self.constants.cslvfixup_version, self.constants.cslvfixup_path
-                    )
-
-            if self.constants.secure_status is False:
-                logging.info("- Disabling SecureBootModel (non-T2)")
-                self.config["Misc"]["Security"]["SecureBootModel"] = "Disabled"
+                # Shared: AMFI / Library Validation (Legacy Non-T2 verification targets)
+                if self.constants.disable_cs_lv is True:
+                    if self.constants.disable_amfi is True:
+                        logging.info("- Disabling AMFI (non-T2 Mac)")
+                        self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "amfi=0x80")
+                    else:
+                        logging.info("- Disabling Library Validation")
+                        support.BuildSupport(self.model, self.constants, self.config).get_item_by_kv(
+                            self.config["Kernel"]["Patch"], "Comment", "Disable Library Validation Enforcement"
+                        )["Enabled"] = True
+                        support.BuildSupport(self.model, self.constants, self.config).get_item_by_kv(
+                            self.config["Kernel"]["Patch"], "Comment", "Disable _csr_check() in _vnode_check_signature"
+                        )["Enabled"] = True
+                        self._update_nvram_string(OCLP_NVRAM_UUID, "OCLP-Settings", "-allow_amfi")
+                        support.BuildSupport(self.model, self.constants, self.config).enable_kext(
+                            "CSLVFixup.kext", self.constants.cslvfixup_version, self.constants.cslvfixup_path
+                        )
+    
+                if self.constants.secure_status is False:
+                    logging.info("- Disabling SecureBootModel (non-T2)")
+                    self.config["Misc"]["Security"]["SecureBootModel"] = "Disabled"
 
         # ==============================================================
         # GLOBAL EVALUATION: Universal AMFIPass Injection Engine
@@ -398,8 +404,12 @@ class BuildSecurity:
             if self.is_tahoe_target or smbios_data.smbios_dictionary[self.model]["Max OS Supported"] < os_data.os_data.tahoe:
                 needs_amfipass = True
         else:
-            if smbios_data.smbios_dictionary[self.model]["Max OS Supported"] < os_data.os_data.sonoma:
-                needs_amfipass = True
+            if self.model in model_array.T2Macs:
+                logging.error(f"By accident, we executed logic for non-T2 Macs while {self.model} has the T2 chip. Aborting. Try reinstalling OpenCore Legacy Patcher T2.")
+                sys.exit(3) # sollte normalerweise niemals hier erreichen - falls die Programme durch einen Angreifer ausgetrickst wurde, dass ein T2 Mac nicht ein T2 Mac ist, nur denn wird es hier erreichen
+            else:
+                if smbios_data.smbios_dictionary[self.model]["Max OS Supported"] < os_data.os_data.sonoma:
+                    needs_amfipass = True
 
         if needs_amfipass:
             logging.info("- Enabling AMFIPass Framework Kext injection context natively.")

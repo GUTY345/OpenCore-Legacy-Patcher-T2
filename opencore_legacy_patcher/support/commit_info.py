@@ -33,9 +33,9 @@ class ParseCommitInfo:
                         github_data.get("Commit URL", ""),
                     )
             except (plistlib.InvalidFileException, OSError):
-                logging.error("Wir konnten nicht, Commit-Informationen zu bestimmen.")
                 logging.error("We couldn't identify the commit information.")
                 logging.exception("Stack Trace:")
-                pass
-                
-        return ("Running from source", "Not applicable", "")
+                return ("Error determining commit information", "Not applicable", "") # anstatt ein reines pass-Argument, die erlaubt Angreifern, beliebiges Code auszuführen, ist return und dann Fehler zurückgegeben
+        # behebt eine Sicherheitslücke, die erlaubt Angreifern zu behaupten, dass den Code von "Source" läufe, auch wenn if self.plist_path and self.plist_path.exists(): erfolgreich gelaufen hat
+        else:      
+            return ("Running from source", "Not applicable", "")

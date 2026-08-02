@@ -90,13 +90,10 @@ class BuildOpenCore:
                     webbrowser.open("https://www.apple.com/os/macos/")
                     logging.error("macOS 27 Golden Gate is not available for Intel Macs. Apple Silicon required. Please do not try to upgrade to Golden Gate on Intel Macs.")
                     logging.info("macOS 27 Golden Gate is compiled only for arm64, specifically for Apple Silicon.")
-                    logging.info("Please select macOS 26 Tahoe or older version.")
-                    sys.exit(0)
                 else:
-                    logging.info("You're not building OpenCore on your target system that is running macOS 27 Golden Gate. Continuing.")
+                    logging.info("You're not building OpenCore on your target system that is running macOS 27 Golden Gate.")
             else:
                 logging.info("You're not targeting macOS 27 Golden Gate, this is good.")
-                pass
         except Exception as e:
             logging.error("We couldn't make sure if you are targeting macOS 27 Golden Gate or newer. Skip checking...")
             logging.exception("Stack Trace:")
