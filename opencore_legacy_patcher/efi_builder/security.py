@@ -213,80 +213,84 @@ class BuildSecurity:
         if self._should_skip_t2_graphics_injection() or not self._requires_t2_graphics_injection():
             logging.info(f"- Skipping Intel graphics injection for {self.model} (no iGPU or not required)")
             return
-
-        graphics_path = self._get_graphics_device_properties_path()
-        if not graphics_path:
-            return
-
-        self._ensure_path("DeviceProperties", "Add", graphics_path)
-        gfx = self.config["DeviceProperties"]["Add"][graphics_path]
-
-        APPLE_NVRAM_UUID = "7C436110-AB2A-4BBB-A880-FE41995C9F82"
-
-        # ── 1. Platform & Device ID Allocation ────────────────────────────
-        if self.is_ice_lake:
-            logging.info(f"- {self.model}: Injecting connector-less Ice Lake Iris Plus DeviceProperties (Tahoe fix)")
-            gfx["AAPL,ig-platform-id"] = binascii.unhexlify("02005C8A")  # 0x8A5C0002 LE
-            gfx["device-id"]           = binascii.unhexlify("5C8A0000")  # 0x8A5C0000 LE
-            
-        elif self.model in _T2_LOW_POWER_MODELS or self.model in _T2_IRIS_PLUS_MODELS:
-            logging.info(f"- {self.model}: Injecting connector-less Iris Plus / Amber Lake DeviceProperties (Tahoe fix)")
-            gfx["AAPL,ig-platform-id"] = binascii.unhexlify("0900A53E")  # 0x3EA50009 LE
-            gfx["device-id"]           = binascii.unhexlify("A53E0000")  # 0x3EA50000 LE
-            
-            self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "igfxgl=1 igfxmetal=1")
-            logging.info("  > Appended LP display sync flags safely.")
-
-        elif self.model in _T2_UHD630_MODELS:
-            logging.info(f"- {self.model}: Injecting connector-less UHD630 DeviceProperties (Tahoe fix)")
-            gfx["AAPL,ig-platform-id"] = binascii.unhexlify("06009B3E")  # 0x3E9B0006 LE
-            gfx["device-id"]           = binascii.unhexlify("9B3E0000")  # 0x3E9B0000 LE
         else:
-            logging.error(f"FATAL: Model {self.model} lacks specific GPU patch data.")
-            sys.exit(3)
-
-        # ── 2. Structural Framebuffer Overrides ───────────────────────────
-        try:
-            gfx["framebuffer-patch-enable"] = binascii.unhexlify("01000000")
-            
-            if self.model in _T2_UHD630_MODELS:
-                # Connector-less ig-platform-id (0x3E9B0006) has no connectors defined,
-                # so con0 must stay in headless isolation for ALL UHD630 T2 models —
-                # this includes Macmini8,1 (no dGPU) as well as the MBP15/16 models (dGPU present).
-                gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
-                gfx["framebuffer-con0-type"]    = binascii.unhexlify("00000000")  
-                logging.info(f"  > {self.model}: Enforced strict headless isolation structure on con0 (connector-less platform-id)")
-            elif self.is_mac_mini or self.is_ice_lake:
-                gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
-                gfx["framebuffer-con0-type"]    = binascii.unhexlify("00040000")  
-                logging.info(f"  > {self.model}: Enforced active physical mapping layout on con0 (iGPU-only fix)")
+            graphics_path = self._get_graphics_device_properties_path()
+            if not graphics_path:
+                return
+    
+            self._ensure_path("DeviceProperties", "Add", graphics_path)
+            gfx = self.config["DeviceProperties"]["Add"][graphics_path]
+    
+            APPLE_NVRAM_UUID = "7C436110-AB2A-4BBB-A880-FE41995C9F82"
+    
+            # ── 1. Platform & Device ID Allocation ────────────────────────────
+            if self.is_ice_lake:
+                logging.info(f"- {self.model}: Injecting connector-less Ice Lake Iris Plus DeviceProperties (Tahoe fix)")
+                gfx["AAPL,ig-platform-id"] = binascii.unhexlify("02005C8A")  # 0x8A5C0002 LE
+                gfx["device-id"]           = binascii.unhexlify("5C8A0000")  # 0x8A5C0000 LE
+                
+            elif self.model in _T2_LOW_POWER_MODELS or self.model in _T2_IRIS_PLUS_MODELS:
+                logging.info(f"- {self.model}: Injecting connector-less Iris Plus / Amber Lake DeviceProperties (Tahoe fix)")
+                gfx["AAPL,ig-platform-id"] = binascii.unhexlify("0900A53E")  # 0x3EA50009 LE
+                gfx["device-id"]           = binascii.unhexlify("A53E0000")  # 0x3EA50000 LE
+                
+                self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "igfxgl=1 igfxmetal=1")
+                logging.info("  > Appended LP display sync flags safely.")
+    
+            elif self.model in _T2_UHD630_MODELS:
+                logging.info(f"- {self.model}: Injecting connector-less UHD630 DeviceProperties (Tahoe fix)")
+                gfx["AAPL,ig-platform-id"] = binascii.unhexlify("06009B3E")  # 0x3E9B0006 LE
+                gfx["device-id"]           = binascii.unhexlify("9B3E0000")  # 0x3E9B0000 LE
             else:
-                gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
-                gfx["framebuffer-con0-type"]    = binascii.unhexlify("00040000")  
-                logging.info(f"  > {self.model}: Standard physical connector mapping applied")
-
-            gfx["framebuffer-stolenmem"]    = binascii.unhexlify("00003001")  
-            gfx["framebuffer-fbmem"]        = binascii.unhexlify("00009000")  
-            logging.info("  > T2 iGPU configuration parameters applied successfully.")
-            
-        except Exception as e:
-            logging.error(f"Whoops, injecting common framebuffer patches for {self.model} failed because of the following error:")
-            logging.exception("Stack Trace:")
-            logging.info("Please try again later.")
-            sys.exit(3)
+                logging.error(f"FATAL: Model {self.model} lacks specific GPU patch data.")
+                sys.exit(3)
+    
+            # ── 2. Structural Framebuffer Overrides ───────────────────────────
+            try:
+                gfx["framebuffer-patch-enable"] = binascii.unhexlify("01000000")
+                
+                if self.model in _T2_UHD630_MODELS:
+                    # Connector-less ig-platform-id (0x3E9B0006) has no connectors defined,
+                    # so con0 must stay in headless isolation for ALL UHD630 T2 models —
+                    # this includes Macmini8,1 (no dGPU) as well as the MBP15/16 models (dGPU present).
+                    gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
+                    gfx["framebuffer-con0-type"]    = binascii.unhexlify("00000000")  
+                    logging.info(f"  > {self.model}: Enforced strict headless isolation structure on con0 (connector-less platform-id)")
+                elif self.is_mac_mini or self.is_ice_lake:
+                    gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
+                    gfx["framebuffer-con0-type"]    = binascii.unhexlify("00040000")  
+                    logging.info(f"  > {self.model}: Enforced active physical mapping layout on con0 (iGPU-only fix)")
+                else:
+                    gfx["framebuffer-con0-enable"]  = binascii.unhexlify("01000000")
+                    gfx["framebuffer-con0-type"]    = binascii.unhexlify("00040000")  
+                    logging.info(f"  > {self.model}: Standard physical connector mapping applied")
+    
+                gfx["framebuffer-stolenmem"]    = binascii.unhexlify("00003001")  
+                gfx["framebuffer-fbmem"]        = binascii.unhexlify("00009000")  
+                logging.info("  > T2 iGPU configuration parameters applied successfully.")
+                
+            except Exception as e:
+                logging.error(f"Whoops, injecting common framebuffer patches for {self.model} failed because of the following error:")
+                logging.exception("Stack Trace:")
+                logging.info("Please try again later.")
+                sys.exit(3)
 
     def _apply_t2_memory_descriptor_overrides(self, apple_nvram_uuid: str) -> None:
-        """Apply mandatory security overrides required for T2 Macs to boot."""
-        logging.info("- Applying T2 memory descriptor overrides (T2 ONLY)")
-
-        # Configure raw boundaries cleanly
-        self.config["Misc"]["Security"]["SecureBootModel"] = "Disabled"
-        self.config["Misc"]["Security"]["DmgLoading"]      = "Any"
-        self.config["Misc"]["Security"]["ApECID"]          = 0
-
-        # FIX: Keyword-Typo korrigiert
-        self._apply_t2_amfi_boot_args(apple_nvram_uuid)
-        self._update_nvram_string(apple_nvram_uuid, "boot-args", "ipc_control_port_options=0 -v keepsyms=1 nvme_shutdown_timestamp=0")
+        if not self.model in model_array.T2Macs:
+            logging.error(f"By accident, we executed logic for T2 Macs while {self.model} doesn't have the T2 chip. Aborting.")
+            sys.exit(3) # # sollte normalerweise niemals hier erreichen - falls die Programme durch einen Angreifer ausgetrickst wurde, dass es nicht um T2 Mac handelt statt um ein T2 Mac, nur denn wird es hier erreichen
+        else:
+            """Apply mandatory security overrides required for T2 Macs to boot."""
+            logging.info("- Applying T2 memory descriptor overrides (T2 ONLY)")
+    
+            # Configure raw boundaries cleanly
+            self.config["Misc"]["Security"]["SecureBootModel"] = "Disabled"
+            self.config["Misc"]["Security"]["DmgLoading"]      = "Any"
+            self.config["Misc"]["Security"]["ApECID"]          = 0
+    
+            # FIX: Keyword-Typo korrigiert
+            self._apply_t2_amfi_boot_args(apple_nvram_uuid)
+            self._update_nvram_string(apple_nvram_uuid, "boot-args", "ipc_control_port_options=0 -v keepsyms=1 nvme_shutdown_timestamp=0")
     
     # ------------------------------------------------------------------
     # Main build entry point
