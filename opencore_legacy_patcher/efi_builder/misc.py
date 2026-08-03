@@ -547,7 +547,7 @@ class BuildMiscellaneous:
                 "Skip": 0
             }
             if self._validate_patch(new_patch):
-                logging.info("- Phase N: Injecting AppleKeyStore SEP retry-limit patch")
+                logging.info("- Injecting AppleKeyStore SEP retry-limit patch")
                 kernel_patches.append(new_patch)
         
         # Bypass osinstallersetupd bridge device validation checks (Fixes Attestation Error -10000)
