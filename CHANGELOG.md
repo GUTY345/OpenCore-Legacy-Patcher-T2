@@ -3,6 +3,7 @@
 This release:
 
 fixes an issue where the Secure Enclave Processor on T2 Macs may block injecting certain patches and cause instability by completely disabling SIP via 0xFFF - this could lead to kernel panics or OpenCore not even being able to start at all, as seen on iMac Pro 2017: #146
+
 fixes an error in the installer that says Failed to find bridge device on T2 Macs
 
 ## 4.0.0.16022 - 4.0.0 alpha 16.1.2
