@@ -1,4 +1,100 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16022 - 4.0.0 alpha 16.1.2
+To the community, the issue where T2 Macs upon trying to install macOS 26 Tahoe on external SSD, it says About 29 minutes remaining, but then the installation stops and says An error occurred preparing the software update and also, when trying to install on the internal SSD, it fails to do so with a Permission denied error and corrupts the operating system. The community is well aware of this and we're trying to fix this issue. This release is a security update only.
+
+It fixes the following vulnerabilities:
+
+security.py:
+
+After if self.model in model_array.T2Macs and if not self.model in model_array.T2Macs, it looked like this:
+
+  if self.model in model_array.T2Macs:
+                  logging.error(f"By accident, we executed logic for non-T2 Macs while {self.model} has the T2 chip. Aborting. Try reinstalling OpenCore Legacy Patcher T2.")
+                  sys.exit(3) # sollte normalerweise niemals hier erreichen - falls die Programme durch einen Angreifer ausgetrickst wurde, dass ein T2 Mac nicht ein T2 Mac ist, nur denn wird es hier erreichen
+              logging.info("- Non-T2 Mac detected — isolating legacy environment execution chain") # <- here's the vulnerability - it lets attackers skip the if condition cause erratic behavior on T2 Macs, or cause DoS attacks
+              logging.info(f"{self.model} has no T2 chip.")
+Impact: an attacker could intentionally inject patches, intended for non-T2 Macs on T2 systems to cause erratic behavior or DoS attacks to cause a kernel panic by just writing an invalid syntax or return to exit the condition. This is fixed by ensuring only after it has checked if it is a T2 Mac or not via an else condition, only then it executes the patches.
+
+  if self._is_t2_mac():
+              if not self.model in model_array.T2Macs:
+                  logging.error(f"By accident, we executed logic for T2 Macs while {self.model} doesn't have the T2 chip. We'll try again and will try injecting non-T2 config instead.")
+                  return # verlässt die Funktion is_t2_mac, falls es nicht um einen T2 Mac handelt
+              logging.info("- T2 Mac detected — applying consolidated T2 security settings") # <- here's another vulnerability - it lets attackers lower the security of a non-T2 Mac by intentionally disabling SIP, AMFI and other security measures completely, and also, inject patches for GPUs found in T2 Macs to cause framebuffer issues
+              logging.info(f"{self.model} has a T2 chip.")
+Impact: an attacker could intentionally lower the security on a non-T2 Mac so an attacker could tamper with critical system files. Also, an attacker could intentionally inject patches for GPUs found in T2 Macs to cause framebuffer issues to cause a DoS attack.
+
+      """Apply mandatory security overrides required for T2 Macs to boot."""
+              logging.info("- Applying T2 memory descriptor overrides (T2 ONLY)") # <- here's a vulnerability that lets attackers to set SecureBootModel to Disabled, DmgLoading to Any and ApECID to 0 on non-T2 Macs, plus inject AMFIPass.kext when it isn't supposed to be and add boot arguments designed only for non-T2 Macs
+      
+              # Configure raw boundaries cleanly
+              self.config["Misc"]["Security"]["SecureBootModel"] = "Disabled"
+              self.config["Misc"]["Security"]["DmgLoading"]      = "Any"
+              self.config["Misc"]["Security"]["ApECID"]          = 0
+      
+              # FIX: Keyword-Typo korrigiert
+              self._apply_t2_amfi_boot_args(apple_nvram_uuid)
+              self._update_nvram_string(apple_nvram_uuid, "boot-args", "ipc_control_port_options=0 -v keepsyms=1 nvme_shutdown_timestamp=0")
+Impact: an attacker could intentionally set SecureBootModel to disabled, DmgLoading to Any and ApECID to 0 on a non-T2 Mac to execute malicious or backdoored dmg files inside macOS Recovery. Also, this lets attackers enable AMFIPass.kext when it's not supposed to be enabled and inject boot arguments intended for T2 Macs to cause unexpected behavior. All this could be exploited by simply calling the self._apply_t2_memory_descriptor_overrides(APPLE_NVRAM_UUID) function and a malicious macOS Recovery environment. This is fixed by checking across the entire application if the Mac is a T2 system or not.
+
+  if self._is_t2_mac(): # <- another vulnerability that lets attackers to add a non-T2 Mac to the dictionary with T2 Macs to enable AMFIPass on non-T2 Macs
+              if self.is_tahoe_target or smbios_data.smbios_dictionary[self.model]["Max OS Supported"] < os_data.os_data.tahoe:
+                  needs_amfipass = True
+Impact: an attacker could enable AMFIPass.kext on a non-T2 Mac when it's not supposed to be enabled. This is fixed by checking if it is really a T2 Mac or it is not across the entire application.
+
+     else: # <- another vulnerability that lets attackers skip injecting AMFIPass.kext to cause DoS attacks on T2 Macs
+                if smbios_data.smbios_dictionary[self.model]["Max OS Supported"] < os_data.os_data.sonoma:
+                    needs_amfipass = True
+Impact: an attacker could intentionally disable AMFIPass.kext or skip injecting it on T2 Macs to cause DoS attacks by removing a T2 Mac from the dictionary. This is fixed by checking if it is really a T2 Mac or it is not across the entire application.
+
+gui_settings.py:
+
+fixes va vulnerability where the Disable automatic updates option is just disabled instead of removed.
+Impact: an attacker could exploit this to tamper with OpenCore Legacy Patcher T2 to intentionally ask the user to disable automatic updates to leave the user in a vulnerable state. This vulnerability is fixed by removing the Disable automatic updates from the code entirely.
+commit_info.py:
+
+    import logging
+    import plistlib
+    from pathlib import Path
+    from typing import Tuple, Optional
+    
+    class ParseCommitInfo:
+        def __init__(self, binary_path: str) -> None:
+            self.binary_path = Path(binary_path)
+            self.plist_path = self._resolve_plist_path()
+    
+        def _resolve_plist_path(self) -> Optional[Path]:
+            # Suche im selben Verzeichnis wie die Binärdatei oder im übergeordneten "Resources"-Ordner
+            # Anstatt hartem .replace() suchen wir nach einer Info.plist in der Nähe
+            possible_paths = [
+                self.binary_path.parent.parent / "Info.plist",
+                self.binary_path.parent / "Info.plist"
+            ]
+            for p in possible_paths:
+                if p.exists():
+                    return p
+            return None
+    
+        def generate_commit_info(self) -> Tuple[str, str, str]:
+            if self.plist_path and self.plist_path.exists():
+                try:
+                    with self.plist_path.open("rb") as f:
+                        plist_info = plistlib.load(f)
+                        github_data = plist_info.get("Github", {})
+                        
+                        return (
+                            github_data.get("Branch", "Unknown"),
+                            github_data.get("Commit Date", "Unknown"),
+                            github_data.get("Commit URL", ""),
+                        )
+                except (plistlib.InvalidFileException, OSError):
+                    logging.error("Wir konnten nicht, Commit-Informationen zu bestimmen.")
+                    logging.error("We couldn't identify the commit information.")
+                    logging.exception("Stack Trace:")
+                    pass # <- a vulnerability where an attacker could set an arbitary condition to execute arbitary code and force to show Running from source when it isn't
+                    
+            return ("Running from source", "Not applicable", "")
+Impact: an attacker could set an arbitary variable, then set an arbitary condition and execute arbitary code or force to display Running from source despite actually being compiled so attackers could claim on a malicious website to claim this is running from source because an error has occured and falls back to display Running from source. This is fixed by removing pass and replace it with proper error handling and nest return ("Running from source", "Not applicable", "") under else.
+
 ## 4.0.0.16021 - 4.0.0 alpha 16.1.1
 This release:
 
