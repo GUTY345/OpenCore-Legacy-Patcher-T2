@@ -517,10 +517,10 @@ class BuildMiscellaneous:
         # Injizieren von bypass für library validation enforcement auf T2 hardware übersprungen, um frühe Kernel Panics zu vermeiden, bevor die Betriebssystem überhaupt startet
 
         try:
-            logging.info("- Set SIP to 0x803")
-            self._set_nvram_value(APPLE_NVRAM_UUID, "csr-active-config", binascii.unhexlify("03080000"), overwrite=True)
+            logging.info("- Set SIP to 0xfff - crucial to be able to boot properly on T2 Macs")
+            self._set_nvram_value(APPLE_NVRAM_UUID, "csr-active-config", binascii.unhexlify("FF0F0000"), overwrite=True)
         except Exception as e:
-            logging.error("Setting SIP to 0x803 failed due to the following error:")
+            logging.error("Setting SIP to 0xfff failed due to the following error:")
             logging.exception("Stack Trace:")
             logging.info("Please try again later.")
             sys.exit(3)
@@ -547,7 +547,7 @@ class BuildMiscellaneous:
                 "Skip": 0
             }
             if self._validate_patch(new_patch):
-                logging.info("- Phase N: Injecting AppleKeyStore SEP retry-limit patch")
+                logging.info("- Injecting AppleKeyStore SEP retry-limit patch")
                 kernel_patches.append(new_patch)
         
         # Bypass osinstallersetupd bridge device validation checks (Fixes Attestation Error -10000)
