@@ -96,33 +96,32 @@ commit_info.py:
 Impact: an attacker could set an arbitary variable, then set an arbitary condition and execute arbitary code or force to display Running from source despite actually being compiled so attackers could claim on a malicious website to claim this is running from source because an error has occured and falls back to display Running from source. This is fixed by removing pass and replace it with proper error handling and nest return ("Running from source", "Not applicable", "") under else.
 
 ## 4.0.0.16021 - 4.0.0 alpha 16.1.1
+This update is recommended to all users.
 This release:
+- fixes a bug where on T2 Macs, it may have not injected AMFIPass.kext because it didn't checked if the Mac is natively supported by macOS 26 Tahoe or not. It only checked if the maximum supported version is older than the version that is currently running. That could lead to kernel panics or erratic behavior due to passing -amfipassbeta as a boot argument while AMFIPass.kext is completely missing.
+- fixes the following vulnerabilities:
 
-fixes a bug where on T2 Macs, it may have not injected AMFIPass.kext because it didn't checked if the Mac is natively supported by macOS 26 Tahoe or not. It only checked if the maximum supported version is older than the version that is currently running. That could lead to kernel panics or erratic behavior due to passing -amfipassbeta as a boot argument while AMFIPass.kext is completely missing.
-fixes the following vulnerabilities:
 security.py:
+- fixes a vulnerability where an attacker may lower security on non-T2 Macs by blindly trusting whatever is inside the dictionary in this file. For example, an attacker could add MacBook Air 2017 to this file's dictionary of T2 Macs. 
+Impact: an attacker may lower the security on a non-T2 Mac by adding a non-T2 Mac to the dictionary with T2 Macs to completely disable AMFI, SIP and other security features in order to alter core system files or infect them with malware
+- This is fixed by cross-checking across the entire application like this:
+      
+        else:
+            if self.model in model_array.T2Macs:
+                logging.error(f"By accident, we executed logic for non-T2 Macs while {self.model} has the T2 chip. Aborting. Try reinstalling OpenCore Legacy Patcher T2.")
+                sys.exit(3) # sollte normalerweise niemals hier erreichen - falls die Programme durch einen Angreifer ausgetrickst wurde, dass ein T2 Mac nicht ein T2 Mac ist, nur denn wird es hier erreichen
+            logging.info("- Non-T2 Mac detected — isolating legacy environment execution chain")
 
-fixes a vulnerability where an attacker may lower security on non-T2 Macs by blindly trusting whatever is inside the dictionary in this file. For example, an attacker could add MacBook Air 2017 to this file's dictionary of T2 Macs.
-Impact: an attacker may lower the security on a non-T2 Mac by adding a non-T2 Mact o the dictionary with T2 Macs to completely disable AMFI, SIP and other security features in order to alter core system files or infect them with malware
-
-This is fixed by cross-checking across the entire application like this:
-
-  else:
-      if self.model in model_array.T2Macs:
-          logging.error(f"By accident, we executed logic for non-T2 Macs while {self.model} has the T2 chip. Aborting. Try reinstalling OpenCore Legacy Patcher T2.")
-          sys.exit(3) # sollte normalerweise niemals hier erreichen - falls die Programme durch einen Angreifer ausgetrickst wurde, dass ein T2 Mac nicht ein T2 Mac ist, nur denn wird es hier erreichen
-      logging.info("- Non-T2 Mac detected — isolating legacy environment execution chain")
-fixes a vulnerability where an attacker may trick users into adding boot-arguments for non-T2 Macs on T2 systems to launch DoS attacks.
+- fixes a vulnerability where an attacker may trick users into adding boot-arguments for non-T2 Macs on T2 systems to launch DoS attacks.
 Impact: an attacker could trick users into adding boot-arguments for non-T2 Macs on T2 systems to cause a kernel panic, erratic behavior or cause instability.
+-  It is fixed like this:
 
-It is fixed like this:
-
- if self._is_t2_mac():
-             if not self.model in model_array.T2Macs:
-                 logging.error(f"By accident, we executed logic for T2 Macs while {self.model} doesn't have the T2 chip. We'll try again and will try injecting non-T2 config instead.")
-                 return # verlässt die Funktion is_t2_mac, falls es nicht um einen T2 Mac handelt
-             logging.info("- T2 Mac detected — applying consolidated T2 security settings")
-             logging.info(f"{self.model} has a T2 chip.")
+        if self._is_t2_mac():
+                    if not self.model in model_array.T2Macs:
+                        logging.error(f"By accident, we executed logic for T2 Macs while {self.model} doesn't have the T2 chip. We'll try again and will try injecting non-T2 config instead.")
+                        return # verlässt die Funktion is_t2_mac, falls es nicht um einen T2 Mac handelt
+                    logging.info("- T2 Mac detected — applying consolidated T2 security settings")
+                    logging.info(f"{self.model} has a T2 chip.")
 
 ## 4.0.0.16020 - alpha 16.1:
 Thanks @DrDonk for contributing to this project!
