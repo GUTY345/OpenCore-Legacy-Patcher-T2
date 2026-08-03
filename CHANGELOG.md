@@ -1,4 +1,10 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16023 - 4.0.0 alpha 16.1.3
+This release:
+
+fixes an issue where the Secure Enclave Processor on T2 Macs may block injecting certain patches and cause instability by completely disabling SIP via 0xFFF - this could lead to kernel panics or OpenCore not even being able to start at all, as seen on iMac Pro 2017: #146
+fixes an error in the installer that says Failed to find bridge device on T2 Macs
+
 ## 4.0.0.16022 - 4.0.0 alpha 16.1.2
 To the community, the issue where T2 Macs upon trying to install macOS 26 Tahoe on external SSD, it says About 29 minutes remaining, but then the installation stops and says An error occurred preparing the software update and also, when trying to install on the internal SSD, it fails to do so with a Permission denied error and corrupts the operating system. The community is well aware of this and we're trying to fix this issue. This release is a security update only.
 
