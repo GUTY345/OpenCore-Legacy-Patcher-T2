@@ -97,11 +97,6 @@ body:
     attributes:
       label: Issue type
       options:
-        - Security vulnerability - in the main project, please do not report it here and go to Security and quality and report a vulnerability there
-        - Malicious website delivering malware disguised as OpenCore Legacy Patcher
-        - Malicious, typosquatting site trying to impersonate Dortania or Albert Müller
-        - Typosquatting repository (e.g  ОpenCore-Legacy-Patchеr-T2 with cyrilic o and e or OCLP-T2)
-        - Malicious fork
         - Boot failure
         - Kernel panic
         - OpenCore doesn't start at all
@@ -112,6 +107,11 @@ body:
         - Sleep / wake
         - USB
         - Application related issues
+        - Security vulnerability - in the main project, please do not report it here and go to Security and quality and report a vulnerability there
+        - Malicious website delivering malware disguised as OpenCore Legacy Patcher
+        - Malicious, typosquatting site trying to impersonate Dortania or Albert Müller
+        - Typosquatting repository (e.g  ОpenCore-Legacy-Patchеr-T2 with cyrilic o and e or OCLP-T2)
+        - Malicious fork
         - Other
     validations:
       required: true
