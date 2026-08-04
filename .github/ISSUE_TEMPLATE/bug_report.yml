@@ -1,5 +1,5 @@
-name: Bug report
-description: Report a boot, panic, or patching issue with OCLP
+name: Bug report / Fehlermeldung
+description: Report a boot, panic, or patching issue with OpenCore Legacy Patcher T2 / Melden Sie ein Start-, Panik- oder Patching-Problem mit OpenCore Legacy Patcher T2
 title: "[Bug]: "
 labels: ["bug"]
 body:
