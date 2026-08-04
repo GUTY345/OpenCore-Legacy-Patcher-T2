@@ -151,7 +151,7 @@ body:
         18. Right click -> Compress - it will create a Zip file
         18. Upload it here
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: logs
