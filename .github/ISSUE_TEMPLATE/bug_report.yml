@@ -129,7 +129,7 @@ body:
   - type: textarea
     id: steps
     attributes:
-      label: Steps to upload the logs of the kernel panic if any
+      label: Steps to upload the logs of the kernel panic if any / Schritte zum Hochladen der Protokolle des Kernel-Panics, falls vorhanden
       placeholder: |
         Whenever is possible, please upload a slow motion video displaying the boot sequence before and during the kernel panic.
         And here's how to upload logs from OpenCore:
@@ -152,12 +152,34 @@ body:
         17. Select all files inside it
         18. Right click -> Compress - it will create a Zip file
         18. Upload it here
+
+        Laden Sie nach Möglichkeit ein Slow-Motion-Video hoch, das den Bootvorgang vor und während der Kernel-Panik zeigt.
+        Und so laden Sie Logs von OpenCore hoch:
+        1. Wenn ein Kernel-Panic auftritt, erzwingen Sie das Herunterfahren Ihres Macs, indem Sie den Einschaltetaste 10 Sekunden lang gedrückt halten.
+        2. Warten Sie anschließend 10 Sekunden.
+        3. Klicken Sie dann auf den Einschaltetaste, um den Mac neu zu starten.
+        4. Halten Sie die Wahltaste (⌥) gedrückt und wählen Sie „Macintosh HD“ (oder wie auch immer Ihr Hauptlaufwerk heißt).
+        5. Öffnen Sie die App „OpenCore Legacy Patcher T2“.
+        6. Klicken Sie auf „Settings“.
+        7. Aktivieren Sie „Verbose“, „OpenCore Debugging“ und „Kext Debugging“.
+        8. Klicken Sie auf „Return“.
+        9. Bauen Sie OpenCore wie gewohnt.
+        10. Starten Sie Ihren Mac mit OpenCore.
+        11. Sobald der Kernel-Panic erneut auftritt, erzwingen Sie das Herunterfahren Ihres Macs und starten Sie ihn wieder vom Hauptlaufwerk.
+        12. Öffnen Sie das Terminal.
+        13. Geben Sie „sudo diskutil mount /dev/disk0s1“ ein und drücken Sie die Eingabetaste.
+        14. Geben Sie Ihr Passwort ein (es wird nicht angezeigt!) und drücken Sie die Eingabetaste.
+        15. Das EFI-Laufwerk ist nun gemountet. Öffnen Sie den Finder.
+        16. Klicken Sie auf EFI.
+        17. Wählen Sie alle darin enthaltenen Dateien aus.
+        18. Klicken Sie mit der rechten Maustaste und wählen Sie „Komprimieren“. Dadurch wird eine ZIP-Datei erstellt.
+        19. Laden Sie die Datei hier hoch.
     validations:
       required: false
 
   - type: textarea
     id: logs
     attributes:
-      label: Panic log / additional notes
-      description: Upload the EFI or a slow motion video displaying the boot sequence.
+      label: Panic log / additional notes / Panikprotokoll / zusätzliche Notizen
+      description: Upload the EFI or a slow motion video displaying the boot sequence. / Laden Sie die EFI-Datei oder ein Slow-Motion-Video hoch, das die Bootsequenz zeigt.
       render: shell
