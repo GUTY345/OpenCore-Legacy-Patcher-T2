@@ -157,5 +157,5 @@ body:
     id: logs
     attributes:
       label: Panic log / additional notes
-      description:Upload the EFI or a slow motion video displaying the boot sequence.
+      description: Upload the EFI or a slow motion video displaying the boot sequence.
       render: shell
