@@ -157,5 +157,5 @@ body:
     id: logs
     attributes:
       label: Panic log / additional notes
-      description: Paste the panic string, csrutil status output, boot-args, Secure Boot status etc, upload the EFI or a slow motion video displaying the boot sequence. This is auto-formatted as a code block.
+      description:Upload the EFI or a slow motion video displaying the boot sequence.
       render: shell
