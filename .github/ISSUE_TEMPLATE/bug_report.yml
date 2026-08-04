@@ -137,7 +137,19 @@ body:
         4. Hold Option and choose Macintosh HD (or whatever is called your main drive)
         5. Open the OpenCore Legacy Patcher T2 app
         6. Click on Settings
-        <img width="812" height="652" alt="Image" src="https://github.com/user-attachments/assets/3e622e81-5d99-4d30-9031-a3f4122f41e2" />
+        7. Enable Verbose, OpenCore Debugging and Kext Debugging
+        8. Click on Return
+        9. Build OpenCore as usual
+        10. Boot your Mac into OpenCore
+        11. Once the kernel panic appears, force shut down your Mac and boot back into the main drive
+        12. Open Terminal
+        13. Type sudo diskutil mount /dev/disk0s1 and hit Enter
+        14. Type your password (you won't see it!) and hit Enter
+        15. Now the EFI is mounted, open Finder
+        16. Click on EFI
+        17. Select all files inside it
+        18. Right click -> Compress - it will create a Zip file
+        18. Upload it here
     validations:
       required: true
 
