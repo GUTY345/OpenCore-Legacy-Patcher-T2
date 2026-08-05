@@ -139,7 +139,7 @@ class OpenCoreLegacyPatcher:
             
             # Fix: Strict regex validation to ensure branch names only contain safe characters
             if re.match(r"^[a-zA-Z0-9_\-\./]+$", branch) and ".." not in branch:
-                self.constants.installer_pkg_url_nightly = self.constants.installer_pkg_url_nightly.replace("main", branch)
+                self.constants.installer_pkg_url = self.constants.installer_pkg_url.replace("main", branch)
             else:
                 logging.error(f"Malicious or invalid branch name detected: {branch}. Falling back to default URL.")
 
