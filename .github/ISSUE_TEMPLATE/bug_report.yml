@@ -12,7 +12,7 @@ body:
   - type: dropdown
     id: mac-model
     attributes:
-      label: Mac model
+      label: Mac model / Mac-Modell
       description: Which Mac is affected? / Welches Mac ist betroffen?
       options:
         - "T2 — Mac mini (2020, 128/256GB SSD storage)"
@@ -121,7 +121,7 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: Description
+      label: Description / Beschreibung
       description: What went wrong? / Was ist los?
     validations:
       required: true
