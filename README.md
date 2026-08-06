@@ -91,6 +91,8 @@ To run the project from source, see here: [Build and run from source](./SOURCE.m
   * Help troubleshooting, determining fixes, fixing security vulnerabilities and writing patches
 * [YBronst](https://github.com/YBronst/OCLP-Plus)
 * for fixing modern wireless on macOS 26 Tahoe
+* [pyquick](https://github.com/pyquick) and [hackdoc](https://github.com/hackdoc)
+  * [improving support for Metallibs on macOS 26 Tahoe on unsupported non-T2 Macs](https://github.com/hackdoc/OCLP-R)
 * [vytska69](https://github.com/vytska69)
   * [developing patches for the T2 chip](https://github.com/vytska69/OpenCore-Legacy-Patcher)
   * [Developing Secure Enclave Processor (SEP) timeout patches](https://github.com/vytska69/OpenCore-Legacy-Patcher)
