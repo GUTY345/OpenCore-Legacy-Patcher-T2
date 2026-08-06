@@ -27,7 +27,7 @@ class AMDTeraScale2(BaseHardware):
         """
         Display name for end users
         """
-        return f"{self.hardware_variant()}: AMD TeraScale 2"
+        return f"{self._trans.get(self.hardware_variant(), self.hardware_variant())}: {self._trans.get('AMD TeraScale 2', 'AMD TeraScale 2')}"
 
 
     def present(self) -> bool:
@@ -45,7 +45,7 @@ class AMDTeraScale2(BaseHardware):
         """
         Dropped support with macOS 10.14, Mojave
         """
-        return self._xnu_major < os_data.mojave.value
+        return self._xnu_major < os_data.mojave.value or self._xnu_major >= os_data.tahoe.value
 
 
     def hardware_variant(self) -> HardwareVariant:
@@ -102,7 +102,7 @@ class AMDTeraScale2(BaseHardware):
         if self.native_os() is True:
             return {}
 
-        if self._xnu_major not in self._constants.legacy_accel_support and self._dortania_internal_check() is False:
+        if self._xnu_major not in self._constants.legacy_accel_support and self._hackdoc_internal_check() is False:
             return {
                 **AMDTeraScale(self._xnu_major, self._xnu_minor, self._os_build).patches(),
                 **self._model_specific_patches()
