@@ -26,7 +26,7 @@ class IntelHaswell(BaseHardware):
         """
         Display name for end users
         """
-        return f"{self.hardware_variant()}: Intel Haswell"
+        return f"{self._trans.get(self.hardware_variant(), self.hardware_variant())}: {self._trans.get('Intel Haswell', 'Intel Haswell')}"
 
 
     def present(self) -> bool:
@@ -44,7 +44,7 @@ class IntelHaswell(BaseHardware):
         """
         Dropped support with macOS 13, Ventura
         """
-        return self._xnu_major < os_data.ventura.value
+        return self._xnu_major < os_data.ventura.value or self._xnu_major >= os_data.tahoe.value
 
 
     def hardware_variant(self) -> HardwareVariant:
