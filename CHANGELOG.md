@@ -1,4 +1,47 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16024 - 4.0.0 alpha 16.1.4 Latest
+@albert-mueller albert-mueller released this 12 hours ago 
+This release fixes a vulnerability where a deprecated constant was used:
+
+ '# Generate environment data'
+        self.constants.recovery_status = utilities.check_recovery()
+        utilities.disable_cls()
+        self._fix_cwd()
+
+        # Generate binary data
+        launcher_script = None
+        launcher_binary = sys.executable
+        if "python" in launcher_binary:
+            # We're running from source
+            launcher_script = __file__
+            if "main.py" in launcher_script:
+                launcher_script = launcher_script.replace("/resources/main.py", "/OpenCore-Patcher-GUI.command")
+        self.constants.launcher_binary = launcher_binary
+        self.constants.launcher_script = launcher_script
+
+        # Initialize working directory after confirming payload integrity
+        # Note: Implement absolute hash checking within verify_payload_integrity
+        if hasattr(utilities, "verify_payload_integrity"):
+            if not utilities.verify_payload_integrity(self.constants):
+                raise SecurityError("Payload integrity verification failed. Execution halted.")
+
+        self.constants.unpack_thread = threading.Thread(target=reroute_payloads.RoutePayloadDiskImage, args=(self.constants,))
+        self.constants.unpack_thread.start()
+
+        # Generate commit info
+        self.constants.commit_info = commit_info.ParseCommitInfo(self.constants.launcher_binary).generate_commit_info()
+        if self.constants.commit_info[0] not in ["Running from source", "Built from source"]:
+            # Now that we have commit info, update nightly link securely
+            branch = self.constants.commit_info[0]
+            branch = branch.replace("refs/heads/", "")
+            
+            # Fix: Strict regex validation to ensure branch names only contain safe characters
+            if re.match(r"^[a-zA-Z0-9_\-\./]+$", branch) and ".." not in branch:
+                self.constants.installer_pkg_url_nightly = self.constants.installer_pkg_url_nightly.replace("main", branch) # <- a deprecated constant is used; an attacker could put intentionally a malicious URL inside this constant
+            else:
+                logging.error(f"Malicious or invalid branch name detected: {branch}. Falling back to default URL.")
+Impact: an attacker could restore the usage of a deprecated constant to hard code a URL of a malicious website to do malicious actions of their own choice
+
 ## 4.0.0.16023 - 4.0.0 alpha 16.1.3
 This release:
 
