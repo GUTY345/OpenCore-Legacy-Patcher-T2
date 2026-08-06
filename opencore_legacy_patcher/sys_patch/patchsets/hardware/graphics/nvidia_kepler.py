@@ -27,7 +27,7 @@ class NvidiaKepler(BaseHardware):
         """
         Display name for end users
         """
-        return f"{self.hardware_variant()}: Nvidia Kepler"
+        return f"{self._trans.get(self.hardware_variant(), self.hardware_variant())}: {self._trans.get('Nvidia Kepler', 'Nvidia Kepler')}"
 
 
     def present(self) -> bool:
@@ -74,7 +74,7 @@ class NvidiaKepler(BaseHardware):
         """
         New compiler format introduced in macOS 15, Sequoia
         """
-        return self._xnu_major >= os_data.sequoia.value
+        return self._xnu_major >= os_data.sequoia.value or self._xnu_major >= os_data.tahoe.value
 
 
     def _resolve_kepler_geforce_framebuffers(self) -> str:
