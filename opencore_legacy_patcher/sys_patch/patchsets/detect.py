@@ -325,7 +325,7 @@ class HardwarePatchsetDetection:
         """
         Check if network patches are already applied
         """
-        oclp_patch_path = "/System/Library/CoreServices/OCLP-Plus.plist"
+        oclp_patch_path = "/System/Library/CoreServices/OpenCore-Patcher.plist"
         if not Path(oclp_patch_path).exists():
             return False
         try:
