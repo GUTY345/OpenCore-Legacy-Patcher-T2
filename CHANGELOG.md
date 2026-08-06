@@ -1,5 +1,5 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
-## 4.0.0.16024 - 4.0.0 alpha 16.1.4 Latest
+## 4.0.0.16024 - 4.0.0 alpha 16.1.4
 @albert-mueller albert-mueller released this 12 hours ago 
 This release fixes a vulnerability where a deprecated constant was used:
 
