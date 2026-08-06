@@ -2,21 +2,24 @@
 ## 4.0.0.16040 - 4.0.0 alpha 16.3
 Thanks @pyquick for contributing to this project!
 This release:
+- fixes an issue when trying to build OpenCore for a different machine, for example, I'd like to build OpenCore for Mac mini 2018 from my MacBook Pro 2020 with 4 thunderbolt 3 ports. Upon selecting Macmini8,1 as a Target device, Build and Install OpenCore was greyed out
+- fixes a bug where when checking if WiFi root patches are installed, it was checking the file OCLP-Plus.plist, which will never exist as this project is not OCLP-Plus
+- Changes the Metallibs API from https://dortania.github.io/ to https://albert-mueller.github.io/ . The repository of the new API is this: https://github.com/albert-mueller/albert-mueller.github.io
+- adds macOS 26 Tahoe support for these GPUs: (previously it was completely absent)
 
-fixes an issue when trying to build OpenCore for a different machine, for example, I'd like to build OpenCore for Mac mini 2018 from my MacBook Pro 2020 with 4 thunderbolt 3 ports. Upon selecting Macmini8,1 as a Target device, Build and Install OpenCore was greyed out
-fixes a bug where when checking if WiFi root patches are installed, it was checking the file OCLP-Plus.plist, which will never exist as this project is not OCLP-Plus
-Changes the Metallibs API from https://dortania.github.io/ to https://albert-mueller.github.io/ . The repository of the new API is this: https://github.com/albert-mueller/albert-mueller.github.io
-adds macOS 26 Tahoe support for these GPUs: (previously it was completely absent)
 Intel:
+- Sandy Bridge, Iron Lake, Ivy Bridge and Haswell GPUs now can run macOS 26 Tahoe properly
 
-Sandy Bridge, Iron Lake, Ivy Bridge and Haswell GPUs now can run macOS 26 Tahoe properly
+AMD:
+- TeraScale 1 and TeraScale 2 GPUs can now run macOS 26 Tahoe properly.
+
 NVIDIA:
+- Kepler, Tesla, Fermi, Pascal and Maxwell GPUs can now run macOS 26 Tahoe properly
 
-Kepler, Tesla, Fermi, Pascal and Maxwell GPUs can now run macOS 26 Tahoe properly
 Vielen Dank an @pyquick für den Beitrag zu diesem Projekt!
 Diese Version:
+- Behebt ein Problem beim Kompilieren von OpenCore für ein anderes Gerät. Beispielsweise wollte ich OpenCore für den Mac mini 2018 von meinem MacBook Pro 2020 mit 4 Thunderbolt-3-Anschlüssen aus kompilieren. Nach Auswahl von „Macmini8,1“ als Zielgerät war die Option „Build and Install OpenCore“ ausgegraut.
 
-Behebt ein Problem beim Kompilieren von OpenCore für ein anderes Gerät. Beispielsweise wollte ich OpenCore für den Mac mini 2018 von meinem MacBook Pro 2020 mit 4 Thunderbolt-3-Anschlüssen aus kompilieren. Nach Auswahl von „Macmini8,1“ als Zielgerät war die Option „Build and Install OpenCore“ ausgegraut.
 Behebt einen Fehler, bei dem beim Prüfen, ob WLAN-Root-Patches installiert sind, die Datei „OCLP-Plus.plist“ geprüft wurde, die jedoch nicht existiert, da dieses Projekt nicht OCLP-Plus ist.
 
 Ändert die Metallibs-API von https://dortania.github.io/ zu https://albert-mueller.github.io/. Das Repository der neuen API finden Sie hier: https://github.com/albert-mueller/albert-mueller.github.io
@@ -26,6 +29,10 @@ Behebt einen Fehler, bei dem beim Prüfen, ob WLAN-Root-Patches installiert sind
 Intel:
 
 – Sandy Bridge-, Iron Lake-, Ivy Bridge- und Haswell-GPUs unterstützen macOS 26 Tahoe nun einwandfrei.
+
+AMD:
+
+- TeraScale 1- und TeraScale 2-GPUs können macOS 26 Tahoe jetzt einwandfrei ausführen.
 
 NVIDIA:
 
