@@ -129,7 +129,7 @@ body:
   - type: textarea
     id: steps
     attributes:
-      label: Steps to upload the logs of the kernel panic if any / Schritte zum Hochladen der Protokolle des Kernel-Panics, falls vorhanden
+      label: Steps to upload the logs of the kernel panic if any (if not, you can skip this step or write -) / Schritte zum Hochladen der Protokolle des Kernel-Panics, falls vorhanden (falls keiner, dann Sie können das überspringen oder einen - schreiben) 
       placeholder: |
         Whenever is possible, please upload a slow motion video displaying the boot sequence before and during the kernel panic.
         And here's how to upload logs from OpenCore:
@@ -180,6 +180,6 @@ body:
   - type: textarea
     id: logs
     attributes:
-      label: Panic log / additional notes / Panikprotokoll / zusätzliche Notizen
+      label: Panic log (if any) / additional notes (if any) / Panikprotokoll (falls einer) / zusätzliche Notizen (falls einer)
       description: Upload the EFI or a slow motion video displaying the boot sequence. / Laden Sie die EFI-Datei oder ein Slow-Motion-Video hoch, das die Bootsequenz zeigt.
       render: shell
