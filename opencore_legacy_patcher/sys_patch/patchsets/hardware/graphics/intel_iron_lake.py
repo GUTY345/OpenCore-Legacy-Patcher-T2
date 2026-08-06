@@ -25,7 +25,7 @@ class IntelIronLake(BaseHardware):
         """
         Display name for end users
         """
-        return f"{self.hardware_variant()}: Intel Iron Lake"
+        return f"{self._trans.get(self.hardware_variant(), self.hardware_variant())}: {self._trans.get('Intel Iron Lake', 'Intel Iron Lake')}"
 
 
     def present(self) -> bool:
@@ -43,7 +43,7 @@ class IntelIronLake(BaseHardware):
         """
         Dropped support with macOS 10.14, Mojave
         """
-        return self._xnu_major < os_data.mojave.value
+        return self._xnu_major < os_data.mojave.value or self._xnu_major >= os_data.tahoe.value
 
 
     def hardware_variant(self) -> HardwareVariant:
@@ -93,7 +93,7 @@ class IntelIronLake(BaseHardware):
         if self.native_os() is True:
             return {}
 
-        if self._xnu_major not in self._constants.legacy_accel_support and self._dortania_internal_check() is False:
+        if self._xnu_major not in self._constants.legacy_accel_support and self._hackdoc_internal_check() is False:
             return {**self._model_specific_patches()}
 
         return {
