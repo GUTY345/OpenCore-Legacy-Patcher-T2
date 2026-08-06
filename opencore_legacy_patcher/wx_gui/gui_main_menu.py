@@ -1,1 +1,413 @@
-IiIiCmd1aV9tYWluX21lbnUucHk6IEdlbmVyYXRlIEdVSSBmb3IgbWFpbiBtZW51CiIiIgoKaW1wb3J0IHd4CmltcG9ydCB3eC5odG1sMgoKaW1wb3J0IHN5cwppbXBvcnQgbG9nZ2luZwppbXBvcnQgc3VicHJvY2VzcwppbXBvcnQgcmVxdWVzdHMKaW1wb3J0IG1hcmtkb3duMgppbXBvcnQgdGhyZWFkaW5nCmltcG9ydCB3ZWJicm93c2VyCmltcG9ydCBzaHV0aWwKaW1wb3J0IG9zCmZyb20gcGF0aGxpYiBpbXBvcnQgUGF0aApmcm9tIHBhY2thZ2luZyBpbXBvcnQgdmVyc2lvbgoKZnJvbSAuLiBpbXBvcnQgY29uc3RhbnRzCgpmcm9tIC4uc3VwcG9ydCBpbXBvcnQgKAogICAgZ2xvYmFsX3NldHRpbmdzLAogICAgdXBkYXRlcwopCmZyb20gLi5kYXRhc2V0cyBpbXBvcnQgKAogICAgb3NfZGF0YSwKICAgIGNzc19kYXRhCikKZnJvbSAuLnd4X2d1aSBpbXBvcnQgKAogICAgZ3VpX2J1aWxkLAogICAgZ3VpX21hY29zX2luc3RhbGxlcl9kb3dubG9hZCwKICAgIGd1aV9zdXBwb3J0LAogICAgZ3VpX2hlbHAsCiAgICBndWlfc2V0dGluZ3MsCiAgICBndWlfc3lzX3BhdGNoX2Rpc3BsYXksCiAgICBndWlfdXBkYXRlLAopCgpjbGFzcyBNYWluRnJhbWUod3guRnJhbWUpOgogICAgZGVmIF9faW5pdF9fKHNlbGYsIHBhcmVudDogd3guRnJhbWUsIHRpdGxlOiBzdHIsIGdsb2JhbF9jb25zdGFudHM6IGNvbnN0YW50cy5Db25zdGFudHMsIHNjcmVlbl9sb2NhdGlvbjogdHVwbGUgPSBOb25lKToKICAgICAgICBsb2dnaW5nLmluZm8oIkluaXRpYWxpemluZyBNYWluIE1lbnUgRnJhbWUiKQogICAgICAgIHN1cGVyKE1haW5GcmFtZSwgc2VsZikuX19pbml0X18ocGFyZW50LCB0aXRsZT10aXRsZSwgc2l6ZT0oNzAwLCA4MDApLCBzdHlsZT13eC5ERUZBVUxUX0ZSQU1FX1NUWUxFICYgfih3eC5SRVNJWkVfQk9SREVSIHwgd3guTUFYSU1JWkVfQk9YKSkKICAgICAgICBndWlfc3VwcG9ydC5HZW5lcmF0ZU1lbnViYXIoc2VsZiwgZ2xvYmFsX2NvbnN0YW50cykuZ2VuZXJhdGUoKQoKICAgICAgICBzZWxmLmNvbnN0YW50czogY29uc3RhbnRzLkNvbnN0YW50cyA9IGdsb2JhbF9jb25zdGFudHMKICAgICAgICBzZWxmLnRpdGxlOiBzdHIgPSB0aXRsZQoKICAgICAgICBzZWxmLm1vZGVsX2xhYmVsOiB3eC5TdGF0aWNUZXh0ID0gTm9uZQogICAgICAgIHNlbGYuYnVpbGRfYnV0dG9uOiB3eC5CdXR0b24gPSBOb25lCiAgICAgICAgCiAgICAgICAgIyBGSVg6IEFic2ljaGVydW5nIGdlZ2VuIFRocmVhZC1SYWNlcyAmIFZlcndhaXN0ZSBGZW5zdGVyLVJlZmVyZW56ZW4KICAgICAgICBzZWxmLmV4aXRpbmdfYXBwOiBib29sID0gRmFsc2UgIAogICAgICAgIHNlbGYuYWN0aXZlX2dlbWluaV9mcmFtZTogd3guRnJhbWUgPSBOb25lCgogICAgICAgIHNlbGYuY29uc3RhbnRzLnVwZGF0ZV9zdGFnZSA9IGd1aV9zdXBwb3J0LkF1dG9VcGRhdGVTdGFnZXMuSU5BQ1RJVkUKCiAgICAgICAgc2VsZi5fZ2VuZXJhdGVfZWxlbWVudHMoKQoKICAgICAgICBzZWxmLkNlbnRyZSgpCiAgICAgICAgc2VsZi5TaG93KCkKCiAgICAgICAgc2VsZi5fcHJlZmxpZ2h0X2NoZWNrcygpCgogICAgZGVmIF9nZW5lcmF0ZV9lbGVtZW50cyhzZWxmKSAtPiBOb25lOgogICAgICAgICIiIgogICAgICAgIEdlbmVyYXRlIFVJIGVsZW1lbnRzIGZvciB0aGUgbWFpbiBtZW51CiAgICAgICAgIiIiCiAgICAgICAgIyBMb2dvCiAgICAgICAgbG9nbyA9IHd4LlN0YXRpY0JpdG1hcChzZWxmLCBiaXRtYXA9d3guQml0bWFwKHN0cihzZWxmLmNvbnN0YW50cy5pY25zX3Jlc291cmNlX3BhdGggLyAiT0MtUGF0Y2hlci5pY25zIiksIHd4LkJJVE1BUF9UWVBFX0lDT04pLCBwb3M9KC0xLCAwKSwgc2l6ZT0oMTI4LCAxMjgpKQogICAgICAgIGxvZ28uQ2VudHJlKHd4LkhPUklaT05UQUwpCgogICAgICAgICMgVGl0bGUgbGFiZWwKICAgICAgICB0aXRsZV9sYWJlbCA9IHd4LlN0YXRpY1RleHQoc2VsZiwgbGFiZWw9c2VsZi5jb25zdGFudHMucGF0Y2hlcl9uYW1lLCBwb3M9KC0xLCAxMjgpKQogICAgICAgIHRpdGxlX2xhYmVsLlNldEZvbnQoZ3VpX3N1cHBvcnQuZm9udF9mYWN0b3J5KDI1LCB3eC5GT05UV0VJR0hUX0JPTEQpKQogICAgICAgIHRpdGxlX2xhYmVsLkNlbnRyZSh3eC5IT1JJWk9OVEFMKQoKICAgICAgICB2ZXJzaW9uX2xhYmVsID0gd3guU3RhdGljVGV4dChzZWxmLCBsYWJlbD1mIlZlcnNpb24ge3NlbGYuY29uc3RhbnRzLnBhdGNoZXJfdmVyc2lvbl9sYWJlbH0iLCBwb3M9KC0xLCB0aXRsZV9sYWJlbC5HZXRQb3NpdGlvbigpWzFdICsgMzIpKQogICAgICAgIHZlcnNpb25fbGFiZWwuU2V0Rm9udChndWlfc3VwcG9ydC5mb250X2ZhY3RvcnkoMTMsIHd4LkZPTlRXRUlHSFRfTk9STUFMKSkKICAgICAgICB2ZXJzaW9uX2xhYmVsLkNlbnRyZSh3eC5IT1JJWk9OVEFMKQogICAgICAgIHZlcnNpb25fbGFiZWwuU2V0Rm9yZWdyb3VuZENvbG91cih3eC5Db2xvdXIoMTI4LCAxMjgsIDEyOCkpCgogICAgICAgICMgTW9kZWwgbGFiZWwKICAgICAgICBtb2RlbF9sYWJlbCA9IHd4LlN0YXRpY1RleHQoc2VsZiwgbGFiZWw9ZiJNb2RlbDoge3NlbGYuY29uc3RhbnRzLmN1c3RvbV9tb2RlbCBvciBzZWxmLmNvbnN0YW50cy5jb21wdXRlci5yZWFsX21vZGVsfSIsIHBvcz0oLTEsIHZlcnNpb25fbGFiZWwuR2V0UG9zaXRpb24oKVsxXSArIDMwKSkKICAgICAgICBtb2RlbF9sYWJlbC5TZXRGb250KGd1aV9zdXBwb3J0LmZvbnRfZmFjdG9yeSgxMywgd3guRk9OVFdFSUdIVF9OT1JNQUwpKQogICAgICAgIG1vZGVsX2xhYmVsLkNlbnRyZSh3eC5IT1JJWk9OVEFMKQogICAgICAgIHNlbGYubW9kZWxfbGFiZWwgPSBtb2RlbF9sYWJlbAoKICAgICAgICAjIE1haW4gNCBGZWF0dXJlIEJ1dHRvbnMKICAgICAgICBtZW51X2J1dHRvbnMgPSB7CiAgICAgICAgICAgICJCdWlsZCBhbmQgSW5zdGFsbCBPcGVuQ29yZSI6IHsKICAgICAgICAgICAgICAgICJmdW5jdGlvbiI6IHNlbGYub25fYnVpbGRfYW5kX2luc3RhbGwsCiAgICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiBbIlByZXBhcmVzIHByb3ZpZGVkIGRyaXZlIHRvIGJlIGFibGUiLCAidG8gYm9vdCB1bnN1cHBvcnRlZCBPU2VzLiIsICJVc2Ugb24gaW5zdGFsbGVycyBvciBpbnRlcm5hbCBkcml2ZXMuIl0sCiAgICAgICAgICAgICAgICAiaWNvbiI6IHN0cihzZWxmLmNvbnN0YW50cy5pY25zX3Jlc291cmNlX3BhdGggLyAiT0MtQnVpbGQuaWNucyIpLAogICAgICAgICAgICB9LAogICAgICAgICAgICAiQ3JlYXRlIG1hY09TIEluc3RhbGxlciI6IHsKICAgICAgICAgICAgICAgICJmdW5jdGlvbiI6IHNlbGYub25fY3JlYXRlX21hY29zX2luc3RhbGxlciwKICAgICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6IFsiRG93bmxvYWQgYW5kIGZsYXNoIGEgbWFjT1MiLCAiSW5zdGFsbGVyIGZvciB5b3VyIHN5c3RlbS4iXSwKICAgICAgICAgICAgICAgICJpY29uIjogc3RyKHNlbGYuY29uc3RhbnRzLmljbnNfcmVzb3VyY2VfcGF0aCAvICJPQy1JbnN0YWxsZXIuaWNucyIpLAogICAgICAgICAgICB9LAogICAgICAgICAgICAiSW5zdGFsbCBkcml2ZXJzIGFuZCBwYXRjaGVzIjogewogICAgICAgICAgICAgICAgImZ1bmN0aW9uIjogc2VsZi5vbl9wb3N0X2luc3RhbGxfcm9vdF9wYXRjaCwKICAgICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6IFsiSW5zdGFsbHMgaGFyZHdhcmUgZHJpdmVycyBhbmQiLCAicGF0Y2hlcyBmb3IgeW91ciBzeXN0ZW0gYWZ0ZXIiLCAiaW5zdGFsbGluZyBhIG5ldyB2ZXJzaW9uIG9mIG1hY09TLiJdLAogICAgICAgICAgICAgICAgImljb24iOiBzdHIoc2VsZi5jb25zdGFudHMuaWNuc19yZXNvdXJjZV9wYXRoIC8gIk9DLVBhdGNoLmljbnMiKSwKICAgICAgICAgICAgfSwKICAgICAgICAgICAgIlN1cHBvcnQiOiB7CiAgICAgICAgICAgICAgICAiZnVuY3Rpb24iOiBzZWxmLm9uX2hlbHAsCiAgICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiBbIlJlc291cmNlcyBmb3IgT3BlbkNvcmUgTGVnYWN5IiwgIlBhdGNoZXIgVDIuIl0sCiAgICAgICAgICAgICAgICAiaWNvbiI6IHN0cihzZWxmLmNvbnN0YW50cy5pY25zX3Jlc291cmNlX3BhdGggLyAiT0MtU3VwcG9ydC5pY25zIiksCiAgICAgICAgICAgIH0sCiAgICAgICAgfQoKICAgICAgICBidXR0b25feCA9IDMwCiAgICAgICAgYnV0dG9uX3kgPSBtb2RlbF9sYWJlbC5HZXRQb3NpdGlvbigpWzFdICsgMzAKICAgICAgICByb2xsb3ZlciA9IDIKICAgICAgICBpbmRleCA9IDAKICAgICAgICBtYXhfaGVpZ2h0ID0gMAoKICAgICAgICBmb3IgYnV0dG9uX25hbWUsIGJ1dHRvbl9mdW5jdGlvbiBpbiBtZW51X2J1dHRvbnMuaXRlbXMoKToKICAgICAgICAgICAgaWYgImljb24iIGluIGJ1dHRvbl9mdW5jdGlvbjoKICAgICAgICAgICAgICAgIGljb24gPSB3eC5TdGF0aWNCaXRtYXAoc2VsZiwgYml0bWFwPXd4LkJpdG1hcChidXR0b25fZnVuY3Rpb25bImljb24iXSwgd3guQklUTUFQX1RZUEVfSUNPTiksIHBvcz0oYnV0dG9uX3ggLSAxMCwgYnV0dG9uX3kpLCBzaXplPSg2NCwgNjQpKQogICAgICAgICAgICAgICAgaWYgYnV0dG9uX25hbWUgPT0gIkJ1aWxkIGFuZCBJbnN0YWxsIE9wZW5Db3JlIjoKICAgICAgICAgICAgICAgICAgICBpY29uLlNldFNpemUoKDcwLCA3MCkpCiAgICAgICAgICAgIAogICAgICAgICAgICBidXR0b24gPSB3eC5CdXR0b24oc2VsZiwgbGFiZWw9YnV0dG9uX25hbWUsIHBvcz0oYnV0dG9uX3ggKyA3MCwgYnV0dG9uX3kpLCBzaXplPSgxODAsIDMwKSkKICAgICAgICAgICAgYnV0dG9uLlNldEZvbnQoZ3VpX3N1cHBvcnQuZm9udF9mYWN0b3J5KDEzLCB3eC5GT05UV0VJR0hUX05PUk1BTCkpCiAgICAgICAgICAgIGJ1dHRvbi5CaW5kKHd4LkVWVF9CVVRUT04sIGxhbWJkYSBldmVudCwgZj1idXR0b25fZnVuY3Rpb25bImZ1bmN0aW9uIl06IGYoZXZlbnQpKQoKICAgICAgICAgICAgaWYgYnV0dG9uX25hbWUgPT0gIkJ1aWxkIGFuZCBJbnN0YWxsIE9wZW5Db3JlIjoKICAgICAgICAgICAgICAgIHNlbGYuYnVpbGRfYnV0dG9uID0gYnV0dG9uCiAgICAgICAgICAgICAgICBpZiBub3QgZ3VpX3N1cHBvcnQuQ2hlY2tQcm9wZXJ0aWVzKHNlbGYuY29uc3RhbnRzKS5ob3N0X2Nhbl9idWlsZCgpOgogICAgICAgICAgICAgICAgICAgIGJ1dHRvbi5EaXNhYmxlKCkKICAgICAgICAgICAgICAgICAgICBidXR0b24uU2V0VG9vbFRpcCgiQnVpbGRpbmcgT3BlbkNvcmUgaXMgbm90IHN1cHBvcnRlZCBvbiBIYWNraW50b3NoZXMgb3IgdmlydHVhbCBtYWNoaW5lcy4gRm9yIGluc3RhbGxpbmcgT3BlbkNvcmUgb24gSGFja2ludG9zaGVzLCBmb2xsb3cgRG9ydGFuaWEncyBndWlkZSBoZXJlOiBodHRwczovL2RvcnRhbmlhLmdpdGh1Yi5pby9PcGVuQ29yZS1JbnN0YWxsLUd1aWRlLyIpCgogICAgICAgICAgICBkZXNjcmlwdGlvbl9sYWJlbCA9IHd4LlN0YXRpY1RleHQoc2VsZiwgbGFiZWw9J1xuJy5qb2luKGJ1dHRvbl9mdW5jdGlvblsiZGVzY3JpcHRpb24iXSksIHBvcz0oYnV0dG9uX3ggKyA3NSwgYnV0dG9uLkdldFBvc2l0aW9uKClbMV0gKyAzMykpCiAgICAgICAgICAgIGRlc2NyaXB0aW9uX2xhYmVsLlNldEZvbnQoZ3VpX3N1cHBvcnQuZm9udF9mYWN0b3J5KDEwLCB3eC5GT05UV0VJR0hUX05PUk1BTCkpCgogICAgICAgICAgICAjIE1haW50YWluIHNwYWNpbmcKICAgICAgICAgICAgcm93X2hlaWdodCA9IDg1CiAgICAgICAgICAgIGJ1dHRvbl95ICs9IHJvd19oZWlnaHQKICAgICAgICAgICAgCiAgICAgICAgICAgIGlmIGJ1dHRvbl95ID4gbWF4X2hlaWdodDoKICAgICAgICAgICAgICAgIG1heF9oZWlnaHQgPSBidXR0b25feQoKICAgICAgICAgICAgaW5kZXggKz0gMQogICAgICAgICAgICBpZiBpbmRleCA9PSByb2xsb3ZlcjoKICAgICAgICAgICAgICAgIGJ1dHRvbl94ID0gMzIwCiAgICAgICAgICAgICAgICBidXR0b25feSA9IG1vZGVsX2xhYmVsLkdldFBvc2l0aW9uKClbMV0gKyAzMAoKICAgICAgICAjIC0tLSBGT09URVIgQlVUVE9OUyAoU2V0dGluZ3MgJiBHZW1pbmkpIC0tLQogICAgICAgIHRvdGFsX2Zvb3Rlcl93aWR0aCA9IDEyMCArIDEwICsgMTUwIAogICAgICAgIHN0YXJ0X3ggPSAoc2VsZi5HZXRTaXplKCkud2lkdGggLSB0b3RhbF9mb290ZXJfd2lkdGgpIC8vIDIKICAgICAgICBmb290ZXJfeSA9IG1heF9oZWlnaHQgKyAxMAoKICAgICAgICBzZXR0aW5nc19idG4gPSB3eC5CdXR0b24oc2VsZiwgbGFiZWw9IuKame+4jyBTZXR0aW5ncyIsIHBvcz0oc3RhcnRfeCwgZm9vdGVyX3kpLCBzaXplPSgxMjAsIDMwKSkKICAgICAgICBzZXR0aW5nc19idG4uQmluZCh3eC5FVlRfQlVUVE9OLCBzZWxmLm9uX3NldHRpbmdzKQoKICAgICAgICBnZW1pbmlfYnRuID0gd3guQnV0dG9uKHNlbGYsIGxhYmVsPSLinKggQXNrIEdlbWluaSIsIHBvcz0oc3RhcnRfeCArIDEzMCwgZm9vdGVyX3kpLCBzaXplPSgxNTAsIDMwKSkKICAgICAgICBnZW1pbmlfYnRuLkJpbmQod3guRVZUX0JVVFRPTiwgc2VsZi5vbl9nZW1pbmlfaGVscCkKCiAgICAgICAgZ2VtaW5pX2Rlc2MgPSB3eC5TdGF0aWNUZXh0KHNlbGYsIGxhYmVsPSJBSSBUcm91Ymxlc2hvb3RpbmcgYW5kXG5JbnN0YWxsYXRpb24gaGVscC4iLCBwb3M9KHN0YXJ0X3ggKyAxMzUsIGZvb3Rlcl95ICsgMzUpKQogICAgICAgIGdlbWluaV9kZXNjLlNldEZvbnQoZ3VpX3N1cHBvcnQuZm9udF9mYWN0b3J5KDEwLCB3eC5GT05UV0VJR0hUX05PUk1BTCkpCgogICAgICAgICMgLS0tIENPUFlSSUdIVCAtLS0KICAgICAgICBjb3B5X2xhYmVsID0gd3guU3RhdGljVGV4dChzZWxmLCBsYWJlbD1zZWxmLmNvbnN0YW50cy5jb3B5cmlnaHRfZGF0ZSwgcG9zPSgtMSwgZ2VtaW5pX2Rlc2MuR2V0UG9zaXRpb24oKVsxXSArIDQ1KSkKICAgICAgICBjb3B5X2xhYmVsLlNldEZvbnQoZ3VpX3N1cHBvcnQuZm9udF9mYWN0b3J5KDEwLCB3eC5GT05UV0VJR0hUX05PUk1BTCkpCiAgICAgICAgY29weV9sYWJlbC5DZW50cmUod3guSE9SSVpPTlRBTCkKCiAgICAgICAgIyBGaW5hbCBXaW5kb3cgU2l6ZSBhZGp1c3RtZW50CiAgICAgICAgc2VsZi5TZXRTaXplKCgtMSwgY29weV9sYWJlbC5HZXRQb3NpdGlvbigpWzFdICsgNjApKQoKICAgIGRlZiBfcHJlZmxpZ2h0X2NoZWNrcyhzZWxmKToKICAgICAgICB0cnk6CiAgICAgICAgICAgIGlmIHNlbGYuY29uc3RhbnRzLmNvbXB1dGVyLmJ1aWxkX21vZGVsIGlzIE5vbmU6CiAgICAgICAgICAgICAgICBsb2dnaW5nLmluZm8oIk5vIGJ1aWxkIG1vZGVsIGRldGVjdGVkLiBEZWZhdWx0aW5nIHRvIGN1cnJlbnQgaG9zdCBoYXJkd2FyZS4iKQogICAgICAgICAgICAgICAgc2VsZi5jb25zdGFudHMuY29tcHV0ZXIuYnVpbGRfbW9kZWwgPSBzZWxmLmNvbnN0YW50cy5jb21wdXRlci5yZWFsX21vZGVsCiAgICAgICAgICAgIAogICAgICAgICAgICByZWFsX21vZGVsID0gc3RyKHNlbGYuY29uc3RhbnRzLmNvbXB1dGVyLnJlYWxfbW9kZWwpLnN0cmlwKCkKICAgICAgICAgICAgYnVpbGRfbW9kZWwgPSBzdHIoc2VsZi5jb25zdGFudHMuY29tcHV0ZXIuYnVpbGRfbW9kZWwpLnN0cmlwKCkgaWYgc2VsZi5jb25zdGFudHMuY29tcHV0ZXIuYnVpbGRfbW9kZWwgZWxzZSBOb25lCiAgICAgICAgICAgIAogICAgICAgICAgICBwcmludChmIkRFQlVHOiBSZWFsOiAne3JlYWxfbW9kZWx9JyB8IEJ1aWxkOiAne2J1aWxkX21vZGVsfSciKQoKICAgICAgICAgICAgaWYgKAogICAgICAgICAgICAgICAgYnVpbGRfbW9kZWwgaXMgbm90IE5vbmUgYW5kCiAgICAgICAgICAgICAgICBidWlsZF9tb2RlbCAhPSByZWFsX21vZGVsIGFuZAogICAgICAgICAgICAgICAgc2VsZi5jb25zdGFudHMuaG9zdF9pc19oYWNraW50b3NoIGlzIEZhbHNlCiAgICAgICAgICAgICk6CiAgICAgICAgICAgICAgICBwb3BfdXAgPSB3eC5NZXNzYWdlRGlhbG9nKAogICAgICAgICAgICAgICAgICAgIHNlbGYsCiAgICAgICAgICAgICAgICAgICAgZiJXZSBmb3VuZCB5b3UgYXJlIGN1cnJlbnRseSBib290aW5nIE9wZW5Db3JlIGJ1aWx0IGZvciBhIGRpZmZlcmVudCB1bml0OiB7YnVpbGRfbW9kZWx9XG5cblBsZWFzZSBCdWlsZCBhbmQgSW5zdGFsbCBhIG5ldyBPcGVuQ29yZSBjb25maWcuIiwKICAgICAgICAgICAgICAgICAgICAiVW5zdXBwb3J0ZWQgQ29uZmlndXJhdGlvbiBEZXRlY3RlZCEiLAogICAgICAgICAgICAgICAgICAgIHN0eWxlPXd4Lk9LIHwgd3guSUNPTl9FWENMQU1BVElPTgogICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgcG9wX3VwLlNob3dNb2RhbCgpCiAgICAgICAgICAgICAgICBzZWxmLm9uX2J1aWxkX2FuZF9pbnN0YWxsKCkKICAgICAgICAgICAgICAgIHJldHVybgoKICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHByaW50KGYiREVCVUc6IFByZWZsaWdodCBlcnJvcjoge2V9IikKCiAgICAgICAgc2VsZi51cGRhdGVfdGhyZWFkID0gdGhyZWFkaW5nLlRocmVhZCh0YXJnZXQ9c2VsZi5fY2hlY2tfZm9yX3VwZGF0ZXMpCiAgICAgICAgc2VsZi51cGRhdGVfdGhyZWFkLmRhZW1vbiA9IFRydWUgIAogICAgICAgIHNlbGYudXBkYXRlX3RocmVhZC5zdGFydCgpCgogICAgICAgIGlmICItLXVwZGF0ZV9pbnN0YWxsZWQiIGluIHN5cy5hcmd2IGFuZCBzZWxmLmNvbnN0YW50cy5oYXNfY2hlY2tlZF91cGRhdGVzIGlzIEZhbHNlIGFuZCBndWlfc3VwcG9ydC5DaGVja1Byb3BlcnRpZXMoc2VsZi5jb25zdGFudHMpLmhvc3RfY2FuX2J1aWxkKCk6CiAgICAgICAgICAgIHNlbGYuY29uc3RhbnRzLmhhc19jaGVja2VkX3VwZGF0ZXMgPSBUcnVlCiAgICAgICAgICAgIHBvcF91cCA9IHd4Lk1lc3NhZ2VEaWFsb2coCiAgICAgICAgICAgICAgICBzZWxmLAogICAgICAgICAgICAgICAgZiJ7c2VsZi5jb25zdGFudHMucGF0Y2hlcl9uYW1lfSBoYXMgYmVlbiB1cGRhdGVkIHRvIHRoZSBsYXRlc3QgdmVyc2lvbjoge3NlbGYuY29uc3RhbnRzLnBhdGNoZXJfdmVyc2lvbl9sYWJlbH1cblxuV291bGQgeW91IGxpa2UgdG8gdXBkYXRlIE9wZW5Db3JlIGFuZCB5b3VyIHJvb3Qgdm9sdW1lIHBhdGNoZXM/IiwKICAgICAgICAgICAgICAgICJVcGRhdGUgc3VjY2Vzc2Z1bCEiLAogICAgICAgICAgICAgICAgc3R5bGU9d3guWUVTX05PIHwgd3guWUVTX0RFRkFVTFQgfCB3eC5JQ09OX0lORk9STUFUSU9OCiAgICAgICAgICAgICkKICAgICAgICAgICAgcG9wX3VwLlNob3dNb2RhbCgpCgogICAgICAgICAgICBpZiBwb3BfdXAuR2V0UmV0dXJuQ29kZSgpICE9IHd4LklEX1lFUzoKICAgICAgICAgICAgICAgIGxvZ2dpbmcuaW5mbygiU2tpcHBpbmcgT3BlbkNvcmUgYW5kIHJvb3Qgdm9sdW1lIHBhdGNoIHVwZGF0ZS4uLiIpCiAgICAgICAgICAgICAgICByZXR1cm4KCiAgICAgICAgICAgIGxvZ2dpbmcuaW5mbygiVXBkYXRpbmcgT3BlbkNvcmUgYW5kIHJvb3Qgdm9sdW1lIHBhdGNoZXMuLi4iKQogICAgICAgICAgICBzZWxmLmNvbnN0YW50cy51cGRhdGVfc3RhZ2UgPSBndWlfc3VwcG9ydC5BdXRvVXBkYXRlU3RhZ2VzLkNIRUNLSU5HCiAgICAgICAgICAgIHNlbGYuSGlkZSgpCiAgICAgICAgICAgIHBvcyA9IHNlbGYuR2V0UG9zaXRpb24oKQogICAgICAgICAgICBndWlfYnVpbGQuQnVpbGRGcmFtZSgKICAgICAgICAgICAgICAgIHBhcmVudD1Ob25lLAogICAgICAgICAgICAgICAgdGl0bGU9c2VsZi50aXRsZSwKICAgICAgICAgICAgICAgIGdsb2JhbF9jb25zdGFudHM9c2VsZi5jb25zdGFudHMsCiAgICAgICAgICAgICAgICBzY3JlZW5fbG9jYXRpb249cG9zCiAgICAgICAgICAgICkKICAgICAgICAgICAgd3guQ2FsbEFmdGVyKHNlbGYuRGVzdHJveSkKCiAgICBkZWYgX2NoZWNrX2Zvcl91cGRhdGVzKHNlbGYpOgogICAgICAgIGlmIHNlbGYuY29uc3RhbnRzLmhhc19jaGVja2VkX3VwZGF0ZXMgaXMgVHJ1ZToKICAgICAgICAgICAgcmV0dXJuCiAgICAKICAgICAgICBpZ25vcmVfdXBkYXRlcyA9IGdsb2JhbF9zZXR0aW5ncy5HbG9iYWxFbnZpcm9tZW50U2V0dGluZ3MoKS5yZWFkX3Byb3BlcnR5KCJJZ25vcmVBcHBVcGRhdGVzIikKICAgICAgICBpZiBpZ25vcmVfdXBkYXRlcyBpcyBUcnVlOgogICAgICAgICAgICBzZWxmLmNvbnN0YW50cy5pZ25vcmVfdXBkYXRlcyA9IFRydWUKICAgICAgICAgICAgcmV0dXJuCiAgICAKICAgICAgICBzZWxmLmNvbnN0YW50cy5pZ25vcmVfdXBkYXRlcyA9IEZhbHNlCiAgICAgICAgc2VsZi5jb25zdGFudHMuaGFzX2NoZWNrZWRfdXBkYXRlcyA9IFRydWUKICAgICAgICAKICAgICAgICB1cGRhdGVfZGljdCA9IHVwZGF0ZXMuQ2hlY2tCaW5hcnlVcGRhdGVzKHNlbGYuY29uc3RhbnRzKS5jaGVja19iaW5hcnlfdXBkYXRlcygpCiAgICAgICAgaWYgbm90IHVwZGF0ZV9kaWN0OgogICAgICAgICAgICByZXR1cm4KICAgIAogICAgICAgIHJlbW90ZV92ZXJzaW9uX3N0ciA9IHVwZGF0ZV9kaWN0WyJWZXJzaW9uIl0KICAgICAgICBsb2NhbF92ZXJzaW9uX3N0ciA9IHNlbGYuY29uc3RhbnRzLnBhdGNoZXJfdmVyc2lvbgogICAgCiAgICAgICAgdHJ5OgogICAgICAgICAgICByZW1vdGVfdiA9IHZlcnNpb24ucGFyc2Uoc3RyKHJlbW90ZV92ZXJzaW9uX3N0cikpCiAgICAgICAgICAgIGxvY2FsX3YgPSB2ZXJzaW9uLnBhcnNlKGxvY2FsX3ZlcnNpb25fc3RyKQogICAgCiAgICAgICAgICAgIGlmIHJlbW90ZV92IDw9IGxvY2FsX3Y6CiAgICAgICAgICAgICAgICBsb2dnaW5nLmluZm8oZiJ7c2VsZi5jb25zdGFudHMucGF0Y2hlcl9uYW1lfSBpcyB1cCB0byBkYXRlLiAoTG9jYWw6IHtsb2NhbF92fSA+PSBSZW1vdGU6IHtyZW1vdGVfdn0pIikKICAgICAgICAgICAgICAgIHJldHVybgogICAgCiAgICAgICAgZXhjZXB0IHZlcnNpb24uSW52YWxpZFZlcnNpb246CiAgICAgICAgICAgIGlmIHJlbW90ZV92ZXJzaW9uX3N0ciA9PSBsb2NhbF92ZXJzaW9uX3N0cjoKICAgICAgICAgICAgICAgIHJldHVybgogICAgCiAgICAgICAgaWYgZ2V0YXR0cihzZWxmLCAnZXhpdGluZ19hcHAnLCBGYWxzZSkgb3IgZ3VpX3N1cHBvcnQuaXNfYXBwX2V4aXRpbmcoKToKICAgICAgICAgICAgcmV0dXJuCgogICAgICAgIGxvZ2dpbmcuaW5mbyhmIk5ld2VyIHZlcnNpb24gZGV0ZWN0ZWQ6IHtyZW1vdGVfdmVyc2lvbl9zdHJ9IikKICAgICAgICAKICAgICAgICB1cmwgPSAiaHR0cHM6Ly9hcGkuZ2l0aHViLmNvbS9yZXBvcy9hbGJlcnQtbXVlbGxlci9PcGVuQ29yZS1MZWdhY3ktUGF0Y2hlci1UMi9yZWxlYXNlcy9sYXRlc3QiCiAgICAgICAgY2hhbmdlbG9nID0gIiIiIyMgVW5hYmxlIHRvIGZldGNoIGNoYW5nZWxvZ1xuXG5QbGVhc2UgY2hlY2sgdGhlIEdpdGh1YiBwYWdlIGZvciBtb3JlIGluZm9ybWF0aW9uLiIiIgogICAgICAgIHRyeToKICAgICAgICAgICAgcmVzcG9uc2UgPSByZXF1ZXN0cy5nZXQodXJsLCBoZWFkZXJzPXsiVXNlci1BZ2VudCI6ICJPcGVuQ29yZS1MZWdhY3ktUGF0Y2hlci1UMiJ9LCB0aW1lb3V0PTEwKS5qc29uKCkKICAgICAgICAgICAgaWYgImJvZHkiIGluIHJlc3BvbnNlOgogICAgICAgICAgICAgICAgY2hhbmdlbG9nID0gcmVzcG9uc2VbImJvZHkiXS5zcGxpdCgiIyMgQXNzZXQgSW5mb3JtYXRpb24iKVswXQogICAgICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICAgICAgbG9nZ2luZy5lcnJvcihmIkZhaWxlZCB0byBmZXRjaCBjaGFuZ2Vsb2cgdGV4dDoge2V9IikKICAgICAgICAgICAgbG9nZ2luZy5lcnJvcihmIkVzIGhhdCBmZWhsZ2VzY2hsYWdlbiwgZGVuIENoYW5nZWxvZy1UZXh0IGFuenV6ZWlnZW46IHtlfSIpCgogICAgICAgIGlmIG5vdCBnZXRhdHRyKHNlbGYsICdleGl0aW5nX2FwcCcsIEZhbHNlKSBhbmQgbm90IGd1aV9zdXBwb3J0LmlzX2FwcF9leGl0aW5nKCk6CiAgICAgICAgICAgIHd4LkNhbGxBZnRlcihzZWxmLm9uX3VwZGF0ZSwgdXBkYXRlX2RpY3RbIkxpbmsiXSwgcmVtb3RlX3ZlcnNpb25fc3RyLCB1cGRhdGVfZGljdFsiR2l0aHViIExpbmsiXSwgY2hhbmdlbG9nKQogICAgICAgIAogICAgZGVmIG9uX3VwZGF0ZShzZWxmLCBvY2xwX3VybDogc3RyLCBvY2xwX3ZlcnNpb246IHN0ciwgb2NscF9naXRodWJfdXJs OiBzdHIsIGNoYW5nZWxvZ190ZXh0OiBzdHIpOgogICAgICAgIGlmIG5vdCBzZWxmIG9yIGd1aV9zdXBwb3J0LmlzX2FwcF9leGl0aW5nKCk6CiAgICAgICAgICAgIHJldHVybgoKICAgICAgICBJRF9HSVRIVUIgPSB3eC5OZXdJZFJlZigpIGlmIGhhc2F0dHIod3gsICJOZXdJZFJlZiIpIGVsc2Ugd3guTmV3SWQoKQogICAgICAgIElEX1VQREFURSA9IHd4Lk5ld0lkUmVmKCkgaWYgaGFzYXR0cih3eCwgIk5ld0lkUmVmIikgZWxzZSB3eC5OZXdJZCgpCgogICAgICAgIGh0bWxfbWFya2Rvd24gPSBtYXJrZG93bjIubWFya2Rvd24oY2hhbmdlbG9nX3RleHQsIGV4dHJhcz1bInRhYmxlcyJdKQogICAgICAgIGh0bWxfY3NzID0gY3NzX2RhdGEudXBkYXRlcl9jc3MKICAgICAgICAKICAgICAgICAjIFBhcmVudCBhdWYgc2VsZiBnZXNldHp0IHp1ciBzYXViZXJlbiBTcGVpY2hlcmhpZXJhcmNoaWUKICAgICAgICBmcmFtZSA9IHd4LkRpYWxvZyhzZWxmLCAtMSwgdGl0bGU9IiIsIHNpemU9KDY1MCwgNTAwKSkKICAgICAgICBmcmFtZS5TZXRNaW5TaXplKCg2NTAsIDUwMCkpCiAgICAgICAgZnJhbWUuU2V0V2luZG93U3R5bGUod3guU1RBWV9PTl9UT1ApCiAgICAgICAgcGFuZWwgPSB3eC5QYW5lbChmcmFtZSkKICAgICAgICAKICAgICAgICBzZWxmLnRpdGxlX3RleHQgPSB3eC5TdGF0aWNUZXh0KHBhbmVsLCBsYWJlbD1mIkEgbmV3IHZlcnNpb24gb2Yge3NlbGYuY29uc3RhbnRzLnBhdGNoZXJfbmFtZX0gaXMgYXZhaWxhYmxlISIpCiAgICAgICAgc2VsZi5kZXNjcmlwdGlvbiA9IHd4LlN0YXRpY1RleHQocGFuZWwsIGxhYmVsPWYie3NlbGYuY29uc3RhbnRzLnBhdGNoZXJfbmFtZX0ge29jbHBfdmVyc2lvbn0gaXMgbm93IGF2YWlsYWJsZSAtIFlvdSBoYXZlIHtzZWxmLmNvbnN0YW50cy5wYXRjaGVyX3ZlcnNpb25fbGFiZWx9LiBXb3VsZCB5b3UgbGlrZSB0byB1cGRhdGU/IikKICAgICAgICBzZWxmLnRpdGxlX3RleHQuU2V0Rm9udChndWlfc3VwcG9ydC5mb250X2ZhY3RvcnkoMTksIHd4LkZPTlRXRUlHSFRfQk9MRCkpCiAgICAgICAgc2VsZi5kZXNjcmlwdGlvbi5TZXRGb250KGd1aV9zdXBwb3J0LmZvbnRfZmFjdG9yeSgxMywgd3guRk9OVFdFSUdIVF9OT1JNQUwpKQogICAgICAgIAogICAgICAgIHNlbGYud2ViX3ZpZXcgPSB3eC5odG1sMi5XZWJWaWV3Lk5ldyhwYW5lbCwgc3R5bGU9d3guQk9SREVSX1NVTktFTikKICAgICAgICBodG1sX2NvZGUgPSBmJycnCjxodG1sPgogICAgPGhlYWQ+CiAgICAgICAgPHN0eWxlPgogICAgICAgICAgICB7aHRtbF9jc3N9CiAgICAgICAgPC9zdHlsZT4KICAgIDwvaGVhZD4KICAgIDxib2R5IGNsYXNzPSJtYXJrZG93bi1ib2R5Ij4KICAgICAgICB7aHRtbF9tYXJrZG93bi5yZXBsYWNlKCI8YSBocmVmPSIsICI8YSB0YXJnZXQ9J19ibGFuaycgaHJlZj0iKX0KICAgIDwvYm9keT4KPC9odG1sPgonJycKICAgICAgICBzZWxmLndlYl92aWV3LlNldFBhZ2UoaHRtbF9jb2RlLCAiIikKICAgICAgICBzZWxmLndlYl92aWV3LkJpbmQod3guaHRtbDIuRVZUX1dFQlZJRVdfTkVXV0lORE9XLCBzZWxmLl9vbldlYnZpZXdOYXYpCiAgICAgICAgc2VsZi53ZWJfdmlldy5FbmFibGVDb250ZXh0TWVudShGYWxzZSkKICAgICAgICAKICAgICAgICBzZWxmLmNsb3NlX2J1dHRvbiA9IHd4LkJ1dHRvbihwYW5lbCwgbGFiZWw9IkRpc21pc3MiKQogICAgICAgIHNlbGYuY2xvc2VfYnV0dG9uLkJpbmQod3guRVZUX0JVVFRPTiwgbGFtYmRhIGV2ZW50OiBmcmFtZS5FbmRNb2RhbCh3eC5JRF9DQU5DRUwpKQogICAgICAgIHNlbGYudmlld19idXR0b24gPSB3eC5CdXR0b24ocGFuZWwsIElEX0dJVEhVQiwgbGFiZWw9IlZpZXcgb24gR2l0SHViIikKICAgICAgICBzZWxmLnZpZXdfYnV0dG9uLkJpbmQod3guRVZUX0JVVFRPTiwgbGFtYmRhIGV2ZW50OiBmcmFtZS5FbmRNb2RhbChJRF9HSVRIVUIpKQogICAgICAgIHNlbGYuaW5zdGFsbF9idXR0b24gPSB3eC5CdXR0b24ocGFuZWwsIGxhYmVsPSJEb3dubG9hZCBhbmQgSW5zdGFsbCIpCiAgICAgICAgc2VsZi5pbnN0YWxsX2J1dHRvbi5CaW5kKHd4LkVWVF9CVVRUT04sIGxhbWJkYSBldmVudDogZnJhbWUuRW5kTW9kYWwoSURfVVBEQVRFKSkKICAgICAgICBzZWxmLmluc3RhbGxfYnV0dG9uLlNldERlZmF1bHQoKQoKICAgICAgICBidXR0b25zaXplciA9IHd4LkJveFNpemVyKHd4LkhPUklaT05UQUwpCiAgICAgICAgYnV0dG9uc2l6ZXIuQWRkKHNlbGYuY2xvc2VfYnV0dG9uLCAwLCB3eC5BTElHTl9DRU5UUkUgfCB3eC5SSUdIVCwgNSkKICAgICAgICBidXR0b25zaXplci5BZGQoc2VsZi52aWV3X2J1dHRvbiwgMCwgd3guQUxJR05fQ0VOVFJFIHwgd3guTEVGVHx3eC5SSUdIVCwgNSkKICAgICAgICBidXR0b25zaXplci5BZGQoc2VsZi5pbnN0YWxsX2J1dHRvbiwgMCwgd3guQUxJR05fQ0VOVFJFIHwgd3guTEVGVCwgNSkKICAgICAgICAKICAgICAgICBzaXplciA9IHd4LkJveFNpemVyKHd4LlZFUlRJQ0FMKQogICAgICAgIHNpemVyLkFkZChzZWxmLnRpdGxlX3RleHQsIDAsIHd4LkFMSUdOX0NFTlRSRSB8IHd4LlRPUCwgMjApCiAgICAgICAgc2l6ZXIuQWRkKHNlbGYuZGVzY3JpcHRpb24sIDAsIHd4LkFMSUdOX0NFTlRSRSB8IHd4LkJPVFRPTSwgMjApCiAgICAgICAgc2l6ZXIuQWRkKHNlbGYud2ViX3ZpZXcsIDEsIHd4LkVYUEFORCB8IHd4LkxFRlR8d3guUklHSFQsIDEwKQogICAgICAgIHNpemVyLkFkZChidXR0b25zaXplciwgMCwgd3guQUxJR05fUklHSFQgfCB3eC5BTEwsIDIwKQogICAgICAgIHBhbmVsLlNldFNpemVyKHNpemVyKQogICAgICAgIGZyYW1lLkNlbnRyZSgpCgogICAgICAgIHJlc3VsdCA9IGZyYW1lLlNob3dNb2RhbCgpCgogICAgICAgIGlmIHJlc3VsdCA9PSBJRF9HSVRIVUI6CiAgICAgICAgICAgIHdlYmJyb3dzZXIub3BlbihvY2xwX2dpdGh1Yl91cmwpCiAgICAgICAgZWxpZiByZXN1bHQgPT0gSURfVVBEQVRFOgogICAgICAgICAgICBndWlfdXBkYXRlLlVwZGF0ZUZyYW1lKAogICAgICAgICAgICAgICAgcGFyZW50PXNlbGYsCiAgICAgICAgICAgICAgICB0aXRsZT1zZWxmLnRpdGxlLAogICAgICAgICAgICAgICAgZ2xvYmFsX2NvbnN0YW50cz1zZWxmLmNvbnN0YW50cywKICAgICAgICAgICAgICAgIHNjcmVlbl9sb2NhdGlvbj1zZWxmLkdldFBvc2l0aW9uKCksCiAgICAgICAgICAgICAgICB1cmw9b2NscF91cmwsCiAgICAgICAgICAgICAgICB2ZXJzaW9uX2xhYmVsPW9jbHBfdmVyc2lvbgogICAgICAgICAgICApCgogICAgICAgIGZyYW1lLkRlc3Ryb3koKQoKICAgIGRlZiBfb25XZWJ2aWV3TmF2KHNlbGYsIGV2ZW50KToKICAgICAgICB1cmwgPSBldmVudC5HZXRVUkwoKQogICAgICAgIHdlYmJyb3dzZXIub3Blbih1cmwpCiAgICAKICAgIGRlZiBvbl9nZW1pbmlfaGVscChzZWxmLCBldmVudDogd3guRXZlbnQpOgogICAgICAgIGltcG9ydCB3ZWJ2aWV3ICMgSW1wb3J0IGhlcmUgdG8gYXZvaWQgc2xvd2luZyBkb3duIE9DTFAgc3RhcnR1cAogICAgICAgIAogICAgICAgIGxvZ2dpbmcuaW5mbygiLSBMYXVuY2hpbmcgR2VtaW5pIEFJIEFzc2lzdGFudCAocHl3ZWJ2aWV3KSIpCiAgICAgICAgCiAgICAgICAgIyBDcmVhdGUgYSBzbGVlaywgZmxvYXRpbmcgd2luZG93CiAgICAgICAgd2luZG93ID0gd2Vidmlldy5jcmVhdGVfd2luZG93KAogICAgICAgICAgICB0aXRsZT0nR2VtaW5pIEFJIEFzc2lzdGFudCcsCiAgICAgICAgICAgIHVybD0naHR0cHM6Ly9nZW1pbmkuZ29vZ2xlLmNvbScsCiAgICAgICAgICAgIHdpZHRoPTUwMCwKICAgICAgICAgICAgaGVpZ2h0PTg1MCwKICAgICAgICAgICAgY29uZmlybV9jbG9zZT1GYWxzZSwKICAgICAgICAgICAgYmFja2dyb3VuZF9jb2xvcj0nI2ZmZmZmZicKICAgICAgICApCiAgICAgICAgCiAgICAgICAgIyBzdGFydCgpIGlzIGJsb2NraW5nIGJ5IGRlZmF1bHQsIGJ1dCBpbiBhIHd4UHl0aG9uIGFwcCwgCiAgICAgICAgIyBpdCB1c3VhbGx5IG5lZWRzIHRvIHJ1biBpbiBpdHMgb3duIGZsb3cuCiAgICAgICAgd2Vidmlldy5zdGFydCgpCgogICAgZGVmIG9uX2J1aWxkX2FuZF9pbnN0YWxsKHNlbGYsIGV2ZW50OiB3eC5FdmVudCA9IE5vbmUpOgogICAgICAgIHRyeToKICAgICAgICAgICAgc2VsZi5IaWRlKCkKICAgICAgICAgICAgZ3VpX2J1aWxkLkJ1aWxkRnJhbWUocGFyZW50PU5vbmUsIHRpdGxlPXNlbGYudGl0bGUsIGdsb2JhbF9jb25zdGFudHM9c2VsZi5jb25zdGFudHMsIHNjcmVlbl9sb2NhdGlvbj1zZWxmLkdldFBvc2l0aW9uKCkpCiAgICAgICAgICAgIHd4LkNhbGxBZnRlcihzZWxmLkRlc3Ryb3kpCiAgICAgICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgICAgICBsb2dnaW5nLmVycm9yKGYiV2UgZmFpbGVkIHRvIG9wZW4gdXAgQnVpbGQgYW5kIEluc3RhbGwgT3BlbkNvcmU6IHtlfSIpCiAgICAgICAgICAgIGxvZ2dpbmcuZXhjZXB0aW9uKCJTdGFjayBUcmFjZToiKQoKICAgIGRlZiBvbl9wb3N0X2luc3RhbGxfcm9vdF9wYXRjaChzZWxmLCBldmVudDogd3guRXZlbnQgPSBOb25lKTogICAgCiAgICAgICAgdHJ5OgogICAgICAgICAgICBndWlfc3lzX3BhdGNoX2Rpc3BsYXkuU3lzUGF0Y2hEaXNwbGF5RnJhbWUocGFyZW50PXNlbGYsIHRpdGxlPXNlbGYudGl0bGUsIGdsb2JhbF9jb25zdGFudHM9c2VsZi5jb25zdGFudHMsIHNjcmVlbl9sb2NhdGlvbj1zZWxmLkdldFBvc2l0aW9uKCkpCiAgICAgICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgICAgICBsb2dnaW5nLmVycm9yKGYiRmFpbGVkIHRvIG9wZW4gSW5zdGFsbCBkcml2ZXJzIGFuZCBwYXRjaGVzOiB7ZX0iKQogICAgICAgICAgICBsb2dnaW5nLmV4Y2VwdGlvbigiU3RhY2sgVHJhY2U6IikKCiAgICBkZWYgb25fY3JlYXRlX21hY29zX2luc3RhbGxlcihzZWxmLCBldmVudDogd3guRXZlbnQgPSBOb25lKToKICAgICAgICB0cnk6CiAgICAgICAgICAgIGd1aV9tYWNvc19pbnN0YWxsZXJfZG93bmxvYWQubWFjT1NJbnN0YWxsZXJEb3dubG9hZEZyYW1lKHBhcmVudD1zZWxmLCB0aXRsZT1zZWxmLnRpdGxlLCBnbG9iYWxfY29uc3RhbnRzPXNlbGYuY29uc3RhbnRzLCBzY3JlZW5fbG9jYXRpb249c2VsZi5HZXRQb3NpdGlvbigpKQogICAgICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICAgICAgbG9nZ2luZy5lcnJvcihmIldlIGZhaWxlZCB0byBvcGVuIHVwIERvd25sb2FkIG1hY09TOiB7ZX0iKQogICAgICAgICAgICBsb2dnaW5nLmV4Y2VwdGlvbigiU3RhY2sgVHJhY2U6IikKCiAgICBkZWYgb25fc2V0dGluZ3Moc2VsZiwgZXZlbnQ6IHd4LkV2ZW50ID0gTm9uZSk6CiAgICAgICAgdHJ5OgogICAgICAgICAgICBndWlfc2V0dGluZ3MuU2V0dGluZ3NGcmFtZShwYXJlbnQ9c2VsZiwgdGl0bGU9c2VsZi50aXRsZSwgZ2xvYmFsX2NvbnN0YW50cz1zZWxmLmNvbnN0YW50cywgc2NyZWVuX2xvY2F0aW9uPXNlbGYuR2V0UG9zaXRpb24oKSkKICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIGxvZ2dpbmcuZXJyb3IoZiJXZSBmYWlsZWQgdG8gb3BlbiB1cCBTZXR0aW5nczoge2V9IikKICAgICAgICAgICAgbG9nZ2luZy5leGNlcHRpb24oIlN0YWNrIFRyYWNlOiIpCgogICAgZGVmIG9uX2hlbHAoc2VsZiwgZXZlbnQ6IHd4LkV2ZW50ID0gTm9uZSk6CiAgICAgICAgdHJ5OgogICAgICAgICAgICBndWlfaGVscC5IZWxwRnJhbWUocGFyZW50PXNlbGYsIHRpdGxlPXNlbGYudGl0bGUsIGdsb2JhbF9jb25zdGFudHM9c2VsZi5jb25zdGFudHMsIHNjcmVlbl9sb2NhdGlvbj1zZWxmLkdldFBvc2l0aW9uKCkpCiAgICAgICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgICAgICBsb2dnaW5nLmVycm9yKGYiV2UgZmFpbGVkIHRvIG9wZW4gdXAgSGVscDoge2V9IikKICAgICAgICAgICAgbG9nZ2luZy5leGNlcHRpb24oIlN0YWNrIFRyYWNlOiIpCg==
+"""
+gui_main_menu.py: Generate GUI for main menu
+"""
+
+import wx
+import wx.html2
+
+import sys
+import logging
+import subprocess
+import requests
+import markdown2
+import threading
+import webbrowser
+import shutil
+import os
+from pathlib import Path
+from packaging import version
+
+from .. import constants
+
+from ..support import (
+    global_settings,
+    updates
+)
+from ..datasets import (
+    os_data,
+    css_data
+)
+from ..wx_gui import (
+    gui_build,
+    gui_macos_installer_download,
+    gui_support,
+    gui_help,
+    gui_settings,
+    gui_sys_patch_display,
+    gui_update,
+)
+
+class MainFrame(wx.Frame):
+    def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None):
+        logging.info("Initializing Main Menu Frame")
+        super(MainFrame, self).__init__(parent, title=title, size=(700, 800), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
+        gui_support.GenerateMenubar(self, global_constants).generate()
+
+        self.constants: constants.Constants = global_constants
+        self.title: str = title
+
+        self.model_label: wx.StaticText = None
+        self.build_button: wx.Button = None
+        
+        # FIX: Absicherung gegen Thread-Races & Verwaiste Fenster-Referenzen
+        self.exiting_app: bool = False  
+        self.active_gemini_frame: wx.Frame = None
+
+        self.constants.update_stage = gui_support.AutoUpdateStages.INACTIVE
+
+        self._generate_elements()
+
+        self.Centre()
+        self.Show()
+
+        self._preflight_checks()
+
+    def _generate_elements(self) -> None:
+        """
+        Generate UI elements for the main menu
+        """
+        # Logo
+        logo = wx.StaticBitmap(self, bitmap=wx.Bitmap(str(self.constants.icns_resource_path / "OC-Patcher.icns"), wx.BITMAP_TYPE_ICON), pos=(-1, 0), size=(128, 128))
+        logo.Centre(wx.HORIZONTAL)
+
+        # Title label
+        title_label = wx.StaticText(self, label=self.constants.patcher_name, pos=(-1, 128))
+        title_label.SetFont(gui_support.font_factory(25, wx.FONTWEIGHT_BOLD))
+        title_label.Centre(wx.HORIZONTAL)
+
+        version_label = wx.StaticText(self, label=f"Version {self.constants.patcher_version_label}", pos=(-1, title_label.GetPosition()[1] + 32))
+        version_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+        version_label.Centre(wx.HORIZONTAL)
+        version_label.SetForegroundColour(wx.Colour(128, 128, 128))
+
+        # Model label
+        model_label = wx.StaticText(self, label=f"Model: {self.constants.custom_model or self.constants.computer.real_model}", pos=(-1, version_label.GetPosition()[1] + 30))
+        model_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+        model_label.Centre(wx.HORIZONTAL)
+        self.model_label = model_label
+
+        # Main 4 Feature Buttons
+        menu_buttons = {
+            "Build and Install OpenCore": {
+                "function": self.on_build_and_install,
+                "description": ["Prepares provided drive to be able", "to boot unsupported OSes.", "Use on installers or internal drives."],
+                "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+            },
+            "Create macOS Installer": {
+                "function": self.on_create_macos_installer,
+                "description": ["Download and flash a macOS", "Installer for your system."],
+                "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
+            },
+            "Install drivers and patches": {
+                "function": self.on_post_install_root_patch,
+                "description": ["Installs hardware drivers and", "patches for your system after", "installing a new version of macOS."],
+                "icon": str(self.constants.icns_resource_path / "OC-Patch.icns"),
+            },
+            "Support": {
+                "function": self.on_help,
+                "description": ["Resources for OpenCore Legacy", "Patcher T2."],
+                "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
+            },
+        }
+
+        button_x = 30
+        button_y = model_label.GetPosition()[1] + 30
+        rollover = 2
+        index = 0
+        max_height = 0
+
+        for button_name, button_function in menu_buttons.items():
+            if "icon" in button_function:
+                icon = wx.StaticBitmap(self, bitmap=wx.Bitmap(button_function["icon"], wx.BITMAP_TYPE_ICON), pos=(button_x - 10, button_y), size=(64, 64))
+                if button_name == "Build and Install OpenCore":
+                    icon.SetSize((70, 70))
+            
+            button = wx.Button(self, label=button_name, pos=(button_x + 70, button_y), size=(180, 30))
+            button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+            button.Bind(wx.EVT_BUTTON, lambda event, f=button_function["function"]: f(event))
+
+            if button_name == "Build and Install OpenCore":
+                self.build_button = button
+                if not gui_support.CheckProperties(self.constants).host_can_build():
+                    button.Disable()
+                    button.SetToolTip("Building OpenCore is not supported on Hackintoshes or virtual machines. For installing OpenCore on Hackintoshes, follow Dortania's guide here: https://dortania.github.io/OpenCore-Install-Guide/")
+
+            description_label = wx.StaticText(self, label='\n'.join(button_function["description"]), pos=(button_x + 75, button.GetPosition()[1] + 33))
+            description_label.SetFont(gui_support.font_factory(10, wx.FONTWEIGHT_NORMAL))
+
+            # Maintain spacing
+            row_height = 85
+            button_y += row_height
+            
+            if button_y > max_height:
+                max_height = button_y
+
+            index += 1
+            if index == rollover:
+                button_x = 320
+                button_y = model_label.GetPosition()[1] + 30
+
+        # --- FOOTER BUTTONS (Settings & Gemini) ---
+        total_footer_width = 120 + 10 + 150 
+        start_x = (self.GetSize().width - total_footer_width) // 2
+        footer_y = max_height + 10
+
+        settings_btn = wx.Button(self, label="⚙️ Settings", pos=(start_x, footer_y), size=(120, 30))
+        settings_btn.Bind(wx.EVT_BUTTON, self.on_settings)
+
+        gemini_btn = wx.Button(self, label="✨ Ask Gemini", pos=(start_x + 130, footer_y), size=(150, 30))
+        gemini_btn.Bind(wx.EVT_BUTTON, self.on_gemini_help)
+
+        gemini_desc = wx.StaticText(self, label="AI Troubleshooting and\nInstallation help.", pos=(start_x + 135, footer_y + 35))
+        gemini_desc.SetFont(gui_support.font_factory(10, wx.FONTWEIGHT_NORMAL))
+
+        # --- COPYRIGHT ---
+        copy_label = wx.StaticText(self, label=self.constants.copyright_date, pos=(-1, gemini_desc.GetPosition()[1] + 45))
+        copy_label.SetFont(gui_support.font_factory(10, wx.FONTWEIGHT_NORMAL))
+        copy_label.Centre(wx.HORIZONTAL)
+
+        # Final Window Size adjustment
+        self.SetSize((-1, copy_label.GetPosition()[1] + 60))
+
+    def _preflight_checks(self):
+        try:
+            if self.constants.computer.build_model is None:
+                logging.info("No build model detected. Defaulting to current host hardware.")
+                self.constants.computer.build_model = self.constants.computer.real_model
+            
+            real_model = str(self.constants.computer.real_model).strip()
+            build_model = str(self.constants.computer.build_model).strip() if self.constants.computer.build_model else None
+            
+            print(f"DEBUG: Real: '{real_model}' | Build: '{build_model}'")
+
+            if (
+                build_model is not None and
+                build_model != real_model and
+                self.constants.host_is_hackintosh is False
+            ):
+                pop_up = wx.MessageDialog(
+                    self,
+                    f"We found you are currently booting OpenCore built for a different unit: {build_model}\n\nPlease Build and Install a new OpenCore config.",
+                    "Unsupported Configuration Detected!",
+                    style=wx.OK | wx.ICON_EXCLAMATION
+                )
+                pop_up.ShowModal()
+                self.on_build_and_install()
+                return
+
+        except Exception as e:
+            print(f"DEBUG: Preflight error: {e}")
+
+        self.update_thread = threading.Thread(target=self._check_for_updates)
+        self.update_thread.daemon = True  
+        self.update_thread.start()
+
+        if "--update_installed" in sys.argv and self.constants.has_checked_updates is False and gui_support.CheckProperties(self.constants).host_can_build():
+            self.constants.has_checked_updates = True
+            pop_up = wx.MessageDialog(
+                self,
+                f"{self.constants.patcher_name} has been updated to the latest version: {self.constants.patcher_version_label}\n\nWould you like to update OpenCore and your root volume patches?",
+                "Update successful!",
+                style=wx.YES_NO | wx.YES_DEFAULT | wx.ICON_INFORMATION
+            )
+            pop_up.ShowModal()
+
+            if pop_up.GetReturnCode() != wx.ID_YES:
+                logging.info("Skipping OpenCore and root volume patch update...")
+                return
+
+            logging.info("Updating OpenCore and root volume patches...")
+            self.constants.update_stage = gui_support.AutoUpdateStages.CHECKING
+            self.Hide()
+            pos = self.GetPosition()
+            gui_build.BuildFrame(
+                parent=None,
+                title=self.title,
+                global_constants=self.constants,
+                screen_location=pos
+            )
+            wx.CallAfter(self.Destroy)
+
+    def _check_for_updates(self):
+        if self.constants.has_checked_updates is True:
+            return
+    
+        ignore_updates = global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates")
+        if ignore_updates is True:
+            self.constants.ignore_updates = True
+            return
+    
+        self.constants.ignore_updates = False
+        self.constants.has_checked_updates = True
+        
+        update_dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
+        if not update_dict:
+            return
+    
+        remote_version_str = update_dict["Version"]
+        local_version_str = self.constants.patcher_version
+    
+        try:
+            remote_v = version.parse(str(remote_version_str))
+            local_v = version.parse(local_version_str)
+    
+            if remote_v <= local_v:
+                logging.info(f"{self.constants.patcher_name} is up to date. (Local: {local_v} >= Remote: {remote_v})")
+                return
+    
+        except version.InvalidVersion:
+            if remote_version_str == local_version_str:
+                return
+    
+        if getattr(self, 'exiting_app', False) or gui_support.is_app_exiting():
+            return
+
+        logging.info(f"Newer version detected: {remote_version_str}")
+        
+        url = "https://api.github.com/repos/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/latest"
+        changelog = """## Unable to fetch changelog\n\nPlease check the Github page for more information."""
+        try:
+            response = requests.get(url, headers={"User-Agent": "OpenCore-Legacy-Patcher-T2"}, timeout=10).json()
+            if "body" in response:
+                changelog = response["body"].split("## Asset Information")[0]
+        except Exception as e:
+            logging.error(f"Failed to fetch changelog text: {e}")
+            logging.error(f"Es hat fehlgeschlagen, den Changelog-Text anzuzeigen: {e}")
+
+        if not getattr(self, 'exiting_app', False) and not gui_support.is_app_exiting():
+            wx.CallAfter(self.on_update, update_dict["Link"], remote_version_str, update_dict["Github Link"], changelog)
+        
+    def on_update(self, oclp_url: str, oclp_version: str, oclp_github_url: str, changelog_text: str):
+        if not self or gui_support.is_app_exiting():
+            return
+
+        ID_GITHUB = wx.NewIdRef() if hasattr(wx, "NewIdRef") else wx.NewId()
+        ID_UPDATE = wx.NewIdRef() if hasattr(wx, "NewIdRef") else wx.NewId()
+
+        html_markdown = markdown2.markdown(changelog_text, extras=["tables"])
+        html_css = css_data.updater_css
+        
+        # Parent auf self gesetzt zur sauberen Speicherhierarchie
+        frame = wx.Dialog(self, -1, title="", size=(650, 500))
+        frame.SetMinSize((650, 500))
+        frame.SetWindowStyle(wx.STAY_ON_TOP)
+        panel = wx.Panel(frame)
+        
+        self.title_text = wx.StaticText(panel, label=f"A new version of {self.constants.patcher_name} is available!")
+        self.description = wx.StaticText(panel, label=f"{self.constants.patcher_name} {oclp_version} is now available - You have {self.constants.patcher_version_label}. Would you like to update?")
+        self.title_text.SetFont(gui_support.font_factory(19, wx.FONTWEIGHT_BOLD))
+        self.description.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+        
+        self.web_view = wx.html2.WebView.New(panel, style=wx.BORDER_SUNKEN)
+        html_code = f'''
+<html>
+    <head>
+        <style>
+            {html_css}
+        </style>
+    </head>
+    <body class="markdown-body">
+        {html_markdown.replace("<a href=", "<a target='_blank' href=")}
+    </body>
+</html>
+'''
+        self.web_view.SetPage(html_code, "")
+        self.web_view.Bind(wx.html2.EVT_WEBVIEW_NEWWINDOW, self._onWebviewNav)
+        self.web_view.EnableContextMenu(False)
+        
+        self.close_button = wx.Button(panel, label="Dismiss")
+        self.close_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(wx.ID_CANCEL))
+        self.view_button = wx.Button(panel, ID_GITHUB, label="View on GitHub")
+        self.view_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(ID_GITHUB))
+        self.install_button = wx.Button(panel, label="Download and Install")
+        self.install_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(ID_UPDATE))
+        self.install_button.SetDefault()
+
+        buttonsizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonsizer.Add(self.close_button, 0, wx.ALIGN_CENTRE | wx.RIGHT, 5)
+        buttonsizer.Add(self.view_button, 0, wx.ALIGN_CENTRE | wx.LEFT|wx.RIGHT, 5)
+        buttonsizer.Add(self.install_button, 0, wx.ALIGN_CENTRE | wx.LEFT, 5)
+        
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.title_text, 0, wx.ALIGN_CENTRE | wx.TOP, 20)
+        sizer.Add(self.description, 0, wx.ALIGN_CENTRE | wx.BOTTOM, 20)
+        sizer.Add(self.web_view, 1, wx.EXPAND | wx.LEFT|wx.RIGHT, 10)
+        sizer.Add(buttonsizer, 0, wx.ALIGN_RIGHT | wx.ALL, 20)
+        panel.SetSizer(sizer)
+        frame.Centre()
+
+        result = frame.ShowModal()
+
+        if result == ID_GITHUB:
+            webbrowser.open(oclp_github_url)
+        elif result == ID_UPDATE:
+            gui_update.UpdateFrame(
+                parent=self,
+                title=self.title,
+                global_constants=self.constants,
+                screen_location=self.GetPosition(),
+                url=oclp_url,
+                version_label=oclp_version
+            )
+
+        frame.Destroy()
+
+    def _onWebviewNav(self, event):
+        url = event.GetURL()
+        webbrowser.open(url)
+    
+    def on_gemini_help(self, event: wx.Event):
+        import webview # Import here to avoid slowing down OCLP startup
+        
+        logging.info("- Launching Gemini AI Assistant (pywebview)")
+        
+        # Create a sleek, floating window
+        window = webview.create_window(
+            title='Gemini AI Assistant',
+            url='https://gemini.google.com',
+            width=500,
+            height=850,
+            confirm_close=False,
+            background_color='#ffffff'
+        )
+        
+        # start() is blocking by default, but in a wxPython app, 
+        # it usually needs to run in its own flow.
+        webview.start()
+
+    def on_build_and_install(self, event: wx.Event = None):
+        try:
+            self.Hide()
+            gui_build.BuildFrame(parent=None, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+            wx.CallAfter(self.Destroy)
+        except Exception as e:
+            logging.error(f"We failed to open up Build and Install OpenCore: {e}")
+            logging.exception("Stack Trace:")
+
+    def on_post_install_root_patch(self, event: wx.Event = None):    
+        try:
+            gui_sys_patch_display.SysPatchDisplayFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+        except Exception as e:
+            logging.error(f"Failed to open Install drivers and patches: {e}")
+            logging.exception("Stack Trace:")
+
+    def on_create_macos_installer(self, event: wx.Event = None):
+        try:
+            gui_macos_installer_download.macOSInstallerDownloadFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+        except Exception as e:
+            logging.error(f"We failed to open up Download macOS: {e}")
+            logging.exception("Stack Trace:")
+
+    def on_settings(self, event: wx.Event = None):
+        try:
+            gui_settings.SettingsFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+        except Exception as e:
+            logging.error(f"We failed to open up Settings: {e}")
+            logging.exception("Stack Trace:")
+
+    def on_help(self, event: wx.Event = None):
+        try:
+            gui_help.HelpFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+        except Exception as e:
+            logging.error(f"We failed to open up Help: {e}")
+            logging.exception("Stack Trace:")
