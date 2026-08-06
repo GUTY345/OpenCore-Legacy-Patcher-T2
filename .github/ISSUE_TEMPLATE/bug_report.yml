@@ -81,7 +81,7 @@ body:
   - type: input
     id: target-macos
     attributes:
-      label: Target macOS version / macOS-Zielversion
+      label: Target macOS version (if it is about malicious forks, typosquatting sites or security vulnerabilities, write - instead) / macOS-Zielversion (falls es um Typpfehler-Webseiten, Typpfehler-Repository oder Sicherheitslücken handelt, schreiben Sie stattdessen ein - )
       placeholder: e.g. macOS 26.6 Tahoe / z.B macOS 26.6 Tahoe
     validations:
       required: true
