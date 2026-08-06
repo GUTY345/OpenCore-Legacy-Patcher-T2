@@ -28,7 +28,7 @@ class IntelIvyBridge(BaseHardware):
         """
         Display name for end users
         """
-        return f"{self.hardware_variant()}: Intel Ivy Bridge"
+        return f"{self._trans.get(self.hardware_variant(), self.hardware_variant())}: {self._trans.get('Intel Ivy Bridge', 'Intel Ivy Bridge')}"
 
 
     def present(self) -> bool:
@@ -46,7 +46,7 @@ class IntelIvyBridge(BaseHardware):
         """
         Dropped support with macOS 12, Monterey
         """
-        return self._xnu_major < os_data.monterey.value
+        return self._xnu_major < os_data.monterey.value or self._xnu_major >= os_data.tahoe.value
 
 
     def hardware_variant(self) -> HardwareVariant:
