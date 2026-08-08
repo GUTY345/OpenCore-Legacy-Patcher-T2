@@ -16,13 +16,11 @@ class LegacyMetal31001(BaseSharedPatchSet):
     def __init__(self, xnu_major: int, xnu_minor: int, marketing_version: str) -> None:
         super().__init__(xnu_major, xnu_minor, marketing_version)
 
-
     def _os_requires_patches(self) -> bool:
         """
         Check if the current OS requires
         """
         return self._xnu_major >= os_data.ventura.value
-
 
     def _patches_metal_31001_common(self) -> dict:
         """
