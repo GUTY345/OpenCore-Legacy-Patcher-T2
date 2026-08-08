@@ -26,6 +26,7 @@ A Python-based project revolving around [Acidanthera's OpenCorePkg](https://gith
 - [ ] GPU accelaration/WiFi - most T2 Macs will have GPU accelaration out of the box, and on certain T2 Macs, also WiFi
 
 Our goal of this project is to add support for T2 Macs so unsupported T2 Macs can boot into Tahoe. This project does run also on non-T2 Macs and we're committing to improve macOS 26 Tahoe compatability even on non-T2 Macs.
+For Broadwell GPUs, at this time there are no patches inside the PatcherSupportPkg for macOS 26 Tahoe, so anyone having these GPU series should avoid upgrading to macOS 26 Tahoe. Or another way is if you can write patches, to fork any of the PatcherSupportPkgs that support Tahoe and add patches for this GPU.
 
 Noteworthy features of OpenCore Legacy Patcher:
 
