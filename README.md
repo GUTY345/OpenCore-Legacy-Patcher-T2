@@ -25,7 +25,7 @@ A Python-based project revolving around [Acidanthera's OpenCorePkg](https://gith
 - [ ] Post install - issues with second stage
 - [ ] GPU accelaration/WiFi - most T2 Macs will have GPU accelaration out of the box, and on certain T2 Macs, also WiFi
 
-Our goal of this project is to add support for T2 Macs so unsupported T2 Macs can boot into Tahoe. This project does run also on non-T2 Macs and we're committing to improve macOS 26 Tahoe compatability even on non-T2 Macs. However, there is always a catch: in Tahoe, Apple removed AppleHDA.kext, so it requires on non-T2 Macs to install an audio driver seperately after root patching is done, like this: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/discussions/121 
+Our goal of this project is to add support for T2 Macs so unsupported T2 Macs can boot into Tahoe. This project does run also on non-T2 Macs and we're committing to improve macOS 26 Tahoe compatability even on non-T2 Macs.
 
 Noteworthy features of OpenCore Legacy Patcher:
 
