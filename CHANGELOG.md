@@ -64,7 +64,6 @@ NVIDIA:
 – Kepler-, Tesla-, Fermi-, Pascal- und Maxwell-GPUs unterstützen macOS 26 Tahoe nun einwandfrei.
 
 ## 4.0.0.16024 - 4.0.0 alpha 16.1.4
-@albert-mueller albert-mueller released this 12 hours ago 
 This release fixes a vulnerability where a deprecated constant was used:
 
  '# Generate environment data'
