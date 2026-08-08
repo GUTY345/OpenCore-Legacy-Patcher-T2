@@ -44,7 +44,7 @@ class IntelHaswell(BaseHardware):
         """
         Dropped support with macOS 13, Ventura
         """
-        return self._xnu_major < os_data.ventura.value or self._xnu_major >= os_data.tahoe.value
+        return self._xnu_major < os_data.ventura.value
 
 
     def hardware_variant(self) -> HardwareVariant:

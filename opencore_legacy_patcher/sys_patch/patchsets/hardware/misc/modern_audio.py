@@ -36,12 +36,17 @@ class ModernAudio(BaseHardware):
     def native_os(self) -> bool:
         """
         - Everything before macOS Tahoe 26 is considered native
+        - T2 Macs retain native (digital) audio routing under macOS Tahoe;
+          Apple only removed AppleHDA-based analog audio routing for non-T2 Macs
         """
         if self._xnu_major < os_data.tahoe.value:
             return True
 
         # Technically, macOS Tahoe Beta 1 is also native, so return True
         if self._os_build == "25A5279m":
+            return True
+
+        if self._computer.t2_chip is True:
             return True
 
         return False

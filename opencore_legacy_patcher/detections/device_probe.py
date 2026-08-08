@@ -20,7 +20,8 @@ from ..support import utilities
 
 from ..datasets import (
     pci_data,
-    usb_data
+    usb_data,
+    model_array
 )
 
 
@@ -591,6 +592,7 @@ class Computer:
     third_party_sata_ssd: Optional[bool] = False
     pcie_webcam: Optional[bool] = False
     t1_chip: Optional[bool] = False
+    t2_chip: Optional[bool] = False
     secure_boot_model: Optional[str] = None
     secure_boot_policy: Optional[int] = None
     oclp_sys_version: Optional[str] = None
@@ -617,6 +619,7 @@ class Computer:
         computer.bluetooth_probe()
         computer.topcase_probe()
         computer.t1_probe()
+        computer.t2_probe()
         computer.ambient_light_sensor_probe()
         computer.pcie_webcam_probe()
         computer.sata_disk_probe()
@@ -920,6 +923,16 @@ class Computer:
                     continue
                 self.t1_chip = True
                 break
+
+    def t2_probe(self):
+        """
+        Apple T2 Macs retain native (digital) audio routing under macOS Tahoe;
+        Apple only dropped AppleHDA-based analog audio routing for non-T2 Macs.
+        Determine T2 presence from the real (non-spoofed) Mac model so patches
+        such as Modern Audio can be skipped where Apple still provides support.
+        """
+        if self.real_model in model_array.T2Macs:
+            self.t2_chip = True
 
     def sata_disk_probe(self):
         sp_sata_data = plistlib.loads(subprocess.run(["/usr/sbin/system_profiler", "SPSerialATADataType", "-xml"], stdout=subprocess.PIPE).stdout.decode().strip().encode())
