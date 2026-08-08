@@ -21,7 +21,7 @@ from .hardware.graphics import (
     intel_haswell,
     intel_broadwell,
     intel_skylake,
-
+    
     nvidia_tesla,
     nvidia_kepler,
     nvidia_webdriver,
@@ -40,13 +40,19 @@ from .hardware.misc import (
     display_backlight,
     gmux,
     keyboard_backlight,
-    legacy_audio,
-    modern_audio,
     pcie_webcam,
     t1_security,
-    usb11,
+    cpu_missing_avx,
 )
-
+from .hardware.USB import (
+    modern_usb,
+    legacy_usb11,
+)
+from .hardware.audio import(
+    legacy_audio,
+    modern_audio,
+    voodoo_audio,
+)
 from ... import constants
 
 from ...datasets import sip_data
@@ -61,36 +67,38 @@ from ...detections import (
     amfi_detect,
     device_probe
 )
+from ...support import translate_language
 
+cons=constants.Constants()
+trans=translate_language.TranslateLanguage_sys_patch(cons).detect()
 
 class HardwarePatchsetSettings(StrEnum):
     """
     Enum for patch settings
     """
-    KERNEL_DEBUG_KIT_REQUIRED     = "Settings: Kernel Debug Kit required"
-    KERNEL_DEBUG_KIT_MISSING      = "Settings: Kernel Debug Kit missing"
-    METALLIB_SUPPORT_PKG_REQUIRED = "Settings: MetallibSupportPkg.pkg required"
-    METALLIB_SUPPORT_PKG_MISSING  = "Settings: MetallibSupportPkg.pkg missing"
+    KERNEL_DEBUG_KIT_REQUIRED     = trans["Settings: Kernel Debug Kit required"]
+    KERNEL_DEBUG_KIT_MISSING      = trans["Settings: Kernel Debug Kit missing"]
+    METALLIB_SUPPORT_PKG_REQUIRED = trans["Settings: MetallibSupportPkg.pkg required"]
+    METALLIB_SUPPORT_PKG_MISSING  = trans["Settings: MetallibSupportPkg.pkg missing"]
 
 
 class HardwarePatchsetValidation(StrEnum):
     """
     Enum for validation settings
     """
-    UNSUPPORTED_HOST_OS           = "Validation: Unsupported Host OS"
-    MISSING_NETWORK_CONNECTION    = "Validation: Missing Network Connection"
-    FILEVAULT_ENABLED             = "Validation: FileVault is enabled"
-    SIP_ENABLED                   = "Validation: System Integrity Protection is enabled"
-    SECURE_BOOT_MODEL_ENABLED     = "Validation: SecureBootModel is enabled"
-    AMFI_ENABLED                  = "Validation: AMFI is enabled"
-    WHATEVERGREEN_MISSING         = "Validation: WhateverGreen.kext missing"
-    FORCE_OPENGL_MISSING          = "Validation: Force OpenGL property missing"
-    FORCE_COMPAT_MISSING          = "Validation: Force compat property missing"
-    NVDA_DRV_MISSING              = "Validation: nvda_drv(_vrl) variable missing"
-    REPATCHING_NOT_SUPPORTED      = "Validation: Revert Root Patches before repatching"
-    ROOT_VOLUME_DIRTY             = "Validation: Root volume is modified"
-    PATCHING_NOT_POSSIBLE         = "Validation: Patching not possible"
-    UNPATCHING_NOT_POSSIBLE       = "Validation: Unpatching not possible"
+    UNSUPPORTED_HOST_OS           = trans["Validation: Unsupported Host OS"]
+    MISSING_NETWORK_CONNECTION    = trans["Validation: Missing Network Connection"]
+    FILEVAULT_ENABLED             = trans["Validation: FileVault is enabled"]
+    SIP_ENABLED                   = trans["Validation: System Integrity Protection is enabled"]
+    SECURE_BOOT_MODEL_ENABLED     = trans["Validation: SecureBootModel is enabled"]
+    AMFI_ENABLED                  = trans["Validation: AMFI is enabled"]
+    WHATEVERGREEN_MISSING         = trans["Validation: WhateverGreen.kext missing"]
+    FORCE_OPENGL_MISSING          = trans["Validation: Force OpenGL property missing"]
+    FORCE_COMPAT_MISSING          = trans["Validation: Force compat property missing"]
+    NVDA_DRV_MISSING              = trans["Validation: nvda_drv(_vrl) variable missing"]
+    PATCHING_NOT_POSSIBLE         = trans["Validation: Patching not possible"]
+    UNPATCHING_NOT_POSSIBLE       = trans["Validation: Unpatching not possible"]
+    REPATCHING_NOT_SUPPORTED      = trans["Validation: Root volume dirty"]
 
 
 class HardwarePatchsetDetection:
@@ -107,47 +115,36 @@ class HardwarePatchsetDetection:
         self._os_build   = os_build   or self._constants.detected_os_build
         self._os_version = os_version or self._constants.detected_os_version
         self._validation = validation
-
-        self._hardware_variants = []
-
-        if self._xnu_major < os_data.tahoe.value:
-            self._hardware_variants += [
-                intel_iron_lake.IntelIronLake,
-                intel_sandy_bridge.IntelSandyBridge,
-                intel_ivy_bridge.IntelIvyBridge,
-                intel_haswell.IntelHaswell,
-                intel_broadwell.IntelBroadwell,
-                intel_skylake.IntelSkylake,
-
-                nvidia_tesla.NvidiaTesla,
-                nvidia_kepler.NvidiaKepler,
-                nvidia_webdriver.NvidiaWebDriver,
-
-                amd_terascale_1.AMDTeraScale1,
-                amd_terascale_2.AMDTeraScale2,
-                amd_legacy_gcn.AMDLegacyGCN,
-                amd_polaris.AMDPolaris,
-                amd_vega.AMDVega,
-
-                legacy_wireless.LegacyWireless,
-            ]
-
-        self._hardware_variants.append(modern_wireless.ModernWireless)
-
-        if self._xnu_major < os_data.tahoe.value:
-            self._hardware_variants.append(legacy_audio.LegacyAudio)
-
-        self._hardware_variants.append(modern_audio.ModernAudio)
-
-        if self._xnu_major < os_data.tahoe.value:
-            self._hardware_variants += [
-                display_backlight.DisplayBacklight,
-                gmux.GraphicsMultiplexer,
-                keyboard_backlight.KeyboardBacklight,
-                pcie_webcam.PCIeFaceTimeCamera,
-                t1_security.T1SecurityChip,
-                usb11.USB11Controller,
-            ]
+        self.trans = trans
+        self._hardware_variants = [
+            intel_iron_lake.IntelIronLake,
+            intel_sandy_bridge.IntelSandyBridge,
+            intel_ivy_bridge.IntelIvyBridge,
+            intel_haswell.IntelHaswell,
+            intel_broadwell.IntelBroadwell,
+            intel_skylake.IntelSkylake,
+            nvidia_tesla.NvidiaTesla,
+            nvidia_kepler.NvidiaKepler,
+            nvidia_webdriver.NvidiaWebDriver,
+            amd_terascale_1.AMDTeraScale1,
+            amd_terascale_2.AMDTeraScale2,
+            amd_legacy_gcn.AMDLegacyGCN,
+            amd_polaris.AMDPolaris,
+            amd_vega.AMDVega,
+            legacy_wireless.LegacyWireless,
+            modern_wireless.ModernWireless,
+            legacy_audio.LegacyAudio,
+            modern_audio.ModernAudio,
+            voodoo_audio.VoodooAudio,
+            modern_usb.LegacyUSBHost,
+            display_backlight.DisplayBacklight,
+            gmux.GraphicsMultiplexer,
+            keyboard_backlight.KeyboardBacklight,
+            pcie_webcam.PCIeFaceTimeCamera,
+            t1_security.T1SecurityChip,
+            legacy_usb11.USB11Controller,
+            cpu_missing_avx.CPUMissingAVX,
+        ]
 
         self.device_properties = None
         self.patches           = None
@@ -164,7 +161,7 @@ class HardwarePatchsetDetection:
         """
         _min_os = os_data.big_sur.value
         _max_os = os_data.tahoe.value
-        if self._dortania_internal_check() is True:
+        if self._hackdoc_internal_check() is True:
             return False
         if self._xnu_major < _min_os or self._xnu_major > _max_os:
             return True
@@ -188,26 +185,80 @@ class HardwarePatchsetDetection:
         if self._xnu_major < os_data.big_sur.value:
             return False
 
-        # OCLP-Plus exposes whether it patched APFS.kext to allow for FileVault
+        # OCLP-R exposes whether it patched APFS.kext to allow for FileVault
         nvram = utilities.get_nvram("OCLP-Settings", "4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102", decode=True)
         if nvram:
             if "-allow_fv" in nvram:
                 return False
 
         return "FileVault is Off" not in subprocess.run(["/usr/bin/fdesetup", "status"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.decode()
+    def _is_root_volume_dirty(self) -> bool:
+        """
+        Determine if system volume is not sealed
+        """
+        # macOS 11.0 introduced sealed system volumes
+        if self._xnu_major < os_data.big_sur.value:
+            return False
 
+        try:
+            content = plistlib.loads(subprocess.run(["/usr/sbin/diskutil", "info", "-plist", "/"], capture_output=True).stdout)
+        except plistlib.InvalidFileException:
+            raise RuntimeError(self.trans["Failed to parse diskutil output."])
+        
+        seal = content["Sealed"]
+
+        if "Broken" in seal:
+            logging.error(self.trans["System volume is tainted, unpatching is required"])
+            return True
+
+        return False
+    def _validation_check_repatching_is_possible(self) -> bool:
+        """
+        Determine if repatching is not allowed
+        """
+        if self._constants.commit_info[0] in ["Running from source", "Built from source"] or self._constants.commit_info[2] is None or self._constants.commit_info[2] == "":
+            return False
+        oclp_patch_path = "/System/Library/CoreServices/oclp-r.plist"
+        if not Path(oclp_patch_path).exists():
+            return self._is_root_volume_dirty()
+
+        oclp_plist = plistlib.load(open(oclp_patch_path, "rb"))
+
+        if self._constants.computer.oclp_sys_url != self._constants.commit_info[2]:
+            logging.error(self.trans["Installed patches are from different commit, unpatching is required"])
+            return True
+
+
+
+        wireless_keys = {"Legacy Wireless", "Modern Wireless", "Modern Wireless Common", "Modern Wireless Extended","传统无线补丁","现代无线补丁"}
+
+        # Keep in sync with generate_patchset_plist
+        metadata_keys = {
+            "oclp-r",
+            "oclp-R",
+            "OCLP-r",
+            "OCLP-R",
+           # "OpenCore Legacy Patcher",
+            "PatcherSupportPkg",
+            "Time Patched",
+            "Commit URL",
+            "Kernel Debug Kit Used",
+            "Metal Library Used",
+            "OS Version",
+            "Custom Signature",
+        }
+
+        existing_patches = set(oclp_plist) - wireless_keys - metadata_keys
+        if existing_patches:
+            logging.error(self.trans["Patch(es) already installed: {0}, unpatching is required"].format(", ".join(existing_patches)))
+            return True
+
+        return False
     
     def _validation_check_system_integrity_protection_enabled(self, configs: list[str]) -> bool:
         """
         Determine if System Integrity Protection is enabled
         """
-        if getattr(self._constants, "host_is_vmware_vm", False) is True:
-            # Dev/test only: bypass the live SIP validation gate inside VMware VMs so the
-            # root-patching command paths can be exercised without real T2 hardware.
-            # host_is_vmware_vm is only ever set in application_entry.py when device_probe
-            # reports a VMware SMBIOS model - this branch is never reachable on a real Mac.
-            logging.info("Bypassing SIP validation - host detected as VMware VM (test-only, see host_is_vmware_vm)")
-            return False
         return utilities.csr_decode(configs)
 
 
@@ -222,12 +273,6 @@ class HardwarePatchsetDetection:
         """
         Determine if AMFI is enabled
         """
-        if getattr(self._constants, "host_is_vmware_vm", False) is True:
-            # Dev/test only: bypass the live AMFI validation gate inside VMware VMs, mirroring
-            # the SIP bypass above. host_is_vmware_vm is only ever set in application_entry.py
-            # when device_probe reports a VMware SMBIOS model - never reachable on a real Mac.
-            logging.info("Bypassing AMFI validation - host detected as VMware VM (test-only, see host_is_vmware_vm)")
-            return False
         return not amfi_detect.AmfiConfigurationDetection().check_config(self._override_amfi_level(level))
 
 
@@ -283,24 +328,6 @@ class HardwarePatchsetDetection:
         return True
 
 
-    def _is_root_volume_dirty(self, manifest_path: Path = None) -> bool:
-        """
-        Determine if root volume is dirty
-        """
-        if utilities.check_seal() is False:
-            return True
-        if manifest_path is not None:
-            return True
-        return False
-
-
-    def _validation_check_root_is_dirty(self, manifest_path: Path = None) -> bool:
-        """
-        Determine if root volume is dirty
-        """
-        return self._is_root_volume_dirty(manifest_path)
-
-
     @cache
     def _override_amfi_level(self, level: amfi_detect.AmfiConfigDetectLevel) -> amfi_detect.AmfiConfigDetectLevel:
         """
@@ -314,25 +341,25 @@ class HardwarePatchsetDetection:
         return level
 
 
-    def _dortania_internal_check(self) -> None:
+    def _hackdoc_internal_check(self) -> None:
         """
-        Determine whether to unlock Dortania Developer mode
+        Determine whether to unlock Hackdoc Developer mode
         """
-        return Path("~/.dortania_developer").expanduser().exists()
+        return Path("~/.hackdoc_developer").expanduser().exists()
 
 
     def _already_has_networking_patches(self) -> bool:
         """
         Check if network patches are already applied
         """
-        oclp_patch_path = "/System/Library/CoreServices/OpenCore-Legacy-Patcher.plist"
+        oclp_patch_path = "/System/Library/CoreServices/OCLP-R.plist"
         if not Path(oclp_patch_path).exists():
             return False
         try:
             oclp_plist = plistlib.load(open(oclp_patch_path, "rb"))
         except Exception as e:
             return False
-        if "Legacy Wireless" in oclp_plist or "Modern Wireless" in oclp_plist:
+        if "Legacy Wireless" in oclp_plist or "Modern Wireless" in oclp_plist or "传统无线补丁" in oclp_plist or "现代无线补丁" in oclp_plist:
             return True
         return False
 
@@ -350,7 +377,7 @@ class HardwarePatchsetDetection:
         """
         return metallib_handler.MetalLibraryObject(self._constants, self._os_build, self._os_version).metallib_already_installed
 
-    
+
     def _can_patch(self, requirements: dict, ignore_keys: list[str] = []) -> bool:
         """
         Check if patching is possible
@@ -407,20 +434,20 @@ class HardwarePatchsetDetection:
         metal_gpu_present = metal_31001_gpu_present or metal_3802_gpu_present
 
         if metal_gpu_present and non_metal_gpu_present:
-            logging.error("Cannot mix Metal and Non-Metal GPUs")
-            logging.error("Stripping out Non-Metal GPUs")
+            logging.error(self.trans["Cannot mix Metal and Non-Metal GPUs"])
+            logging.error(self.trans["Stripping out Non-Metal GPUs"])
             for hardware in list(present_hardware):
                 if hardware.hardware_variant_graphics_subclass() == HardwareVariantGraphicsSubclass.NON_METAL_GRAPHICS:
-                    logging.info(f"  Stripping out {hardware.name()}")
+                    logging.info(self.trans["  Stripping out {hardware_name}"].format(hardware_name=hardware.name()))
                     present_hardware.remove(hardware)
 
         if metal_3802_gpu_present and metal_31001_gpu_present and self._xnu_major >= os_data.sequoia.value:
             if metal_31001_name != "Graphics: AMD Legacy GCN":
-                logging.error("Cannot mix Metal 3802 and Metal 31001 GPUs on macOS Sequoia or newer")
-                logging.error("Stripping out Metal 3802 GPUs")
+                logging.error(self.trans["Cannot mix Metal 3802 and Metal 31001 GPUs on macOS Sequoia or newer"])
+                logging.error(self.trans["Stripping out Metal 3802 GPUs"])
                 for hardware in list(present_hardware):
                     if hardware.hardware_variant_graphics_subclass() == HardwareVariantGraphicsSubclass.METAL_3802_GRAPHICS:
-                        logging.error(f"  Stripping out {hardware.name()}")
+                        logging.error(self.trans["  Stripping out {hardware_name}"].format(hardware_name=hardware.name()))
                         present_hardware.remove(hardware)
 
         return present_hardware
@@ -432,16 +459,16 @@ class HardwarePatchsetDetection:
         """
         if self._can_patch(requirements, ignore_keys=[HardwarePatchsetValidation.MISSING_NETWORK_CONNECTION]) is False:
             return requirements, device_properties
-        logging.info("Network connection missing, checking whether network patches are applicable")
+        logging.info(self.trans["Network connection missing, checking whether network patches are applicable"])
         if self._already_has_networking_patches() is True:
-            logging.info("Network patches are already applied, requiring network connection")
+            logging.info(self.trans["Network patches are already applied, requiring network connection"])
             return requirements, device_properties
 
         if not any([key.startswith("Networking:") for key in device_properties.keys()]):
-            logging.info("Network patches are not applicable, requiring network connection")
+            logging.info(self.trans["Network patches are not applicable, requiring network connection"])
             return requirements, device_properties
 
-        logging.info("Network patches are applicable, removing other patches")
+        logging.info(self.trans["Network patches are applicable, removing other patches"])
         for key in list(device_properties.keys()):
             if key.startswith("Networking:"):
                 continue
@@ -509,7 +536,7 @@ class HardwarePatchsetDetection:
             item: BaseHardware
             device_properties[item.name()] = True
 
-            if item.name() == "Graphics: Nvidia Web Drivers":
+            if item.name() == "Graphics: Nvidia Web Drivers" or item.name() == "图形: Nvidia Web 驱动程序" :
                 has_nvidia_web_drivers = True
 
             for config in item.required_system_integrity_protection_configurations():
@@ -531,8 +558,6 @@ class HardwarePatchsetDetection:
 
         requires_network_connection = missing_metallib_support_pkg or missing_kernel_debug_kit
 
-        manifest_path = utilities.find_any_oclp_manifest(root_path=Path(self._constants.mount_root) if hasattr(self._constants, "mount_root") else Path("/"))
-
         requirements = {
             HardwarePatchsetSettings.KERNEL_DEBUG_KIT_REQUIRED:     requires_kernel_debug_kit,
             HardwarePatchsetSettings.KERNEL_DEBUG_KIT_MISSING:      missing_kernel_debug_kit,
@@ -545,19 +570,12 @@ class HardwarePatchsetDetection:
             HardwarePatchsetValidation.SIP_ENABLED:                 self._validation_check_system_integrity_protection_enabled(required_sip_configs),
             HardwarePatchsetValidation.SECURE_BOOT_MODEL_ENABLED:   self._validation_check_secure_boot_model_enabled(),
             HardwarePatchsetValidation.AMFI_ENABLED:                self._validation_check_amfi_enabled(highest_amfi_level),
+            HardwarePatchsetValidation.REPATCHING_NOT_SUPPORTED: self._validation_check_repatching_is_possible(),
             HardwarePatchsetValidation.WHATEVERGREEN_MISSING:       self._validation_check_whatevergreen_missing() if has_nvidia_web_drivers is True else False,
             HardwarePatchsetValidation.FORCE_OPENGL_MISSING:        self._validation_check_force_opengl_missing()  if has_nvidia_web_drivers is True else False,
             HardwarePatchsetValidation.FORCE_COMPAT_MISSING:        self._validation_check_force_compat_missing()  if has_nvidia_web_drivers is True else False,
             HardwarePatchsetValidation.NVDA_DRV_MISSING:            self._validation_check_nvda_drv_missing()      if has_nvidia_web_drivers is True else False,
-            HardwarePatchsetValidation.REPATCHING_NOT_SUPPORTED:    False,
-            HardwarePatchsetValidation.ROOT_VOLUME_DIRTY:           False,
         }
-
-        if self._validation_check_root_is_dirty(manifest_path) is True:
-            if manifest_path is not None:
-                requirements[HardwarePatchsetValidation.REPATCHING_NOT_SUPPORTED] = True
-            else:
-                requirements[HardwarePatchsetValidation.ROOT_VOLUME_DIRTY] = True
 
         _cant_patch   = False
         _cant_unpatch = requirements[HardwarePatchsetValidation.SIP_ENABLED]
@@ -593,7 +611,7 @@ class HardwarePatchsetDetection:
         """
         Print out detailed errors
         """
-        logging.error("- Breakdown:")
+        logging.error(self.trans["- Breakdown:"])
         for key, value in self.device_properties.items():
             if not key.startswith("Validation:"):
                 continue
@@ -601,4 +619,4 @@ class HardwarePatchsetDetection:
                 continue
             if value is False:
                 continue
-            logging.error(f"  - {key.replace('Validation: ', '')}")
+            logging.error("  - {validation_key}".format(validation_key=key.replace('Validation: ', '')))
