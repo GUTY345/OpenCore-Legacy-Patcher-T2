@@ -388,8 +388,12 @@ T2Macs = [
     "MacBookPro15,2",
     "MacBookPro15,3",
     "MacBookPro15,4",
+    "MacBookPro16,1",
+    "MacBookPro16,2",
     "MacBookPro16,3",
     "MacBookPro16,4",
     "Macmini8,1",
+    "iMac20,1",
+    "iMac20,2",
     "iMacPro1,1",
 ]
