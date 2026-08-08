@@ -6,9 +6,10 @@ from ..base import BaseHardware, HardwareVariant, HardwareVariantGraphicsSubclas
 
 from ...base import PatchType
 
-from ...shared_patches.metal_31001     import LegacyMetal31001
 from ...shared_patches.monterey_gva    import MontereyGVA
 from ...shared_patches.monterey_opencl import MontereyOpenCL
+
+from ...shared_patches.renderbox     import LegacyMetal31001
 
 from .....constants  import Constants
 from .....detections import device_probe
@@ -26,7 +27,7 @@ class IntelBroadwell(BaseHardware):
         """
         Display name for end users
         """
-        return f"{self.hardware_variant()}: Intel Broadwell"
+        return f"{self._trans.get(self.hardware_variant(), self.hardware_variant())}: {self._trans.get('Intel Broadwell', 'Intel Broadwell')}"
 
 
     def present(self) -> bool:
@@ -57,7 +58,7 @@ class IntelBroadwell(BaseHardware):
         """
         Dropped support with macOS 13, Ventura
         """
-        return self._xnu_major < os_data.ventura.value
+        return self._xnu_major < os_data.ventura.value or self._xnu_major >= os_data.tahoe.value
 
 
     def _model_specific_patches(self) -> dict:
