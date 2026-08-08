@@ -361,8 +361,16 @@ class BuildSMBIOS:
         """
 
         if self.constants.custom_serial_number == "" or self.constants.custom_board_serial_number == "":
-            macserial_output = subprocess.run([self.constants.macserial_path, "--generate", "--model", self.spoofed_model, "--num", "1"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            macserial_output = macserial_output.stdout.decode().strip().split(" | ")
+            macserial_result = subprocess.run([self.constants.macserial_path, "--generate", "--model", self.spoofed_model, "--num", "1"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            macserial_output = macserial_result.stdout.decode().strip().split(" | ")
+            if macserial_result.returncode != 0 or len(macserial_output) < 2:
+                raise RuntimeError(
+                    f"macserial could not generate a serial number/MLB pair for SMBIOS model '{self.spoofed_model}' "
+                    f"(exit code {macserial_result.returncode}, output: {' '.join(macserial_output) or '<empty>'}). "
+                    "macserial only has serial data for real Mac models - if you're targeting a non-Mac SMBIOS "
+                    "(e.g. a VMware model) or a model outside its database, switch Serial Settings to Minimal/"
+                    "Moderate, or provide a Custom Serial Number and Custom Board Serial Number instead."
+                )
             sn = macserial_output[0]
             mlb = macserial_output[1]
         else:
