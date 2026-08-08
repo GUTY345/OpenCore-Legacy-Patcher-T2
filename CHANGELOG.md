@@ -1,4 +1,29 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16041 - 4.0.0 alpha 16.3.1
+Thanks @pyquick for contributing to this project!
+This release:
+
+fixes a bug where when checking if Modern Audio patches are installed or not, it was checking against OCLP-Plus.plist instead of the file that it creates that says if the patches are installed or not. An attacker could abuse this bug to have influence of the decisions the patcher makes if there is a patch for Modern Audio or not and then do anything of the attacker’s choice
+fixes a vulnerability where modern_audio.py wasn’t checking if the patches are injected on a non-T2 Mac or a T2 one because it didn’t checked if the Mac had one. An attacker could trick T2 Mac users into injecting Modern Audio patches on T2 Macs in order to brick the operating system and cause DoS attacks.
+improves GPU detection when it comes to root patches
+improves support for Intel Broadwell graphics
+fixes a bug where on some T2 MacBooks when checking for root patches it was showing that there was Modern Audio patches available. These Modern Audio patches are intended for non-T2 Macs as T2 Macs route the audio via a completely different kext and support is still there.
+fixes a bug where upon trying to spoof as a virtual machine, it was throwing an error Index out of range instead of giving instructions and telling that Advanced Spoofing is not supported when a virtual machine SMBIOS is selected
+Vielen Dank an @pyquick für den Beitrag zu diesem Projekt!
+Diese Version:
+
+Behebt einen Fehler, bei dem beim Prüfen, ob Modern-Audio-Patches installiert sind, die Datei OCLP-Plus.plist anstelle der vom Programm erstellten Datei, die den Installationsstatus der Patches angibt, verwendet wurde. Ein Angreifer konnte diesen Fehler ausnutzen, um die Entscheidung des Patch-Programms bezüglich der Verfügbarkeit von Modern-Audio-Patches zu beeinflussen und anschließend beliebige Aktionen auszuführen.
+
+Behebt eine Sicherheitslücke, bei der modern_audio.py nicht prüfte, ob die Patches auf einem Nicht-T2-Mac oder einem T2-Mac installiert waren, da nicht geprüft wurde, ob der Mac bereits über einen T2-Mac verfügte. Ein Angreifer konnte T2-Mac-Benutzer dazu verleiten, Modern-Audio-Patches auf ihren T2-Macs zu installieren, um das Betriebssystem unbrauchbar zu machen und Denial-of-Service-Angriffe (DoS) durchzuführen.
+
+Verbessert die GPU-Erkennung bei Root-Patches.
+
+Verbessert die Unterstützung für Intel Broadwell-Grafikkarten.
+
+Behebt einen Fehler, bei dem auf einigen T2-MacBooks beim Prüfen auf Root-Patches fälschlicherweise angezeigt wurde, dass Modern-Audio-Patches verfügbar seien. Diese Modern-Audio-Patches sind für Nicht-T2-Macs gedacht, da T2-Macs die Audioausgabe über eine völlig andere Kernel-Erweiterung (kext) leiten. Die Unterstützung dafür ist jedoch weiterhin vorhanden.
+
+– Behebt einen Fehler, der beim Versuch, sich als virtuelle Maschine auszugeben, zu einer Fehlermeldung „Index außerhalb des gültigen Bereichs“ führte, anstatt Anweisungen zu geben und darauf hinzuweisen, dass „Erweitertes Spoofing“ bei Auswahl eines virtuellen Maschinen-SMBIOS nicht unterstützt wird.
+
 ## 4.0.0.16040 - 4.0.0 alpha 16.3
 Thanks @pyquick for contributing to this project!
 This release:
