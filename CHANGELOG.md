@@ -66,7 +66,7 @@ NVIDIA:
 ## 4.0.0.16024 - 4.0.0 alpha 16.1.4
 This release fixes a vulnerability where a deprecated constant was used:
 
- '# Generate environment data'
+       '# Generate environment data'
         self.constants.recovery_status = utilities.check_recovery()
         utilities.disable_cls()
         self._fix_cwd()
