@@ -1,4 +1,12 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16042 - 4.0.0 alpha 16.3.2
+Thanks @hackintosh-user and @priest for reporting an issue where upon trying to root patch, root patches for the GPU are not getting detected!
+This release fixes a bug where certain GPUs would not be detected when trying to root patch.
+Warning: anyone with Broadwell and similar GPUs, at this time you should not upgrade to Tahoe as the PatcherSupportPkg (any) does not have patches for Tahoe. Please stay on Sequoia or if you want really on Tahoe, you can fork a PatcherSupportPkg that supports Tahoe and add patches for these GPUs.
+Vielen Dank an @hackintosh-user und @priest für die Meldung eines Problems, bei dem beim Versuch, Root-Patches anzuwenden, Root-Patches für die GPU nicht erkannt werden!
+Diese Version behebt einen Fehler, bei dem bestimmte GPUs beim Versuch, einen Root-Patch durchzuführen, nicht erkannt wurden.
+WARNUNG: Broadwell und ähnliche Grafikkarten sind zurzeit in jeder PatcherSupportPkg keine Patches für Tahoe vorhanden, also bitte nicht auf Tahoe upgraden falls solche Grafikkarte benutzt wird. Falls solche Grafikkarten verwendet ist, Sie müssen vorerst auf macOS 15 Sequoia bleiben und von Upgrade verzichten, oder einfach jeder PatcherSupportPkg forken und patches für Tahoe hinzufügen.
+
 ## 4.0.0.16041 - 4.0.0 alpha 16.3.1
 Thanks @pyquick for contributing to this project!
 This release:
