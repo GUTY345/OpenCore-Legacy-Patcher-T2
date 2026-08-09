@@ -1,4 +1,23 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16043 - 4.0.0 alpha 16.3.3
+This release fixes a critical typosquatting vulnerability and should update to this version immediately.
+This release:
+
+changes the PatcherSupportPkg from https://github.com/YBronst/PatcherSupportPkg to my own fork here: https://github.com/albert-mueller/PatcherSupportPkg
+fixes a typosquatting vulnerability where by accident, in constants.py under self.url_patcher_support_pkg I defined ttps://github.com/YBronst/PatcherSupportPkg instead of https://github.com/YBronst/PatcherSupportPkg . This is very dangerous accident as attackers could register ttps://github.com/YBronst/PatcherSupportPkg to deliver malware under the guise of patches.
+adds patches for Broadwell and similar GPUs
+Dieses Release behebt eine kritische Typosquatting-Sicherheitslücke und sollte umgehend aktualisiert werden.
+
+Dieses Release:
+
+ändert das PatcherSupportPkg von https://github.com/YBronst/PatcherSupportPkg zu meinem eigenen Fork hier: https://github.com/albert-mueller/PatcherSupportPkg
+
+behebt eine Typosquatting-Sicherheitslücke, die durch die versehentliche Definition von ttps://github.com/YBronst/PatcherSupportPkg in constants.py unter self.url_patcher_support_pkg entstanden ist. Anstatt https://github.com/YBronst/PatcherSupportPkg wurde ttps://github.com/YBronst/PatcherSupportPkg definiert. Dies ist ein sehr gefährlicher Fehler, da Angreifer ttps://github.com/YBronst/PatcherSupportPkg registrieren könnten, um Schadsoftware als Patch getarnt zu verbreiten.
+
+fügt Patches für Broadwell und ähnliche GPUs hinzu.
+
+
+
 ## 4.0.0.16042 - 4.0.0 alpha 16.3.2
 Thanks @hackintosh-user and @priest for reporting an issue where upon trying to root patch, root patches for the GPU are not getting detected!
 This release fixes a bug where certain GPUs would not be detected when trying to root patch.
