@@ -549,7 +549,27 @@ class BuildMiscellaneous:
             if self._validate_patch(new_patch):
                 logging.info("- Injecting AppleKeyStore SEP retry-limit patch")
                 kernel_patches.append(new_patch)
-        
+            # Dieses Patch ist zu verhindern, beim Mounten der APFS-Partition es scheitert mit Fehler 81 Needs authenticator
+            if not any(p.get("Comment") == "Patch apfs.kext ARV root hash NULL bypass" for p in kernel_patches):
+                new_patch = {
+                    "Arch": "x86_64",
+                    "Identifier": "com.apple.filesystems.apfs",
+                    "Base": "",
+                    "Comment": "Patch apfs.kext ARV root hash NULL bypass",
+                    "Count": 1,
+                    "Enabled": True,
+                    "MinKernel": "25.0.0",
+                    "MaxKernel": "25.99.99",
+                    "Find": binascii.unhexlify("E8A50CF9FF8945D485C00F842BF8FFFF"),
+                    "Replace": binascii.unhexlify("E8A50CF9FF8945D431C00F842BF8FFFF"),
+                    "Mask": b"",
+                    "ReplaceMask": b"",
+                    "Limit": 0,
+                    "Skip": 0
+                }
+                if self._validate_patch(new_patch):
+                    logging.info("- Injecting apfs.kext ARV root hash NULL bypass patch")
+                    kernel_patches.append(new_patch)
         # Bypass osinstallersetupd bridge device validation checks (Fixes Attestation Error -10000)
         try:
             logging.info("- Injecting User-Space Attestation bypass flags (Fixes Error -10000)")
