@@ -146,15 +146,56 @@ class GenerateApplication:
             f.write(data)
 
 
+    def _run_git(self, args: list) -> str:
+        """
+        Best-effort git invocation, returns "" on any failure
+        (eg. not a git checkout, git missing, detached worktree, etc.)
+        """
+        try:
+            return subprocess.run(
+                ["git"] + args, capture_output=True, text=True, check=True
+            ).stdout.strip()
+        except Exception:
+            return ""
+
+
+    def _derive_local_git_metadata(self) -> "tuple[str, str, str]":
+        """
+        CI passes --git-branch/--git-commit-url/--git-commit-date explicitly.
+        Local/manual builds (just running Build-Project.command directly)
+        don't, which left "Commit URL" as an empty string and the Settings
+        UI showing "N/A" for it even inside a real git checkout. Fall back
+        to asking the local repo directly so manual builds still get real,
+        clickable commit info.
+        """
+        branch      = self._run_git(["rev-parse", "--abbrev-ref", "HEAD"])
+        commit_hash = self._run_git(["rev-parse", "HEAD"])
+        commit_date = self._run_git(["log", "-1", "--format=%cd", "--date=format:%Y-%m-%d %H:%M:%S"])
+        remote_url  = self._run_git(["config", "--get", "remote.origin.url"])
+
+        commit_url = ""
+        if remote_url and commit_hash:
+            if remote_url.endswith(".git"):
+                remote_url = remote_url[:-len(".git")]
+            if remote_url.startswith("git@"):
+                # git@github.com:user/repo -> https://github.com/user/repo
+                remote_url = "https://" + remote_url[len("git@"):].replace(":", "/", 1)
+            commit_url = f"{remote_url}/commit/{commit_hash}"
+
+        return branch, commit_url, commit_date
+
+
     def _embed_git_data(self) -> None:
         """
         Embed git data
         """
         _file = self._application_output / "Contents" / "Info.plist"
 
-        _git_branch = self._git_branch or "Built from source"
-        _git_commit = self._git_commit_url or ""
-        _git_commit_date = self._git_commit_date or time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        _local_branch, _local_commit_url, _local_commit_date = self._derive_local_git_metadata()
+
+        _git_branch = self._git_branch or _local_branch or "Built from source"
+        _git_commit = self._git_commit_url or _local_commit_url or ""
+        _git_commit_date = self._git_commit_date or _local_commit_date or time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
         print("Embedding git data")
         if not _file.exists():
