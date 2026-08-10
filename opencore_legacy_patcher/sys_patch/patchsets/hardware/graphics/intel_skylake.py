@@ -71,7 +71,7 @@ class IntelSkylake(BaseHardware):
                         "AppleIntelSKLGraphics.kext":            self._resolve_monterey_framebuffers(),
                         "AppleIntelSKLGraphicsFramebuffer.kext": self._resolve_monterey_framebuffers(),
                         "AppleIntelSKLGraphicsGLDriver.bundle":  "12.5",
-                        **({ "AppleIntelSKLGraphicsMTLDriver.bundle": f"12.5-{self._xnu_major}" }),
+                        "AppleIntelSKLGraphicsMTLDriver.bundle": "12.5-22" if self._xnu_major < os_data.sequoia.value else "12.5-24",
                         "AppleIntelSKLGraphicsVADriver.bundle":  "12.5",
                         "AppleIntelSKLGraphicsVAME.bundle":      "12.5",
                         "AppleIntelGraphicsShared.bundle":       "12.5",

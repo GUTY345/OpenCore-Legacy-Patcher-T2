@@ -25,19 +25,16 @@ class LegacyMetal31001(BaseSharedPatchSet):
     def _patches_metal_31001_common(self) -> dict:
         """
         Intel Broadwell, Skylake, and AMD GCN are Metal 31001-based GPUs
-        """
-        if self._os_requires_patches() is False:
-            return {}
 
-        return {
-            "Metal 31001 Common": {
-                PatchType.OVERWRITE_SYSTEM_VOLUME: {
-                    "/System/Library/PrivateFrameworks/RenderBox.framework/Versions/A/Resources": {
-                        **({ "default.metallib": f"RenderBox-{self._xnu_major}" }),
-                    }
-                },
-            }
-        }
+        Note: PatcherSupportPkg has never shipped a per-xnu_major
+        "RenderBox-<xnu_major>" payload directory (e.g. "RenderBox-25"
+        does not exist for macOS 26), so this previously raised
+        "Failed to find .../RenderBox-<xnu_major>/.../default.metallib"
+        during preflight checks. Upstream OCLP does not apply a
+        RenderBox.framework override for the Metal 31001 family either,
+        so this is intentionally a no-op.
+        """
+        return {}
 
     def patches(self) -> dict:
         """
