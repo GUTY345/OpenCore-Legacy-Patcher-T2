@@ -150,12 +150,27 @@ class GenerateApplication:
         """
         Best-effort git invocation, returns "" on any failure
         (eg. not a git checkout, git missing, detached worktree, etc.)
+        Logs *why* it failed instead of failing silently, since a swallowed
+        failure here is exactly what makes "Commit URL: N/A" confusing to
+        debug from the Settings panel alone.
         """
         try:
-            return subprocess.run(
+            result = subprocess.run(
                 ["git"] + args, capture_output=True, text=True, check=True
-            ).stdout.strip()
-        except Exception:
+            )
+            return result.stdout.strip()
+        except FileNotFoundError:
+            print("Warning: 'git' executable not found, skipping local commit metadata")
+            return ""
+        except subprocess.CalledProcessError as e:
+            _stderr = (e.stderr or "").strip()
+            if "not a git repository" in _stderr.lower():
+                print("Warning: this checkout has no .git directory (likely downloaded as a ZIP/tarball instead of via 'git clone') - Commit Information will show N/A. Use 'git clone' (or 'git pull' in an existing clone) instead of downloading a source archive to get a real commit URL.")
+            else:
+                print(f"Warning: 'git {' '.join(args)}' failed: {_stderr or e}")
+            return ""
+        except Exception as e:
+            print(f"Warning: 'git {' '.join(args)}' failed: {e}")
             return ""
 
 
@@ -196,6 +211,9 @@ class GenerateApplication:
         _git_branch = self._git_branch or _local_branch or "Built from source"
         _git_commit = self._git_commit_url or _local_commit_url or ""
         _git_commit_date = self._git_commit_date or _local_commit_date or time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+        if not _git_commit:
+            print("Warning: could not determine a Commit URL (no --git-commit-url passed and no local git metadata found) - Settings will show N/A for it")
 
         print("Embedding git data")
         if not _file.exists():
