@@ -37,5 +37,5 @@ We strongly encourage using **Private Vulnerability Reporting** to disclose secu
 **Do not** report disabling SIP (System Integrity Protection) or AMFI (Apple Mobile File Integrity) as vulnerabilities. These are necessary components for bypassing minimum system requirements and will be dismissed.
 
 Note:
-If it is a fork of this project, then enabling the Report a vulnerability button is up to the maintainer of the fork. In case they don't enable this button, open an Issue with a [Vulnerability] tag.
+If it is a fork of this project, then enabling the Report a vulnerability button is up to the maintainer of the fork. In case they don't enable this button, open a bug report, under Mac model select Not applicable, under macOS version write a dash (-), write the affected versions of the fork affected by this vulnerability and select as issue type Security vulnerability.
 And forks may have different timeline on fixing certain vulnerabilities.
