@@ -244,10 +244,13 @@ class DownloadObject:
             logging.exception(f"FATAL DOWNLOAD ERROR: {self.url} | Error: {self.error_msg}")
             
         finally:
-            # NOTE: status is intentionally NOT overwritten here anymore - it was
-            # unconditionally reset to COMPLETE even after the except block above
-            # had just set it to ERROR, silently erasing the failure for any caller
-            # that inspects .status instead of .error/.download_complete.
+            # NOTE: status is now set explicitly on each path above (COMPLETE on
+            # success, ERROR on failure) instead of being forced to COMPLETE here.
+            # Previously this finally block unconditionally overwrote a just-set
+            # ERROR status back to COMPLETE, so no consumer of DownloadObject could
+            # ever actually observe a failed download via .status (is_active() still
+            # correctly stopped polling either way, since both COMPLETE and ERROR
+            # differ from DOWNLOADING - but the failure state itself was discarded).
             utilities.enable_sleep_after_running()
             logging.info("Netzwerkressourcen freigegeben und Energiespareinstellungen wiederhergestellt.")
             logging.info("Network resources released and sleep settings restored.")
