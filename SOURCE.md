@@ -1,6 +1,6 @@
 # Build and run from source
 
-OpenCore Legacy Patcher at its core is a Python-based GUI/CLI-based application. In turn, to run the project from source, you simply need to invoke the OpenCore-Patcher-GUI.command file via Python.
+OpenCore Legacy Patcher T2 at its core is a Python-based GUI/CLI-based application. In turn, to run the project from source, you simply need to invoke the OpenCore-Patcher-GUI.command file via Python.
 
 For developers wishing to validate mainline changes, you may use this link: [GUI (Graphical Based App)](https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/releases)
 
