@@ -229,6 +229,7 @@ class DownloadObject:
                 self.checksum = self._checksum_storage.hexdigest()
 
             self.download_complete = True
+            self.status = DownloadStatus.COMPLETE
             logging.info(f"Herunterladen vollständig abgeschlossen: {self.filename}")
             logging.info(f"Successfully finished download: {self.filename}")
 
@@ -243,7 +244,10 @@ class DownloadObject:
             logging.exception(f"FATAL DOWNLOAD ERROR: {self.url} | Error: {self.error_msg}")
             
         finally:
-            self.status = DownloadStatus.COMPLETE
+            # NOTE: status is intentionally NOT overwritten here anymore - it was
+            # unconditionally reset to COMPLETE even after the except block above
+            # had just set it to ERROR, silently erasing the failure for any caller
+            # that inspects .status instead of .error/.download_complete.
             utilities.enable_sleep_after_running()
             logging.info("Netzwerkressourcen freigegeben und Energiespareinstellungen wiederhergestellt.")
             logging.info("Network resources released and sleep settings restored.")
