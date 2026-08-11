@@ -71,6 +71,6 @@ python3 Build-Project.command
 open ./dist/
 ```
 
-Once done, you'll find the application generated at `./dist/OpenCore-Patcher.app`:
+Once done, you'll find the application generated at `./dist/OpenCore-Patcher.app` , alongside with the pkg installers:
 
 ![](./images/build-dist.png)
