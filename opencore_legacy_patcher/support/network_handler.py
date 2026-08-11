@@ -117,8 +117,11 @@ class DownloadObject:
         
         try:
             # We use SESSION (global) for consistency with your original code
-            # Timeout is strictly defined to prevent hanging during the check
-            result = SESSION.head(self.url, allow_redirects=True, timeout=5)
+            # Timeout is strictly defined to prevent hanging during the check.
+            # 10s (rather than the previous 5s) gives a HEAD + cross-host redirect
+            # (e.g. github.com -> release-assets.githubusercontent.com) more slack
+            # on higher-latency or slower links before we give up on a real size.
+            result = SESSION.head(self.url, allow_redirects=True, timeout=10)
             
             if 'Content-Length' in result.headers:
                 self.total_file_size = float(result.headers['Content-Length'])
@@ -139,6 +142,16 @@ class DownloadObject:
             logging.error("Die Gesamtdateigröße wird auf 0,0 zurückgesetzt.")
             logging.error("Defaulting total_file_size to 0.0")
             self.total_file_size = 0.0
+            # NOTE: with total_file_size == 0.0, get_percent() permanently returns
+            # -1, so the UI (gui_download.py) falls back to an indeterminate,
+            # continuously-pulsing progress bar for the entire download, with no
+            # ETA and no percentage ever shown - easy to mistake for a hung/looping
+            # download even though bytes may still be arriving underneath. Flag
+            # this loudly so it is unambiguous in the log which code path is active.
+            logging.warning(
+                "total_file_size could not be determined - the download UI will show "
+                "an indeterminate/pulsing progress bar instead of a percentage for this file."
+            )
 
     def get_percent(self) -> float:
         return -1 if self.total_file_size == 0.0 else (self.downloaded_file_size / self.total_file_size * 100)
@@ -244,13 +257,10 @@ class DownloadObject:
             logging.exception(f"FATAL DOWNLOAD ERROR: {self.url} | Error: {self.error_msg}")
             
         finally:
-            # NOTE: status is now set explicitly on each path above (COMPLETE on
-            # success, ERROR on failure) instead of being forced to COMPLETE here.
-            # Previously this finally block unconditionally overwrote a just-set
-            # ERROR status back to COMPLETE, so no consumer of DownloadObject could
-            # ever actually observe a failed download via .status (is_active() still
-            # correctly stopped polling either way, since both COMPLETE and ERROR
-            # differ from DOWNLOADING - but the failure state itself was discarded).
+            # NOTE: status is intentionally NOT overwritten here anymore - it was
+            # unconditionally reset to COMPLETE even after the except block above
+            # had just set it to ERROR, silently erasing the failure for any caller
+            # that inspects .status instead of .error/.download_complete.
             utilities.enable_sleep_after_running()
             logging.info("Netzwerkressourcen freigegeben und Energiespareinstellungen wiederhergestellt.")
             logging.info("Network resources released and sleep settings restored.")
