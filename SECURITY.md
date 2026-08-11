@@ -22,7 +22,7 @@ Ensure you are running one of the latest up-to-date versions:
 When forks are releasing versions, forks shouldn't mislead users that they are running a newer version than they are. When they do, this is called version spoofing.
 Example of version spoofing:
 <img width="1712" height="910" alt="image" src="https://github.com/user-attachments/assets/f114a2e9-a41a-40b6-a8dc-aad2a20bb1d4" />
-Only a couple of commits and then releasing 4.0.0 alpha 1 without merging PR from the main repository is a red flag.
+Only a couple of commits and then releasing 4.0.0 alpha 1 without merging PR from the main repository is a red flag, unless they at least mention that their fork is not affiliated with the main project.
 
 ## Reporting a Vulnerability
 
