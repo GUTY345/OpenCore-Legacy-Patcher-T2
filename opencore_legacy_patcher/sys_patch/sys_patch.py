@@ -173,7 +173,7 @@ class PatchSysVolume:
         return self.mount_obj.mount()
 
 
-    def _unmount_root_vol(self) -> None:
+    def _umount_root_vol(self) -> None:
         """Unmount root volume gracefully."""
         logging.info("- Unmounting root volume")
         self.mount_obj.unmount(ignore_errors=True)
@@ -685,7 +685,7 @@ class PatchSysVolume:
                             logging.error(f"- Failed to execute root process: {e}")
                             logging.error("Stack Trace:")
                     else:
-                        logging.info(f"- Running Process:\n{process}")
+                        logging.info(f"- Running Process:\{process}")
                         try:
                             subprocess_wrapper.run_and_verify(
                                 process,
@@ -715,18 +715,34 @@ class PatchSysVolume:
         self._write_patchset(required_patches)
 
 
-    def _resolve_metallib_support_pkg(self) -> str:
+    def _resolve_metallib_support_pkg(self, _attempt: int = 0) -> str:
         """
         Resolve MetalLibSupportPkg.
         
         Downloads and installs if necessary.
-        
+
+        Parameters:
+            _attempt: Internal recursion guard, do not set explicitly.
+
         Returns:
             str: Path to resolved metallib support package
             
         Raises:
             Exception: If resolution fails
         """
+        # Guard against re-downloading/re-installing forever: if the installer reports
+        # success but the package still can't be found on disk afterwards (e.g. an
+        # install-path mismatch), fail loudly instead of looping indefinitely.
+        MAX_ATTEMPTS = 2
+        if _attempt >= MAX_ATTEMPTS:
+            logging.error("MetalLibSupportPkg still not detected after installing, aborting to avoid an infinite loop")
+            logging.exception("Stack Trace:")
+            raise Exception(
+                "MetalLibSupportPkg installer reported success, but the installed package could "
+                "not be found afterwards. This usually means the installer wrote its files to a "
+                "location OCLP isn't checking. Please file a bug report with your logs."
+            )
+
         metallib_obj = metallib_handler.MetalLibraryObject(
             self.constants,
             self.constants.detected_os_build,
@@ -757,7 +773,7 @@ class PatchSysVolume:
             raise Exception("Failed to install MetalLibSupportPkg")
 
         # After install, check if it's present
-        return self._resolve_metallib_support_pkg()
+        return self._resolve_metallib_support_pkg(_attempt=_attempt + 1)
 
 
     @cache
@@ -930,7 +946,7 @@ class PatchSysVolume:
             return
 
         if not self._run_sanity_checks():
-            self._unmount_root_vol()
+            self._umount_root_vol()
             logging.error("- Failed sanity checks: Pending updates/upgrades detected.")
             logging.info("It is recommended to install that update/upgrade and only then run the patcher once again.")
             

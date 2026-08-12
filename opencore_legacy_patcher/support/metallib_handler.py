@@ -16,8 +16,15 @@ from .. import constants
 from ..datasets import os_data
 
 
-METALLIB_INSTALL_PATH: str  = "/Library/Application Support/Dortania/MetallibSupportPkg"
-METALLIB_API_LINK:     str  = "https://albert-mueller.github.io/MetallibSupportPkg/manifest.json"
+# Packages built from github.com/pyquick/MetallibSupportPkg (which METALLIB_API_LINK below
+# points at) install themselves under the "Pyquick" vendor folder, see cli.py: build_pkg():
+#   f"/Library/Application Support/Pyquick/MetallibSupportPkg/{name}"
+# METALLIB_INSTALL_PATH_LEGACY is kept around purely so metallibs installed by older OCLP
+# releases (which sourced packages from the original Dortania-maintained project) are still
+# recognised, avoiding an unnecessary re-download.
+METALLIB_INSTALL_PATH:        str  = "/Library/Application Support/Pyquick/MetallibSupportPkg"
+METALLIB_INSTALL_PATH_LEGACY: str  = "/Library/Application Support/Dortania/MetallibSupportPkg"
+METALLIB_API_LINK:            str  = "https://albert-mueller.github.io/MetallibSupportPkg/manifest.json"
 
 METALLIB_ASSET_LIST:   list = None
 
@@ -208,20 +215,21 @@ class MetalLibraryObject:
         if self.ignore_installed:
             return None
 
-        if not Path(METALLIB_INSTALL_PATH).exists():
-            return None
-
-        for metallib_folder in Path(METALLIB_INSTALL_PATH).iterdir():
-            if not metallib_folder.is_dir():
+        for install_path in (METALLIB_INSTALL_PATH, METALLIB_INSTALL_PATH_LEGACY):
+            if not Path(install_path).exists():
                 continue
-            if check_version:
-                if match not in metallib_folder.name:
-                    continue
-            else:
-                if not metallib_folder.name.endswith(f"-{match}"):
-                    continue
 
-            return metallib_folder
+            for metallib_folder in Path(install_path).iterdir():
+                if not metallib_folder.is_dir():
+                    continue
+                if check_version:
+                    if match not in metallib_folder.name:
+                        continue
+                else:
+                    if not metallib_folder.name.endswith(f"-{match}"):
+                        continue
+
+                return metallib_folder
 
         return None
 
