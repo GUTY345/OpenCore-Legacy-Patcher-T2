@@ -82,7 +82,7 @@ class AMDNavi(BaseHardware):
 
                         "AMDRadeonVADriver2.bundle":      "12.5",
                         "AMDRadeonX6000GLDriver.bundle":  "12.5",
-                        **({ "AMDRadeonX6000MTLDriver.bundle": f"12.5-{self._xnu_major}" }),
+                        **({ "AMDRadeonX6000MTLDriver.bundle": f"12.5-{self._xnu_major}" if self._xnu_major < os_data.sequoia.value else "12.5-24" }),
                         "AMDRadeonX6000Shared.bundle":    "12.5",
 
                         "AMDShared.bundle":               "12.5",
