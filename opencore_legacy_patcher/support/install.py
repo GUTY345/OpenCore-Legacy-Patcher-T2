@@ -148,23 +148,39 @@ class tui_disk_installation:
                 subprocess_wrapper.run_as_root(["/bin/rm", mount_path / "boot.efi"])
 
             logging.info("Mounting the EFI partition")
-            subprocess_wrapper.run_as_root(["/bin/mkdir", "-p", mount_path / "EFI"])
+            # FIX 6: run_as_root() only returned the CompletedProcess and never checked its exit code, so a
+            # failed "cp -r" (very common specifically on USB flash drives: privileged-helper permission
+            # errors on external/removable volumes, slow/cheap "Chinesium" media dropping out mid-copy,
+            # etc. -- see list_disks() above) was silently swallowed. The function then fell through all
+            # the way to "OpenCore Transfer complete" and returned True even though nothing was actually
+            # copied. Switched the critical file operations to run_as_root_and_verify(), which raises on a
+            # non-zero exit code and is caught by the existing except-block below (sys.exit(3)), so
+            # failures are now surfaced instead of hidden. Also capturing stdout/stderr so the failure
+            # reason shows up in the log instead of "None".
+            subprocess_wrapper.run_as_root_and_verify(["/bin/mkdir", "-p", mount_path / "EFI"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             logging.info("Copying OpenCore to the EFI partition")
-            subprocess_wrapper.run_as_root(["/bin/cp", "-r", str(self.constants.opencore_release_folder / "EFI/OC"), str(mount_path / "EFI/OC")])
-            subprocess_wrapper.run_as_root(["/bin/cp", "-r", str(self.constants.opencore_release_folder / "System"), str(mount_path / "System")])
+            subprocess_wrapper.run_as_root_and_verify(["/bin/cp", "-r", str(self.constants.opencore_release_folder / "EFI/OC"), str(mount_path / "EFI/OC")], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess_wrapper.run_as_root_and_verify(["/bin/cp", "-r", str(self.constants.opencore_release_folder / "System"), str(mount_path / "System")], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            # FIX 7: belt-and-braces check in case the privileged helper ever reports success (exit 0)
+            # without the copy having actually landed on disk (seen with some external/USB edge cases).
+            if not (mount_path / "EFI/OC").exists() or not (mount_path / "System").exists():
+                logging.error("Copying OpenCore to the EFI partition failed: EFI/OC or System is missing on the target after copy.")
+                logging.error(f"Target partition bus protocol: {disk_type}")
+                sys.exit(3)
 
             if (self.constants.opencore_release_folder / "boot.efi").exists():
                 logging.info("Copying boot.efi to the EFI partition")
-                subprocess_wrapper.run_as_root(["/bin/cp", str(self.constants.opencore_release_folder / "boot.efi"), str(mount_path / "boot.efi")])
+                subprocess_wrapper.run_as_root_and_verify(["/bin/cp", str(self.constants.opencore_release_folder / "boot.efi"), str(mount_path / "boot.efi")], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             if self.constants.boot_efi is True:
                 logging.info("Converting Bootstrap to BOOTx64.efi")
                 if (mount_path / "EFI/BOOT").exists():
-                    subprocess_wrapper.run_as_root(["/bin/rm", "-rf", mount_path / "EFI/BOOT"])
-                
-                subprocess_wrapper.run_as_root(["/bin/mkdir", "-p", mount_path / "EFI/BOOT"])
-                subprocess_wrapper.run_as_root(["/bin/mv", str(mount_path / "System/Library/CoreServices/boot.efi"), str(mount_path / "EFI/BOOT/BOOTx64.efi")])
-                subprocess_wrapper.run_as_root(["/bin/rm", "-rf", mount_path / "System"])
+                    subprocess_wrapper.run_as_root_and_verify(["/bin/rm", "-rf", mount_path / "EFI/BOOT"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+                subprocess_wrapper.run_as_root_and_verify(["/bin/mkdir", "-p", mount_path / "EFI/BOOT"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                subprocess_wrapper.run_as_root_and_verify(["/bin/mv", str(mount_path / "System/Library/CoreServices/boot.efi"), str(mount_path / "EFI/BOOT/BOOTx64.efi")], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                subprocess_wrapper.run_as_root_and_verify(["/bin/rm", "-rf", mount_path / "System"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
         except Exception as e:
             logging.error(f"File operation failed during installation: {e}")
