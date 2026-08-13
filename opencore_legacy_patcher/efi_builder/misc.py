@@ -275,6 +275,8 @@ class BuildMiscellaneous:
                 "class-code": binascii.unhexlify("FFFFFFFF"),
                 "device-id": binascii.unhexlify("FFFF0000")
             }
+        else:
+            logging.info("Your Mac doesn't require disabling the thunderbolt controller. Continuing.")
 
     def _webcam_handling(self) -> None:
         """iSight Handler."""
