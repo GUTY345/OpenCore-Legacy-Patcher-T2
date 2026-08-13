@@ -196,11 +196,19 @@ class BuildSupport:
         # Validating local files
         # Report if they have no associated config.plist entry (i.e. they're not being used)
         for tool_files in Path(self.constants.opencore_release_folder / Path("EFI/OC/Tools")).glob("*"):
+            # Skip macOS Finder/filesystem metadata (e.g. .DS_Store, ._* AppleDouble files) that
+            # can appear if the folder was ever browsed in Finder or copied from a non-APFS/HFS+
+            # volume; these aren't real OpenCore tools and shouldn't fail validation.
+            if tool_files.name.startswith("."):
+                continue
             if tool_files.name not in [x["Path"] for x in config_plist["Misc"]["Tools"]]:
                 logging.info(f"- Missing tool from config: {tool_files.name}")
                 raise Exception(f"Missing tool from config: {tool_files.name}")
 
         for driver_file in Path(self.constants.opencore_release_folder / Path("EFI/OC/Drivers")).glob("*"):
+            # Same rationale as above: ignore macOS metadata files, not real UEFI drivers.
+            if driver_file.name.startswith("."):
+                continue
             if driver_file.name not in [x["Path"] for x in config_plist["UEFI"]["Drivers"]]:
                 logging.info(f"- Found extra driver: {driver_file.name}")
                 raise Exception(f"Found extra driver: {driver_file.name}")
