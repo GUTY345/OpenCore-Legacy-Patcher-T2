@@ -1,4 +1,57 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16048 - 4.0.0 alpha 16.3.8
+This release:
+
+fixes a bug that prevents from installing Metal 3802 and non-Metal patches
+
+Fix permission-denied loop on global settings file owned by root - a bug that exists ever since the 4.0.0 alpha 5 update, or simply called the emergency update that patched critical vulnerabilities but created this bug alongside it
+
+fixes a bug where when trying to build OpenCore to the USB drive, the USB drive remains with no EFI despite it briefly mounts it
+
+fixes 2 vulnerabilities:
+
+   def _t2_handling(self) -> None: # <- an identical vulnerability applies for the T1 handling too
+          """T2 Security Chip Handler."""
+          if not self._is_t2_mac():
+              return
+          enable_experimental_patches = False # Nur auf True setzen wenn der Benutzer manuell selbst bearbeitet und wechselt enable_experimental_patches von False auf True 
+         # <- here's the vulnerability - it doesn't strictly check if it is a T1/T2 Mac or not. Like this, an attacker could delete the if condition to cause DoS or intentionally lower the security
+          logging.info("If you want to enable optional patches that haven't been tested yet, you should download go to releases")
+          logging.info(", then download the zip file, extract it, and then, open up misc.py.")
+          logging.info("And afterwards, you need manually to set enable_experimental_patches from False to True")
+          builder = support.BuildSupport(self.model, self.constants, self.config)
+Impact: an attacker could force users to inject T1/T2 patches onto non-T1/T2 systems to cause DoS and disable completely System Integrity Protection. This is fixed by nesting the rest of the logic that applies to T1/T2 Macs under else.
+
+Diese Version:
+
+Behebt einen Fehler, der die Installation von Metal 3802 und Nicht-Metal-Patches verhindert.
+
+Behebt eine Endlosschleife aufgrund fehlender Berechtigungen für die globale Einstellungsdatei im Besitz von root – ein Fehler, der seit dem Update auf Version 4.0.0 Alpha 5 besteht (auch bekannt als Notfall-Update, das kritische Sicherheitslücken schloss, aber diesen Fehler verursachte).
+
+Behebt einen Fehler, der dazu führt, dass beim Versuch, OpenCore auf einem USB-Laufwerk zu kompilieren, das USB-Laufwerk trotz kurzzeitiger Einbindung keine EFI-Datei besitzt.
+
+Behebt zwei Sicherheitslücken:
+
+def _t2_handling(self) -> None: # <- Eine identische Sicherheitslücke betrifft auch die T1-Verarbeitung.
+
+""T2 Security Chip Handler."""
+if not self._is_t2_mac():
+
+return
+enable_experimental_patches = False # Nur auf True setzen, wenn der Benutzer die Einstellung manuell ändert und enable_experimental_patches von False auf True umstellt.
+
+<- Hier liegt die Sicherheitslücke – es wird nicht strikt geprüft, ob es sich um einen T2-Sicherheitschip handelt. Ob T1/T2-Mac oder nicht. Auf diese Weise könnte ein Angreifer die if-Bedingung entfernen, um einen Denial-of-Service-Angriff (DoS) auszulösen oder die Sicherheit absichtlich zu verringern.
+
+logging.info("Wenn Sie optionale, noch nicht getestete Patches aktivieren möchten, sollten Sie diese unter "Releases" herunterladen.")
+
+logging.info(", anschließend die ZIP-Datei herunterladen, extrahieren und dann "misc.py" öffnen.")
+
+logging.info("Anschließend müssen Sie "enable_experimental_patches" manuell von "False" auf "True" setzen.")
+
+builder = support.BuildSupport(self.model, self.constants, self.config)
+
+Auswirkung: Ein Angreifer könnte Benutzer zwingen, T1/T2-Patches auf Nicht-T1/T2-Systemen zu installieren, um einen DoS-Angriff auszulösen und den Systemintegritätsschutz vollständig zu deaktivieren. Dies wird behoben, indem die restliche Logik, die für T1/T2-Macs gilt, in einen else-Zweig verschachtelt wird.
+
 ## 4.0.0.16900 - 4.0.0 pre-alpha 1 for alpha 17
 This release migrates to a costum OpenCorePkg fork in order to try to boot macOS 26 on unsupported T2 Macs by fixing issues available in OpenCorePkg
 
