@@ -474,6 +474,7 @@ class LegacyMetal3802(BaseSharedPatchSet):
                         "archive.metallib",
                 ],
             },
+            }
         }
 
 
