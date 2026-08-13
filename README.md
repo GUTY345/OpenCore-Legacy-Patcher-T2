@@ -3,6 +3,11 @@
 </div>
 
 A Python-based project revolving around [Acidanthera's OpenCorePkg](https://github.com/acidanthera/OpenCorePkg) and [Lilu](https://github.com/acidanthera/Lilu) for both running and unlocking features in macOS on supported and unsupported Macs.
+
+> **⚠️⚠️⚠️⚠️⚠️ Warning** Installing drivers and patches (root patches) on older macOS 26 Tahoe versions, e.g 26.5 and earlier will not work. Those who want to install drivers and patches with this patcher, you need to update to 26.5 or later.
+
+> **⚠️⚠️⚠️⚠️⚠️ Warnung** Die Installation von Treibern und Patches (Root-Patches) auf älteren macOS 26 Tahoe-Versionen, z. B. 26.5 und älter, funktioniert nicht. Wer Treiber und Patches mit diesem Patcher installieren möchte, muss auf Version 26.5 oder höher aktualisieren.
+
 > **⚠️⚠️⚠️⚠️⚠️ Warning** No support for macOS 27 Golden Gate and newer versions of macOS because macOS 27 Golden Gate and newer versions are arm64-only, so only for Apple Silicon Macs. So the answer is clear. macOS 26 Tahoe is the last supported macOS version by this project.
 
 > **⚠️⚠️⚠️⚠️⚠️ Warnung** macOS 27 Golden Gate und neuere macOS-Versionen sind nicht unterstützt, weil diese sind nur für Apple Silicon/arm64 Macs. Also die Antwort ist klar. macOS 26 Tahoe ist die letzte Version, die von dieser Projekt unterstützt wird.
