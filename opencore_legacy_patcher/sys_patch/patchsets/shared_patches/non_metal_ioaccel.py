@@ -40,12 +40,15 @@ class NonMetalIOAccelerator(BaseSharedPatchSet):
                 },
                 PatchType.MERGE_SYSTEM_VOLUME: {
                     "/System/Library/Frameworks": {
-                        "IOSurface.framework": f"10.14.6-{self._xnu_major}",
+                        # Note: PatcherSupportPkg only ships 10.14.6-<xnu_major> / 10.13.6-<xnu_major> payloads up to
+                        # xnu_major 24 (Sequoia), cap the lookup there for Sequoia+ hosts (e.g. Tahoe) instead of
+                        # requesting a non-existent folder.
+                        "IOSurface.framework": f"10.14.6-{self._xnu_major}" if self._xnu_major < os_data.sequoia.value else "10.14.6-24",
                         "OpenCL.framework":     "10.13.6",
                     },
                     "/System/Library/PrivateFrameworks": {
                         "GPUSupport.framework":     "10.13.6",
-                        "IOAccelerator.framework": f"10.13.6-{self._xnu_major}",
+                        "IOAccelerator.framework": f"10.13.6-{self._xnu_major}" if self._xnu_major < os_data.sequoia.value else "10.13.6-24",
                     },
                 },
                 PatchType.REMOVE_SYSTEM_VOLUME: {
