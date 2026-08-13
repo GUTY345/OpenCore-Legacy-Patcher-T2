@@ -454,16 +454,7 @@ class BuildMiscellaneous:
             logging.info("ATTENTION! Injecting optional patches are enabled. These patches haven't been tested yet and may have bugs, which could lead to for example kernel panics.")
         else:
             logging.error("We couldn't verify if injecting optional patcges are enabled or not, but they must be disabled if the variable is not set to True.")
-
-        logging.error("With alpha 16, T2 Macs will always face a Needs authenticator (81) panic and will be fixed in alpha 17. And it ended up that it is mostly OpenCorePkg bug.")
-        logging.info("Since standard OpenCorePkg for T2 Macs works only inside the installer of macOS 26 Tahoe, but to boot to the desktop, it ended up requiring a seperate OpenCorePkg fork.")
-        logging.info("Since the new OpenCorePkg fork is only used in pre-alpha 17 and later, we'll need to abort building OpenCore for your T2 Mac.")
-        logging.info("Check for available updates. If there are no available updates at this moment, consider upgrading to pre-alpha 1 for alpha 17 or later manually.")
-        logging.info("This will appear unconditionally with any new alpha 16 release from now onwards to prevent broken T2 Macs, so you don't end up with broken partitions.")
-        logging.info("Aborting softly inside the application to prevent further issues.")
-        logging.info("To upgrade manually to the pre-alpha 17, you need to go to OpenCore Legacy Patcher T2's repository, go to Releases and download the pre-alpha.")
-        logging.info("Any new fixes to fix the Needs authenticator (81) are available only in pre-alpha 17 or later. This release from now on will only receive security updates and bug fixes (including ones for non-T2 systems).")
-        sys.exit(3)
+        
         # Prerequisite kext checks
         for kext, ver, path in [
             ("WhateverGreen.kext", self.constants.whatevergreen_version, self.constants.whatevergreen_path),
