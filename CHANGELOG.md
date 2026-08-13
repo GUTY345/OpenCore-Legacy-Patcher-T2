@@ -1,4 +1,36 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16047 - 4.0.0 alpha 16.3.7
+This release:
+
+fixes a bug where when downloading Metallibs, it goes into a download loop
+fixes a bug where on AMD Navi GPUs it fails to patch because of an error finding the folder called 12.5-25
+transitions back to the old PatcherSupportPkg and deprecates the fork as in my fork the only patches that I added were causing chaos on non-Metal GPUs, and that was the only reason to fork the PatcherSupportPkg
+on unsupported T2 Macs, building OpenCore will require upgrading to pre-alpha 1 for alpha 17 or later, as it requires an OpenCorePkg fork at this time to even attempt to successfully boot into macOS 26 Tahoe on unsupported T2 Macs at this time
+Diese Version:
+
+Behebt einen Fehler, der beim Herunterladen von Metallibs zu einer Download-Schleife führte.
+
+Behebt einen Fehler, der das Patchen auf AMD Navi-GPUs aufgrund eines Fehlers beim Auffinden des Ordners „12.5-25“ verhinderte.
+
+Stellt auf das alte PatcherSupportPkg zurück und entfernt den Fork, da die in meinem Fork hinzugefügten Patches auf Nicht-Metal-GPUs zu Problemen führten. Dies war der einzige Grund für den Fork des PatcherSupportPkg.
+
+Auf nicht unterstützten T2-Macs ist für die Erstellung von OpenCore ein Upgrade auf Pre-Alpha 1 für Alpha 17 oder höher erforderlich, da derzeit ein OpenCorePkg-Fork benötigt wird, um macOS 26 Tahoe auf nicht unterstützten T2-Macs überhaupt starten zu können.
+
+## 4.0.0.16046 - 4.0.0 alpha 16.3.6
+This release:
+
+fixes a bug where upon downloading Metallibs, it unconditionally throws a success and goes into download loop instead of throwing error
+fixes a bug where upon applying the WiFi patch first, was saying Root volume modified
+fixes a bug where on non-Metal GPUs it refuses to patch because it couldn't find a folder called 10.14.4-25
+Diese Version:
+
+Behebt einen Fehler, der beim Herunterladen von Metallibs dazu führte, dass fälschlicherweise eine Erfolgsmeldung ausgegeben und der Download in einer Endlosschleife fortgesetzt wurde, anstatt einen Fehler zu melden.
+Behebt einen Fehler, der dazu führte, dass nach dem Anwenden des WLAN-Patches die Meldung „Root-Volume geändert“ angezeigt wurde.
+Behebt einen Fehler, der dazu führte, dass auf Nicht-Metal-GPUs das Patchen verweigert wurde, da der Ordner „10.14.4-25“ nicht gefunden werden konnte.
+
+## 4.0.0.16044 and 4.0.0.16045:
+- fixes bugs, stability issues, and 2 critical vulnerabilities
+
 ## 4.0.0.16043 - 4.0.0 alpha 16.3.3
 This release fixes a critical typosquatting vulnerability and should update to this version immediately.
 This release:
