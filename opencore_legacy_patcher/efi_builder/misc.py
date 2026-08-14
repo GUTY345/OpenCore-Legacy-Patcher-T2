@@ -554,6 +554,72 @@ class BuildMiscellaneous:
                 if self._validate_patch(new_patch):
                     logging.info("- Injecting AppleKeyStore SEP retry-limit patch")
                     kernel_patches.append(new_patch)
+             
+            # --- Patch 2: Force FileVault on Broken Seal ---
+            if not any(p.get("Comment") == "Force FileVault on Broken Seal" for p in kernel_patches):
+                new_patch = {
+                    "Arch": "x86_64",
+                    "Identifier": "com.apple.filesystems.apfs",
+                    "Base": "_apfs_filevault_allowed",
+                    "Comment": "Force FileVault on Broken Seal",
+                    "Count": 0,
+                    "Enabled": True,
+                    "MinKernel": "20.4.0",
+                    "MaxKernel": "",
+                    "Find": b"",
+                    "Replace": binascii.unhexlify("B801000000C3"),
+                    "Mask": b"",
+                    "ReplaceMask": b"",
+                    "Limit": 0,
+                    "Skip": 0
+                }
+                if self._validate_patch(new_patch):
+                    logging.info("- Injecting Force FileVault on Broken Seal patch")
+                    kernel_patches.append(new_patch)
+             
+            # --- Patch 3: Disable Library Validation Enforcement ---
+            if not any(p.get("Comment") == "Disable Library Validation Enforcement" for p in kernel_patches):
+                new_patch = {
+                    "Arch": "x86_64",
+                    "Identifier": "kernel",
+                    "Base": "_cs_require_lv",
+                    "Comment": "Disable Library Validation Enforcement",
+                    "Count": 0,
+                    "Enabled": True,
+                    "MinKernel": "20.0.0",
+                    "MaxKernel": "",
+                    "Find": b"",
+                    "Replace": binascii.unhexlify("B800000000C3"),
+                    "Mask": b"",
+                    "ReplaceMask": b"",
+                    "Limit": 0,
+                    "Skip": 0
+                }
+                if self._validate_patch(new_patch):
+                    logging.info("- Injecting Disable Library Validation Enforcement patch")
+                    kernel_patches.append(new_patch)
+             
+            # --- Patch 4: Disable _csr_check() in _vnode_check_signature ---
+            if not any(p.get("Comment") == "Disable _csr_check() in _vnode_check_signature" for p in kernel_patches):
+                new_patch = {
+                    "Arch": "x86_64",
+                    "Identifier": "com.apple.driver.AppleMobileFileIntegrity",
+                    "Base": "__ZL22_vnode_check_signatureP5vnodeP5labeliP7cs_blobPjS5_ijPPcPm",
+                    "Comment": "Disable _csr_check() in _vnode_check_signature",
+                    "Count": 1,
+                    "Enabled": True,
+                    "MinKernel": "22.0.0",
+                    "MaxKernel": "",
+                    "Find": binascii.unhexlify("01000000E80000000085C075"),
+                    "Replace": binascii.unhexlify("01000000B80100000085C075"),
+                    "Mask": binascii.unhexlify("FFFFFFFFFF00000000FFFFFF"),
+                    "ReplaceMask": b"",
+                    "Limit": 0,
+                    "Skip": 0
+                }
+                if self._validate_patch(new_patch):
+                    logging.info("- Injecting Disable _csr_check() in _vnode_check_signature patch")
+                    kernel_patches.append(new_patch)
             
             # Bypass osinstallersetupd bridge device validation checks (Fixes Attestation Error -10000)
             try:
