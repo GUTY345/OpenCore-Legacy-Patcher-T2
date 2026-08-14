@@ -81,7 +81,11 @@ class T1SecurityChip(BaseHardware):
                 },
                 PatchType.MERGE_SYSTEM_VOLUME: {
                     "/System/Library/Frameworks/LocalAuthentication.framework/Support": {
-                        "SharedUtils.framework": f"13.6-{self._xnu_major}" if self._xnu_major < os_data.sequoia else f"13.7.1-{self._xnu_major}",  # Required for Password Authentication (SharedUtils.framework)
+                        # PatcherSupportPkg only ships this payload up to xnu_major 24 (Sequoia); there is
+                        # no "-25" (Tahoe) variant yet, so anything on Tahoe or newer is capped to the last
+                        # known-good "13.7.1-24" payload instead of looking up a folder that doesn't exist.
+                        # Mirrors the existing "-24" capping in shared_patches/non_metal.py.
+                        "SharedUtils.framework": f"13.6-{self._xnu_major}" if self._xnu_major < os_data.sequoia else ("13.7.1-24" if self._xnu_major >= os_data.tahoe.value else f"13.7.1-{self._xnu_major}"),  # Required for Password Authentication (SharedUtils.framework)
                         **({ "MechanismPlugins": "15.0 Beta 4" } if self._xnu_major >= os_data.sequoia else {}), # Required to add a TouchID fingerprint
                         **({ "ModulePlugins": "15.1" } if self._xnu_float >= self.macOS_15_2 else {}),
                         **({ "ModuleBase.framework": "15.2" } if self._xnu_float >= self.macOS_15_3 else {}),
