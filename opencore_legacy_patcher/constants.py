@@ -19,7 +19,7 @@ class Constants:
         self.patcher_version:                 str = "4.0.0.16048"  # OpenCore-Legacy-Patcher
         self.patcher_version_label=self.patcher_version
         self.patcher_support_pkg_version:     str = "2.0.0"  # PatcherSupportPkg
-        self.copyright_date:                  str = "Copyright © 2020-2025 Dortania"
+        self.copyright_date:                  str = "Copyright © 2020-2026 Dortania"
         self.patcher_name:                    str = "OpenCore Legacy Patcher T2"
         self.patcher_full_name:               str = f"{self.patcher_name} version {self.patcher_version_label}"
 
