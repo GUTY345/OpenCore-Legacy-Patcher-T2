@@ -1,4 +1,32 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16901 - 4.0.0 pre-alpha 2 for alpha 17
+This release:
+
+fixes a bug that prevents from installing Metal 3802 and non-Metal patches
+
+Fix permission-denied loop on global settings file owned by root - a bug that exists ever since the 4.0.0 alpha 5 update, or simply called the emergency update that patched critical vulnerabilities but created this bug alongside it
+
+fixes a bug where when trying to build OpenCore to the USB drive, the USB drive remains with no EFI despite it briefly mounts it
+
+fixes 2 vulnerabilities:
+
+   def _t2_handling(self) -> None: # <- an identical vulnerability applies for the T1 handling too
+          """T2 Security Chip Handler."""
+          if not self._is_t2_mac():
+              return
+          enable_experimental_patches = False # Nur auf True setzen wenn der Benutzer manuell selbst bearbeitet und wechselt enable_experimental_patches von False auf True 
+         # <- here's the vulnerability - it doesn't strictly check if it is a T1/T2 Mac or not. Like this, an attacker could delete the if condition to cause DoS or intentionally lower the security
+          logging.info("If you want to enable optional patches that haven't been tested yet, you should download go to releases")
+          logging.info(", then download the zip file, extract it, and then, open up misc.py.")
+          logging.info("And afterwards, you need manually to set enable_experimental_patches from False to True")
+          builder = support.BuildSupport(self.model, self.constants, self.config)
+Impact: an attacker could force users to inject T1/T2 patches onto non-T1/T2 systems to cause DoS and disable completely System Integrity Protection. This is fixed by nesting the rest of the logic that applies to T1/T2 Macs under else.
+
+fixes a vulnerability where in validation.py if an errror occurs, it doesn't print in the Terminal. An attacker could abuse this to launch ClickFix attacks.
+fixes a bug where in validation.py, still it was pointed my own fork's PatcherSupportPkg link, which if it tries to fetch from it, it will throw an error since it's deprecated
+adds support for T1 security chip in macOS 26 Tahoe
+Add multiple kernel patches for FileVault and validation for T2 Macs
+
 ## 4.0.0.16048 - 4.0.0 alpha 16.3.8
 This release:
 
