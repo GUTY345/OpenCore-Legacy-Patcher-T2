@@ -95,6 +95,7 @@ class PatcherValidation:
             if result.returncode != 0:
                 logging.error(f"Validation failed for model: {model}")
                 subprocess_wrapper.log(result)
+                logging.error(f"Validation failed for predefined model: {model}")
                 raise Exception(f"Validation failed for predefined model: {model}")
 
             logging.info(f"Validation succeeded for predefined model: {model}")
@@ -115,6 +116,7 @@ class PatcherValidation:
             if result.returncode != 0:
                 logging.error(f"Validation failed for dumped model: {self.constants.computer.real_model}")
                 subprocess_wrapper.log(result)
+                logging.error(f"Validation failed for model: {self.constants.computer.real_model}")
                 raise Exception(f"Validation failed for model: {self.constants.computer.real_model}")
 
             logging.info(f"Validation succeeded for model: {self.constants.computer.real_model}")
@@ -140,9 +142,11 @@ class PatcherValidation:
 
                             if install_type in [PatchType.OVERWRITE_SYSTEM_VOLUME, PatchType.OVERWRITE_DATA_VOLUME]:
                                 if install_file.endswith(".framework"):
+                                    logging.error(f"{install_file} used with {install_type} - framework overwrite is prohibited.")
                                     raise Exception(f"{install_file} used with {install_type} - framework overwrite is prohibited.")
                             elif install_type in [PatchType.MERGE_SYSTEM_VOLUME, PatchType.MERGE_DATA_VOLUME]:
                                 if not install_file.endswith(".framework") and install_file not in patch_type_merge_exempt:
+                                    logging.error(f"{install_file} used with {install_type} - non-framework merge is prohibited.")
                                     raise Exception(f"{install_file} used with {install_type} - non-framework merge is prohibited.")
 
                             # SECURITY: Use pathlib to resolve paths correctly
@@ -156,6 +160,7 @@ class PatcherValidation:
         logging.info(f"Validating against Darwin {major_kernel}.{minor_kernel}")
         plist_name = f"OpenCore-Legacy-Patcher-{major_kernel}.{minor_kernel}.plist"
         if not sys_patch_helpers.SysPatchHelpers(self.constants).generate_patchset_plist(patchset, plist_name, None, None):
+            logging.error("Failed to generate patchset plist")
             raise Exception("Failed to generate patchset plist")
 
         plist_path = self.constants.payload_path / plist_name
@@ -180,10 +185,11 @@ class PatcherValidation:
         shadow_path = self.constants.payload_path / "Universal-Binaries_overlay"
 
         if not dmg_path.exists():
-            url = f"https://github.com/albert-mueller/PatcherSupportPkg/download/{self.constants.patcher_support_pkg_version}/Universal-Binaries.dmg"
+            url = f"https://github.com/YBronst/PatcherSupportPkg/download/{self.constants.patcher_support_pkg_version}/Universal-Binaries.dmg"
             dl_obj = network_handler.DownloadObject(url, str(dmg_path))
             dl_obj.download(spawn_thread=False)
             if not dl_obj.download_complete:
+                logging.error("Failed to download Universal-Binaries.dmg")
                 raise Exception("Failed to download Universal-Binaries.dmg")
 
         logging.info("Validating Root Patch File integrity")
