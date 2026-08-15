@@ -87,9 +87,9 @@ class BuildOpenCore:
         try:
             if self.constants.detected_os >= os_data.os_data.golden_gate:
                 if not self.constants.custom_model:
-                    webbrowser.open("https://www.apple.com/os/macos/")
-                    logging.error("macOS 27 Golden Gate is not available for Intel Macs. Apple Silicon required. Please do not try to upgrade to Golden Gate on Intel Macs.")
+                    logging.info("macOS 27 Golden Gate is not available for Intel Macs. Apple Silicon required. Please do not try to upgrade to Golden Gate on Intel Macs.")
                     logging.info("macOS 27 Golden Gate is compiled only for arm64, specifically for Apple Silicon.")
+                    webbrowser.open("https://www.apple.com/os/macos/")
                 else:
                     logging.info("You're not building OpenCore on your target system that is running macOS 27 Golden Gate.")
             else:
@@ -172,7 +172,7 @@ class BuildOpenCore:
                 # (AppleUSBXHCICommandRing::abortCommand / setPowerStateGated failures).
                 self.config["Kernel"]["Quirks"]["DisableIoMapper"] = False
             except Exception as e:
-                logging.error("Whoops, the app failed to inject the required kexts because of the following error:")
+                logging.error("Whoops, the app failed to inject the required OpenCore configuration because of the following error:")
                 logging.exception("Stack Trace:")
                 logging.info("Please try again later.")
                 sys.exit(3)
@@ -185,11 +185,12 @@ class BuildOpenCore:
                 
             current_boot_args = self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"]
             
-            # Target 2017 iMac models specifically to bypass vt-d/broadcom complications
-            _IMAC_2017_MODELS = ["iMac18,1", "iMac18,2", "iMac18,3"]
-            if self.model in _IMAC_2017_MODELS:
+            # Target some 2017 Mac models specifically to bypass vt-d/broadcom complications
+            # Dies ist benötigt, um WLAN und Bluetooth richtig zu funktionieren auf macOS 26 Tahoe.
+            _2017_MODELS_NEED_DART = ["iMac18,1", "iMac18,2", "iMac18,3", "MacBookPro14,1"]
+            if self.model in _2017_MODELS_NEED_DART:
                 if "dart=0" not in current_boot_args:
-                    logging.info(f"- Appending dart=0 boot argument for 2017 iMac hardware target to fix WiFi/Bluetooth issues on macOS Tahoe ({self.model})")
+                    logging.info(f"- Appending dart=0 boot argument for {self.model} hardware target to fix WiFi/Bluetooth issues on macOS Tahoe ({self.model})")
                     current_boot_args = f"{current_boot_args} dart=0".strip()
 
             if "-lilubetaall" not in current_boot_args:
