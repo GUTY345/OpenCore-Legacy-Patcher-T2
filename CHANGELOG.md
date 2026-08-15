@@ -1,5 +1,5 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
-## 4.0.0.16902 - 4.0.0 pre-alpha 3 for alpha 17 Pre-release
+## 4.0.0.16902 - 4.0.0 pre-alpha 3 for alpha 17
 This release:
 
 updates OpenCore to 2.0.0.5
