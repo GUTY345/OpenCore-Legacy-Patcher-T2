@@ -87,9 +87,9 @@ class BuildOpenCore:
         try:
             if self.constants.detected_os >= os_data.os_data.golden_gate:
                 if not self.constants.custom_model:
-                    webbrowser.open("https://www.apple.com/os/macos/")
-                    logging.error("macOS 27 Golden Gate is not available for Intel Macs. Apple Silicon required. Please do not try to upgrade to Golden Gate on Intel Macs.")
+                    logging.info("macOS 27 Golden Gate is not available for Intel Macs. Apple Silicon required. Please do not try to upgrade to Golden Gate on Intel Macs.")
                     logging.info("macOS 27 Golden Gate is compiled only for arm64, specifically for Apple Silicon.")
+                    webbrowser.open("https://www.apple.com/os/macos/")
                 else:
                     logging.info("You're not building OpenCore on your target system that is running macOS 27 Golden Gate.")
             else:
@@ -172,7 +172,7 @@ class BuildOpenCore:
                 # (AppleUSBXHCICommandRing::abortCommand / setPowerStateGated failures).
                 self.config["Kernel"]["Quirks"]["DisableIoMapper"] = False
             except Exception as e:
-                logging.error("Whoops, the app failed to inject the required kexts because of the following error:")
+                logging.error("Whoops, the app failed to inject the required OpenCore configuration because of the following error:")
                 logging.exception("Stack Trace:")
                 logging.info("Please try again later.")
                 sys.exit(3)
