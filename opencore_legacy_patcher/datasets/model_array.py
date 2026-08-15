@@ -295,10 +295,10 @@ AGDPSupport = [
     "iMac19,1",
     "iMac19,2",
     "iMacPro1,1",
+    "MacPro6,1",
     # Uncomment when dropped from macOS 
     # "iMac20,1",
     # "iMac20,2",
-    # "MacPro6,1",
 ]
 
 Missing_USB_Map = [
