@@ -496,7 +496,14 @@ class BuildGraphicsAudio:
                 self._nvidia_mxm_patch(self.gfx0_path)
             else:
                 logging.info("- Failed to find vendor")
-        elif not self.constants.custom_model and self.model in model_array.LegacyGPU and self.computer.dgpu:
+        # iMac15,1/17,1 and MacPro6,1 have a built-in (non-MXM) AMD GCN 1 dGPU that Apple's
+        # native AppleGraphicsDevicePolicy no longer recognizes under Tahoe (same models as
+        # the "Uncomment when dropped from macOS" AGDPSupport block). Route them through the
+        # same agdpmod/shikigva DeviceProperties + GCN power-gate patches every other GCN
+        # dGPU in this codebase gets: without it, any boot needing GPU compositing -- including
+        # the plain installer's own progress UI, before root patching ever runs -- renders a
+        # solid yellow/garbled screen instead of finishing.
+        elif not self.constants.custom_model and (self.model in model_array.LegacyGPU or self.model in ["iMac15,1", "iMac17,1", "MacPro6,1"]) and self.computer.dgpu:
             logging.info(f"- Detected dGPU: {utilities.friendly_hex(self.computer.dgpu.vendor_id)}:{utilities.friendly_hex(self.computer.dgpu.device_id)}")
             if self.computer.dgpu.arch in [
                 device_probe.AMD.Archs.Legacy_GCN_7000,
