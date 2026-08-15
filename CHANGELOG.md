@@ -1,4 +1,21 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16902 - 4.0.0 pre-alpha 3 for alpha 17 Pre-release
+This release:
+
+updates OpenCore to 2.0.0.5
+updates ocvalidate and macserial to 2.0.0.5
+fixes a bug where on certain systems, including T1 Macs, RSRRepair fails to run, in which turn results in a black screen or white screen with cursor
+fixes a yellow screen bug at 99% complete on iMac15,1, iMac17,1 and MacPro6,1 due to missing boot arguments required for macOS 26 Tahoe
+enables WiFi and Bluetooth on MacBookPro14,1
+
+Diese Version:
+
+Aktualisiert OpenCore auf Version 2.0.0.5
+Aktualisiert ocvalidate und macserial auf Version 2.0.0.5
+Behebt einen Fehler, der dazu führte, dass RSRRepair auf bestimmten Systemen, einschließlich T1 Macs, nicht ausgeführt werden konnte und ein schwarzer oder weißer Bildschirm mit Cursor angezeigt wurde
+Behebt einen Fehler, der bei 99 % abgeschlossen auf iMac15,1, iMac17,1 und MacPro6,1 aufgrund fehlender Startargumente für macOS 26 Tahoe einen gelben Bildschirm anzeigte
+Aktiviert WLAN und Bluetooth auf MacBookPro14,1
+
 ## 4.0.0.16901 - 4.0.0 pre-alpha 2 for alpha 17
 This release:
 
