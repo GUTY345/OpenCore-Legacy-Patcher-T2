@@ -839,11 +839,13 @@ class PatchSysVolume:
                 if method_type not in required_patches[patch]:
                     continue
                     
-                for install_patch_directory in required_patches[patch][method_type]:
-                    for install_file in required_patches[patch][method_type][install_patch_directory]:
+                for install_patch_directory in list(required_patches[patch][method_type]):
+                    for install_file in list(required_patches[patch][method_type][install_patch_directory]):
+                        is_dynamic_patchset = False
                         try:
                             # Resolve dynamic patchsets
                             if required_patches[patch][method_type][install_patch_directory][install_file] in DynamicPatchset:
+                                is_dynamic_patchset = True
                                 required_patches[patch][method_type][install_patch_directory][install_file] = self._resolve_dynamic_patchset(
                                     required_patches[patch][method_type][install_patch_directory][install_file]
                                 )
@@ -860,7 +862,7 @@ class PatchSysVolume:
                         # Check whether to source from root
                         if not required_patches[patch][method_type][install_patch_directory][install_file].startswith("/"):
                             source_file = source_files_path + "/" + source_file
-                        
+
                         if not Path(source_file).exists():
                             # _local_metallib_installed() only matches an already-installed
                             # MetallibSupportPkg folder by macOS build name, never by verifying
@@ -886,10 +888,24 @@ class PatchSysVolume:
                                     logging.error(f"- Failed to force-refresh MetallibSupportPkg: {e}")
 
                             if not Path(source_file).exists():
+                                if is_dynamic_patchset:
+                                    # Even after a fresh MetallibSupportPkg pull, this specific file is
+                                    # still missing. MetallibSupportPkg packages are generated per exact
+                                    # macOS build by a third-party service and aren't guaranteed to
+                                    # contain every single metallib for every build/Mac combination (see
+                                    # reports of e.g. missing VisionKitInternal.framework/.../default.metallib
+                                    # on multiple different builds, even after updating macOS). Treat a
+                                    # missing file sourced from it as non-fatal: skip installing just this
+                                    # one file instead of aborting root patching entirely, since these are
+                                    # supplemental shader libraries, not files every patch set depends on
+                                    # to function.
+                                    logging.warning(f"- MetallibSupportPkg is missing {install_patch_directory}/{install_file} for this build, skipping")
+                                    del required_patches[patch][method_type][install_patch_directory][install_file]
+                                    continue
                                 logging.error(f"Failed to find {source_file}")
                                 logging.exception("Stack Trace:")
                                 raise Exception(f"Failed to find {source_file}")
-                        
+
                         logging.debug(f"Verified file exists: {source_file}")
 
         # Make sure old SkyLight plugins aren't being used
