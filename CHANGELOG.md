@@ -1,4 +1,26 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16049 - 4.0.0 alpha 16.3.9
+Note: if your Mac requires dart=0 to be added as a boot argument to get WiFi and isn't done so automatically by the patcher, please report and I'll add it to the list of Macs that requires this boot argument. I added this boot argument on the Macs that are tested and confirmed to require this argument.
+This release:
+
+Adds MacBook Pro 2020 4 thunderbolt 3 ports and Mac Pro 2019 to the list with _T2_MODELS as otherwise it skips critical patches that without them when booting OpenCore, it would immediately trigger Activation Lock or a kernel panic when even booting natively supported macOS releases
+
+fixes OpenCore transfer silently reports success on USB flash drive installs
+
+enables WiFi and Bluetooth on MacBookPro14,1
+
+Fixes stale MetallibSupportPkg cache masking missing framework metallibs in preflight checks
+
+fixes yellow screen on certain GPUs
+
+fixes a bug where on certain systems, including T1 Macs, RSRRepair fails to run, in which turn results in a black screen or white screen with cursor fixes a yellow screen bug at 99% complete on iMac15,1, iMac17,1 and MacPro6,1 due to missing boot arguments required for macOS 26 Tahoe enables WiFi and Bluetooth on MacBookPro14,1
+
+fixes a bug that prevents from installing Metal 3802 and non-Metal patches
+
+adds support for the T1 security chip on macOS 26 Tahoe
+
+fixes a vulnerability where in validation.py if an errror occurs, it doesn't print in the Terminal. An attacker could abuse this to launch ClickFix attacks. fixes a bug where in validation.py, still it was pointed my own fork's PatcherSupportPkg link, which if it tries to fetch from it, it will throw an error since it's deprecated adds support for T1 security chip in macOS 26 Tahoe Add multiple kernel patches for FileVault and validation for T2 Macs
+
 ## 4.0.0.16048 - 4.0.0 alpha 16.3.8
 This release:
 
