@@ -226,10 +226,16 @@ class CheckProperties:
         """
         Check if host supports building OpenCore configs
         """
+        # Hackintoshes/VMs must stay blocked regardless of a selected custom_model,
+        # unless the user has explicitly opted in via allow_oc_everywhere. Checking
+        # custom_model first (as before) let picking any custom SMBIOS target in
+        # Settings silently re-enable "Build and Install OpenCore" on these hosts
+        # (this is what the on_model_choice() fix alone could not solve, since it
+        # just re-checks this same function).
+        if self.constants.host_is_hackintosh is True and self.constants.allow_oc_everywhere is False:
+            return False
         if self.constants.custom_model:
             return True
-        if self.constants.host_is_hackintosh is True:
-            return False
         if self.constants.allow_oc_everywhere is True:
             return True
         if self.constants.computer.real_model in model_array.SupportedSMBIOS:
