@@ -911,9 +911,18 @@ class SettingsFrame(wx.Frame):
             logging.info(f"Using Custom Model: {selection}")
             self.constants.custom_model = selection
             defaults.GenerateDefaults(self.constants.custom_model, False, self.constants)
-            if hasattr(self.parent, 'build_button') and self.parent.build_button:
-                self.parent.build_button.Enable()
 
+        # Re-sync the build button with host_can_build() on every model choice (not just the
+        # custom-model branch above): building OpenCore is never supported on Hackintoshes or
+        # VMs, regardless of which SMBIOS model is selected, so an unconditional Enable() here
+        # would re-show the button as clickable on those hosts (this previously regressed the
+        # Hackintosh/VM greying-out fix, since this call site wasn't updated to match the
+        # host_can_build() check already used elsewhere in this file, e.g. on_toggle above).
+        if hasattr(self.parent, 'build_button') and self.parent.build_button:
+            if gui_support.CheckProperties(self.constants).host_can_build() is True:
+                self.parent.build_button.Enable()
+            else:
+                self.parent.build_button.Disable()
 
 
         self.parent.model_label.SetLabel(f"Model: {selection}")
