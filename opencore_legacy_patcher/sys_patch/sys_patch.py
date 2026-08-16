@@ -122,6 +122,7 @@ class PatchSysVolume:
         self.needs_kmutil_exemptions = False  # For '/Library/Extensions' rebuilds
         self.kdk_path = None
         self.metallib_path = None
+        self._metallib_preflight_refresh_attempted = False
 
         # GUI will detect hardware patches before starting PatchSysVolume()
         # However the TUI will not, so allow for data to be passed in manually avoiding multiple calls
@@ -715,7 +716,7 @@ class PatchSysVolume:
         self._write_patchset(required_patches)
 
 
-    def _resolve_metallib_support_pkg(self, _post_install_retry: bool = False) -> str:
+    def _resolve_metallib_support_pkg(self, _post_install_retry: bool = False, force_refresh: bool = False) -> str:
         """
         Resolve MetalLibSupportPkg.
         
@@ -730,7 +731,8 @@ class PatchSysVolume:
         metallib_obj = metallib_handler.MetalLibraryObject(
             self.constants,
             self.constants.detected_os_build,
-            self.constants.detected_os_version
+            self.constants.detected_os_version,
+            ignore_installed=force_refresh
         )
         
         if not metallib_obj.success:
@@ -860,9 +862,33 @@ class PatchSysVolume:
                             source_file = source_files_path + "/" + source_file
                         
                         if not Path(source_file).exists():
-                            logging.error(f"Failed to find {source_file}")
-                            logging.exception("Stack Trace:")
-                            raise Exception(f"Failed to find {source_file}")
+                            # _local_metallib_installed() only matches an already-installed
+                            # MetallibSupportPkg folder by macOS build name, never by verifying
+                            # every file inside it is actually present. If an earlier run left
+                            # behind a package that's missing files this patchset needs (e.g.
+                            # upstream shipped an incomplete release for this build and later
+                            # fixed it), every future preflight attempt would keep failing on the
+                            # same stale "already installed" cache forever. Force one fresh
+                            # re-download/install before giving up.
+                            if (
+                                self.metallib_path
+                                and source_file.startswith(str(self.metallib_path))
+                                and not self._metallib_preflight_refresh_attempted
+                            ):
+                                self._metallib_preflight_refresh_attempted = True
+                                logging.warning(f"- {source_file} missing from cached MetallibSupportPkg, forcing a fresh download")
+                                try:
+                                    refreshed_path = self._resolve_metallib_support_pkg(force_refresh=True)
+                                    self._resolve_dynamic_patchset.cache_clear()
+                                    required_patches[patch][method_type][install_patch_directory][install_file] = refreshed_path
+                                    source_file = refreshed_path + install_patch_directory + "/" + install_file
+                                except Exception as e:
+                                    logging.error(f"- Failed to force-refresh MetallibSupportPkg: {e}")
+
+                            if not Path(source_file).exists():
+                                logging.error(f"Failed to find {source_file}")
+                                logging.exception("Stack Trace:")
+                                raise Exception(f"Failed to find {source_file}")
                         
                         logging.debug(f"Verified file exists: {source_file}")
 
