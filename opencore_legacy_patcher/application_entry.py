@@ -80,9 +80,14 @@ class OpenCoreLegacyPatcher:
         self.constants.computer = device_probe.Computer.probe()
         self.computer = self.constants.computer
         self.constants.booted_oc_disk = utilities.find_disk_off_uuid(utilities.clean_device_path(self.computer.opencore_path))
-        if self.constants.computer.firmware_vendor:
-            if self.constants.computer.firmware_vendor != "Apple":
-                self.constants.host_is_hackintosh = True
+        # Note: intentionally no truthy guard around firmware_vendor here. Several Hackintoshes
+        # never get an EFI "firmware-vendor" DeviceTree property injected at all (get_firmware_vendor()
+        # then returns None), which previously fell through this check entirely and left
+        # host_is_hackintosh at its default False - silently re-enabling "Build and Install
+        # OpenCore" via host_can_build()'s SupportedSMBIOS fallback. Genuine Apple firmware
+        # always reports "Apple" here, so this can't misfire on real Macs.
+        if self.constants.computer.firmware_vendor != "Apple":
+            self.constants.host_is_hackintosh = True
 
         # Dev/test only: detect VMware virtual machines specifically (never matches real Mac hardware,
         # since Apple never assigns "VMware*" as a real_model string). Used solely to bypass the SIP
@@ -187,4 +192,3 @@ def main():
     Main entry point
     """
     OpenCoreLegacyPatcher()
-
