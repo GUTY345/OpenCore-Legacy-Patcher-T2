@@ -147,23 +147,8 @@ class EntryPoint:
         """
         Closes the wxPython GUI safely using wxWidgets native event lifecycle
         """
-        if not self.frame:
-            if event:
-                event.Skip()
-            return
-
-        logging.info("Cleaning up wxPython GUI")
-
-        self.frame.SetTransparent(0)
-        wx.Yield()
-
-        self.frame.DestroyChildren()
-        self.frame.Destroy()
-        
-        # Sicherstellen, dass die MainLoop sauber beendet wird
-        if self.app:
-            self.app.ExitMainLoop()
-            
-        # Erlaubt dem System, das Event final zu verarbeiten, falls vorhanden
+        logging.info("Closing wxPython GUI")
         if event:
             event.Skip()
+        elif self.frame:
+            self.frame.Destroy()

@@ -55,7 +55,7 @@ exe = EXE(pyz,
           a.scripts,
           [],
           exclude_binaries=True,
-          name='OpenCore-Patcher',
+          name='OpenCore-Legacy-Patcher-T1-MBP14,3',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -73,10 +73,10 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                upx_exclude=[],
-               name='OpenCore-Patcher')
+               name='OpenCore-Legacy-Patcher-T1-MBP14,3')
 
 app = BUNDLE(coll,
-             name='OpenCore-Patcher.app',
+             name='OpenCore-Legacy-Patcher-T1-MBP14,3.app',
              icon=str(SPEC_DIR / "payloads/Icon/AppIcons/OC-Patcher.icns"), # Fix: Use the corrected SPEC_DIR variable
              bundle_identifier="com.dortania.opencore-legacy-patcher",
              info_plist={

@@ -34,13 +34,15 @@ class AMDPolaris(BaseHardware):
 
     def present(self) -> bool:
         """
-        Targeting AMD Polaris GPUs with CPUs lacking AVX2.0 or missing Framebuffer patches (ie. MacBookPro13,3 and MacBookPro14,3)
+        Targeting AMD Polaris GPUs with CPUs lacking AVX2.0 or missing Framebuffer patches (ie. MacBookPro13,3).
+        MacBookPro14,3 is intentionally excluded while investigating its Polaris
+        root-patch black-screen issue.
         """
         return self._is_gpu_architecture_present(
             gpu_architectures=[
                 device_probe.AMD.Archs.Polaris
             ]
-        ) and ("AVX2" not in self._computer.cpu.leafs or self._computer.real_model in ["MacBookPro13,3", "MacBookPro14,3"])
+        ) and ("AVX2" not in self._computer.cpu.leafs or self._computer.real_model in ["MacBookPro13,3"])
 
 
     def native_os(self) -> bool:

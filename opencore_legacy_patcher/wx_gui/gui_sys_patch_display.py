@@ -244,16 +244,73 @@ class SysPatchDisplayFrame(wx.Frame):
 
 
     def on_start_root_patching(self, patches: dict):
+        t1_status = "DETECTED" if getattr(self.constants.computer, 't1_chip', False) else "NOT DETECTED"
+        
+        gpu_status = "NOT DETECTED"
+        if getattr(self.constants.computer, 'dgpu', None):
+            dgpu = self.constants.computer.dgpu
+            arch = getattr(dgpu, 'arch', None)
+            if arch and "Polaris" in str(arch):
+                gpu_status = "DETECTED"
+        if gpu_status == "NOT DETECTED" and getattr(self.constants.computer, 'gpus', None):
+            for gpu in self.constants.computer.gpus:
+                arch = getattr(gpu, 'arch', None)
+                if arch and "Polaris" in str(arch):
+                    gpu_status = "DETECTED"
+                    break
+        if gpu_status == "NOT DETECTED" and any("AMD Polaris" in p for p in patches if patches[p] is True):
+            gpu_status = "DETECTED"
+            
+        wifi_status = "NOT DETECTED"
+        if getattr(self.constants.computer, 'wifi', None):
+            wifi = self.constants.computer.wifi
+            vendor_name = getattr(wifi, 'vendor_name', 'Broadcom')
+            vendor_id = getattr(wifi, 'vendor_id', 0)
+            device_id = getattr(wifi, 'device_id', 0)
+            wifi_status = f"{vendor_name} {vendor_id:04X}:{device_id:04X}"
+
+        patch_list = "\n".join([f"- {patch.split(': ')[1] if ': ' in patch else patch}" for patch in patches if not patch.startswith("Settings") and not patch.startswith("Validation") and patches[patch] is True])
+        if not patch_list:
+            patch_list = "- None"
+
+        os_name = "macOS Tahoe 26.x" if self.constants.detected_os >= 25 else f"macOS (Build {self.constants.detected_os_build})"
+        
+        warning_msg = f"""Target OS: {os_name}
+Model: {self.constants.computer.real_model}
+T1 Security: {t1_status}
+AMD Polaris: {gpu_status}
+Wi-Fi: {wifi_status}
+
+Root Patches da applicare:
+{patch_list}
+
+ATTENZIONE:
+L'applicazione delle Root Patches modificherà il volume di sistema
+creando un nuovo snapshot APFS.
+"""
+        pop_up = wx.MessageDialog(
+            self.frame,
+            warning_msg,
+            "CONFERMA APPLICAZIONE ROOT PATCH",
+            style=wx.OK | wx.CANCEL | wx.ICON_WARNING
+        )
+        pop_up.SetOKCancelLabels("APPLICA ROOT PATCH", "ANNULLA")
+        
+        if pop_up.ShowModal() != wx.ID_OK:
+            return
+
         frame = gui_sys_patch_start.SysPatchStartFrame(
             parent=None,
             title=self.title,
             global_constants=self.constants,
             patches=patches,
         )
-        self.frame_modal.Hide()
-        self.frame_modal.Destroy()
-        self.frame.Hide()
-        self.frame.Destroy()
+        if hasattr(self, 'frame_modal') and self.frame_modal:
+            self.frame_modal.Hide()
+            self.frame_modal.Destroy()
+        if hasattr(self, 'frame') and self.frame:
+            self.frame.Hide()
+            self.frame.Destroy()
         frame.start_root_patching()
 
 

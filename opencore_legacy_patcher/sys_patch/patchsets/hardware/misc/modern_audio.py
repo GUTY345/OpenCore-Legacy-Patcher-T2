@@ -46,7 +46,10 @@ class ModernAudio(BaseHardware):
         if self._os_build == "25A5279m":
             return True
 
-        if self._computer.t2_chip is True:
+        # Non-T2 models (including T1 models like MacBookPro13,x and MacBookPro14,x)
+        # require AppleHDA on macOS Tahoe even if spoofed to a T2 model.
+        real_model = getattr(self._computer, "real_model", "")
+        if self._computer.t2_chip is True and real_model not in ["MacBookPro14,3", "MacBookPro14,2", "MacBookPro14,1", "MacBookPro13,3", "MacBookPro13,2", "MacBookPro13,1"]:
             return True
 
         return False

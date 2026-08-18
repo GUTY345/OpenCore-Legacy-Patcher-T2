@@ -63,6 +63,32 @@ class BuildGraphicsAudio:
         Primarily for Mac Pros and systems with Nvidia Maxwell/Pascal GPUs
         """
 
+        # MacBookPro14,3 GPU Profile Handling
+        # WhateverGreen + -wegnoegpu are ONLY injected when TEST-B profile is explicitly selected.
+        # Historical evidence: these modifications prevented reaching Tahoe login screen.
+        if self.model == "MacBookPro14,3" or (self.computer and self.computer.real_model == "MacBookPro14,3"):
+            if self.constants.build_profile == "test_b":
+                logging.info("TEST-B GPU PROFILE ENABLED")
+                if not self.constants.whatevergreen_path.exists():
+                    logging.error(f"ERROR: WhateverGreen payload not found at {self.constants.whatevergreen_path}")
+                    sys.exit(1)
+                if not support.BuildSupport(self.model, self.constants, self.config).get_kext_by_bundle_path("WhateverGreen.kext")["Enabled"] is True:
+                    logging.info(f"Adding WhateverGreen.kext {self.constants.whatevergreen_version}")
+                    support.BuildSupport(self.model, self.constants, self.config).enable_kext("WhateverGreen.kext", self.constants.whatevergreen_version, self.constants.whatevergreen_path)
+                if "-wegnoegpu" not in self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"]:
+                    logging.info("Enabling -wegnoegpu")
+                    self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] += " -wegnoegpu"
+                logging.info(f"WhateverGreen: ENABLED")
+                logging.info(f"WhateverGreen version: {self.constants.whatevergreen_version}")
+                logging.info(f"-wegnoegpu: ENABLED")
+            else:
+                logging.info("STANDARD / SAFE PROFILE — MacBookPro14,3")
+                logging.info("Adding agdpmod=pikera to boot-args for Tahoe DisplayPolicy mitigation")
+                if "agdpmod=pikera" not in self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"]:
+                    self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] += " agdpmod=pikera"
+                logging.info("WhateverGreen: NOT ENABLED BY TEST-B")
+                logging.info("-wegnoegpu: NOT ENABLED BY TEST-B")
+
         if self.constants.allow_oc_everywhere is False and self.constants.serial_settings != "None":
             if not support.BuildSupport(self.model, self.constants, self.config).get_kext_by_bundle_path("WhateverGreen.kext")["Enabled"] is True:
                 support.BuildSupport(self.model, self.constants, self.config).enable_kext("WhateverGreen.kext", self.constants.whatevergreen_version, self.constants.whatevergreen_path)

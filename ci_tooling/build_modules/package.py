@@ -20,7 +20,7 @@ class GeneratePackage:
         Initialize
         """
         self._files = {
-            "./dist/OpenCore-Patcher.app": "/Library/Application Support/Dortania/OpenCore-Patcher.app",
+            "./dist/OpenCore-Legacy-Patcher-T1-MBP14,3.app": "/Applications/OpenCore-Legacy-Patcher-T1-MBP14,3.app",
             "./ci_tooling/privileged_helper_tool/com.dortania.opencore-legacy-patcher.privileged-helper": "/Library/PrivilegedHelperTools/com.dortania.opencore-legacy-patcher.privileged-helper",
         }
         self._autopkg_files = {
@@ -111,8 +111,8 @@ class GeneratePackage:
             f.write(GenerateScripts().postinstall_pkg())
 
         assert macos_pkg_builder.Packages(
-            pkg_output="./dist/OpenCore-Patcher.pkg",
-            pkg_bundle_id="com.dortania.opencore-legacy-patcher",
+            pkg_output="./dist/OpenCore-Legacy-Patcher-T1-MBP14,3.pkg",
+            pkg_bundle_id="com.dortania.opencore-legacy-patcher-t1",
             pkg_version=constants.Constants().patcher_version,
             pkg_allow_relocation=False,
             pkg_as_distribution=True,
@@ -120,7 +120,7 @@ class GeneratePackage:
             pkg_preinstall_script=_tmp_pkg_preinstall.name,
             pkg_postinstall_script=_tmp_pkg_postinstall.name,
             pkg_file_structure=self._files,
-            pkg_title="OpenCore Legacy Patcher T2",
+            pkg_title="OpenCore Legacy Patcher T1",
             pkg_welcome=self._generate_installer_welcome(),
         ).build() is True
 

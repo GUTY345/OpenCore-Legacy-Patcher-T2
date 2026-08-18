@@ -57,71 +57,14 @@ class BuildFrame(wx.Frame):
 
     def on_build_failure(self) -> None:
         """
-        Custom error dialog that provides a direct 'Ask Gemini' bridge 
-        for debugging complex build errors.
+        Standard error dialog for build failure.
         """
-        dlg = wx.Dialog(self, title="Build Error", size=(450, 250))
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Build error explanation
-        msg = wx.StaticText(dlg, label="An error occurred while building OpenCore.\n\n"
-                                       "If you are unsure how to fix this, you can ask \n"
-                                       "Gemini for a technical analysis of your build log.")
-        sizer.Add(msg, 0, wx.ALL | wx.CENTER, 20)
-
-        # Button Row: Ask Gemini | View Log | Close
-        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        
-        gemini_btn = wx.Button(dlg, label="Ask Gemini")
-        gemini_btn.Bind(wx.EVT_BUTTON, lambda e: self.on_ask_gemini())
-        
-        close_btn = wx.Button(dlg, wx.ID_CANCEL, label="Close")
-        
-        btn_sizer.Add(gemini_btn, 0, wx.ALL, 5)
-        btn_sizer.Add(close_btn, 0, wx.ALL, 5)
-        
-        sizer.Add(btn_sizer, 0, wx.CENTER)
-        dlg.SetSizer(sizer)
-        dlg.ShowModal()
-        dlg.Destroy()
-
-    def copy_to_clipboard(self):
-        # 1. Get the error log
-        log_content = self.text_box.GetValue().splitlines()[-15:]
-        error_text = "Analyze this OpenCore build error: " + " ".join(log_content)
-        """Copies the error to the clipboard and opens Gemini for the user."""
-        # 1. Capture the log
-        log_content = self.text_box.GetValue().splitlines()[-15:]
-        error_text = "\n".join(log_content)
-        
-        # 2. Copy to system clipboard
-        if wx.TheClipboard.Open():
-            wx.TheClipboard.SetData(wx.TextDataObject(error_text))
-            wx.TheClipboard.Close()
-            
-        # 3. Inform the user what just happened
-        wx.MessageBox(
-            "The error log has been copied to your clipboard.\n\n"
-            "1. Gemini will now open in a new window.\n"
-            "2. Simply paste (Cmd+V) your error log into the chat box.",
-            "Ask Gemini", 
-            wx.OK | wx.ICON_INFORMATION
+        dlg = wx.MessageDialog(
+            self,
+            "An error occurred while building OpenCore.\n\nPlease check the logs in the text box for more information.",
+            "Build Error",
+            style=wx.OK | wx.ICON_ERROR
         )
-        
-    def on_ask_gemini(self) -> None:
-        self.copy_to_clipboard()
-        dlg = wx.Dialog(self, title="Ask Gemini Analysis", size=(800, 600))
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        
-        webview = wx.html2.WebView.New(dlg)
-        
-        # REMOVE OR COMMENT OUT THIS LINE:
-        # webview.Bind(wx.html2.EVT_WEBVIEW_LOADED, on_load)
-        
-        webview.LoadURL("https://gemini.google.com/")
-        
-        sizer.Add(webview, 1, wx.EXPAND)
-        dlg.SetSizer(sizer)
         dlg.ShowModal()
         dlg.Destroy()
     
@@ -132,6 +75,7 @@ class BuildFrame(wx.Frame):
         Format:
             - Title label:        Build and Install OpenCore
             - Text:               Model: {Build or Host Model}
+            - Profile selection:  Radio buttons (MBP14,3 only)
             - Button:             Install OpenCore
             - Read-only text box: {empty}
             - Button:             Return to Main Menu
@@ -146,8 +90,16 @@ class BuildFrame(wx.Frame):
         model_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         model_label.Centre(wx.HORIZONTAL)
 
+        next_y = model_label.GetPosition()[1] + model_label.GetSize()[1] + 5
+
+        # Profile selection for MacBookPro14,3
+        target_model = self.constants.custom_model or self.constants.computer.real_model
+        self.radio_standard = None
+        self.radio_testb = None
+
+
         # Button: Install OpenCore
-        install_button = wx.Button(frame, label="🔩 Install OpenCore", pos=(-1, model_label.GetPosition()[1] + model_label.GetSize()[1]), size=(150, 30))
+        install_button = wx.Button(frame, label="🔩 Install OpenCore", pos=(-1, next_y), size=(150, 30))
         install_button.Bind(wx.EVT_BUTTON, self.on_install)
         install_button.Centre(wx.HORIZONTAL)
         install_button.Disable()
@@ -207,6 +159,34 @@ class BuildFrame(wx.Frame):
         logger = logging.getLogger()
         handler = gui_support.ThreadHandler(self.text_box) # Keep a reference
         logger.addHandler(handler)
+
+
+        if self.constants.build_profile == "test_b":
+            profile_name = "TEST-B GPU"
+        elif self.constants.build_profile == "test_c":
+            profile_name = "TEST-C TAHOE / ALBERT"
+        elif self.constants.build_profile == "test_c_spoofed":
+            profile_name = "TEST-C SPOOFED / ALBERT"
+        else:
+            profile_name = "STANDARD / SAFE"
+        target_model = self.constants.custom_model or self.constants.computer.real_model
+
+        logging.info("=========================================")
+        logging.info("          BUILD CONFIGURATION            ")
+        logging.info("=========================================")
+        logging.info(f"Target Model: {target_model}")
+        logging.info(f"Profile: {profile_name}")
+
+        if target_model == "MacBookPro14,3":
+            t1_status = "DETECTED" if getattr(self.constants.computer, 't1_chip', False) else "ENABLED (MBP14,3)"
+            wifi_status = f"{self.constants.computer.wifi.vendor_id:04X}:{self.constants.computer.wifi.device_id:04X}" if getattr(self.constants.computer, 'wifi', None) else "14E4:43BA"
+            logging.info(f"T1 Security:  {t1_status}")
+            logging.info(f"Wi-Fi Module: {wifi_status}")
+
+        logging.info("=========================================")
+        logging.info("")
+
+
         try:
             build.BuildOpenCore(self.constants.custom_model or self.constants.computer.real_model, self.constants)
             self.build_successful = True

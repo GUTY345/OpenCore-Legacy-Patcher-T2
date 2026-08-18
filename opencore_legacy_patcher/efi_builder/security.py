@@ -374,22 +374,25 @@ class BuildSecurity:
                     )
                 
                 # Shared: AMFI / Library Validation (Legacy Non-T2 verification targets)
-                if self.constants.disable_cs_lv is True:
-                    if self.constants.disable_amfi is True:
-                        logging.info("- Disabling AMFI (non-T2 Mac)")
-                        self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "amfi=0x80")
-                    else:
-                        logging.info("- Disabling Library Validation")
-                        support.BuildSupport(self.model, self.constants, self.config).get_item_by_kv(
-                            self.config["Kernel"]["Patch"], "Comment", "Disable Library Validation Enforcement"
-                        )["Enabled"] = True
-                        support.BuildSupport(self.model, self.constants, self.config).get_item_by_kv(
-                            self.config["Kernel"]["Patch"], "Comment", "Disable _csr_check() in _vnode_check_signature"
-                        )["Enabled"] = True
-                        self._update_nvram_string(OCLP_NVRAM_UUID, "OCLP-Settings", "-allow_amfi")
-                        support.BuildSupport(self.model, self.constants, self.config).enable_kext(
-                            "CSLVFixup.kext", self.constants.cslvfixup_version, self.constants.cslvfixup_path
-                        )
+                # Ensure kernel patches for Library Validation and FileVault are active
+                support.BuildSupport(self.model, self.constants, self.config).get_item_by_kv(
+                    self.config["Kernel"]["Patch"], "Comment", "Disable Library Validation Enforcement"
+                )["Enabled"] = True
+                support.BuildSupport(self.model, self.constants, self.config).get_item_by_kv(
+                    self.config["Kernel"]["Patch"], "Comment", "Disable _csr_check() in _vnode_check_signature"
+                )["Enabled"] = True
+                self._update_nvram_string(OCLP_NVRAM_UUID, "OCLP-Settings", "-allow_amfi")
+
+                # Attestation error -10000 bypass (Apple Account / setup compatibility)
+                self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-oas_skip_attestation")
+                self._set_nvram_value(APPLE_NVRAM_UUID, "IAS_ENV_SKIP_ATTESTATION", "1", overwrite=True)
+
+                if self.constants.disable_cs_lv is True and self.constants.disable_amfi is True and not needs_amfipass:
+                    logging.info("- Disabling AMFI (non-T2 fallback)")
+                    self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "amfi=0x80")
+                else:
+                    logging.info("- Using AMFIPass & Library Validation Enforcement Bypass for Apple Account compatibility")
+                    self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-amfipassbeta ipc_control_port_options=0")
     
                 if self.constants.secure_status is False:
                     logging.info("- Disabling SecureBootModel (non-T2)")
@@ -408,7 +411,7 @@ class BuildSecurity:
                 logging.error(f"By accident, we executed logic for non-T2 Macs while {self.model} has the T2 chip. Aborting. Try reinstalling OpenCore Legacy Patcher T2.")
                 sys.exit(3) # sollte normalerweise niemals hier erreichen - falls die Programme durch einen Angreifer ausgetrickst wurde, dass ein T2 Mac nicht ein T2 Mac ist, nur denn wird es hier erreichen
             else:
-                if smbios_data.smbios_dictionary[self.model]["Max OS Supported"] < os_data.os_data.sonoma:
+                if smbios_data.smbios_dictionary[self.model]["Max OS Supported"] < os_data.os_data.sonoma or self.model == "MacBookPro14,3":
                     needs_amfipass = True
 
         if needs_amfipass:
@@ -416,3 +419,9 @@ class BuildSecurity:
             support.BuildSupport(self.model, self.constants, self.config).enable_kext(
                 "AMFIPass.kext", self.constants.amfipass_version, self.constants.amfipass_path
             )
+            # Ensure -amfipassbeta is present in boot-args and remove conflicting amfi=0x80
+            self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-amfipassbeta ipc_control_port_options=0")
+            current_args = self._read_nvram_string(APPLE_NVRAM_UUID, "boot-args")
+            if "amfi=0x80" in current_args:
+                cleaned_args = " ".join([arg for arg in current_args.split() if arg != "amfi=0x80"])
+                self.config["NVRAM"]["Add"][APPLE_NVRAM_UUID]["boot-args"] = cleaned_args
