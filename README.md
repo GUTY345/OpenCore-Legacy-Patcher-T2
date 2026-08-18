@@ -162,3 +162,5 @@ This is experimental software.
 Use it only if you understand the risks associated with modifying OpenCore, macOS system volumes, root patches, APFS snapshots and unsupported macOS installations.
 
 Keep a known-good macOS installation available for recovery.
+
+docs: fix source build link
