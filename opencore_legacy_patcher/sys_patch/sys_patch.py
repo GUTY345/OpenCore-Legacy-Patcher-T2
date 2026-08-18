@@ -796,13 +796,21 @@ class PatchSysVolume:
             Exception: If variant is unknown
         """
         logging.debug(f"Resolving dynamic patchset: {variant}")
-        
-        if variant == DynamicPatchset.MetallibSupportPkg:
-            return self._resolve_metallib_support_pkg()
-        else:
-            logging.error(f"Unknown Dynamic Patchset: {variant}")
+        # behebt eine Sicherheitslücke, die erlaubt Angreifern, das App zum Absturz bringen beim unerwartetes Fehler oder davon auszunutzen, belibiges Code auszuführen
+        try:
+            logging.info("Resolving dynamic patchset")
+            if variant == DynamicPatchset.MetallibSupportPkg:
+                return self._resolve_metallib_support_pkg()
+                logging.info("Successfully resolved the dynamic patchset")
+            else:
+                logging.error(f"Unknown Dynamic Patchset: {variant}")
+                logging.exception("Stack Trace:")
+                raise Exception(f"Unknown Dynamic Patchset: {variant}")
+        except Exception as e:
+            logging.error("Couldn't resolve patchset due to unexpected error:")
             logging.exception("Stack Trace:")
-            raise Exception(f"Unknown Dynamic Patchset: {variant}")
+            logging.info("Please try again later.")
+            sys.exit(3)
 
 
     def _preflight_checks(self, required_patches: dict, source_files_path: Path) -> dict:
@@ -851,6 +859,13 @@ class PatchSysVolume:
                                 )
                         except TypeError:
                             pass
+                        # behebt auch eine Sicherheitslücke, die erlaubt Angreifern, falls dies nicht ein erwartetes Fehler ist, beliebiges Code auszuführen
+                        except Exception as e:
+                            logging.error("We couldn't resolve the dynamic patchset and install Metallibs due to the following error:")
+                            logging.exception("Stack Trace:")
+                            logging.info("Please try again later.")
+                            logging.info("Try reporting this issue to the OpenCore Legacy Patcher T2 repository and check for updates.")
+                            sys.exit(3)
 
                         source_file = (
                             required_patches[patch][method_type][install_patch_directory][install_file]
@@ -884,8 +899,12 @@ class PatchSysVolume:
                                     self._resolve_dynamic_patchset.cache_clear()
                                     required_patches[patch][method_type][install_patch_directory][install_file] = refreshed_path
                                     source_file = refreshed_path + install_patch_directory + "/" + install_file
+                                # behebt eine Sicherheitslücke, indem das Fehler ausgedrückt wurde, aber das Prozess nicht richtig beendete und dass das Fehler nicht besonders verständlich war. Angreifern können davon ausnutzen ohne der Ahnung des Nutzers auszuführen, ohne überhaupt das zu loggen, um schädliches Code ungemerkt zu ausführen. Und auch, Angreifern können davon ausnutzen, um ClickFix-Angriffe zu starten.
                                 except Exception as e:
                                     logging.error(f"- Failed to force-refresh MetallibSupportPkg: {e}")
+                                    logging.exception("Stack Trace:")
+                                    logging.info("Try reporting this issue to the OpenCore Legacy Patcher T2 repository and check for updates.")
+                                    sys.exit(3)
 
                             if not Path(source_file).exists():
                                 if is_dynamic_patchset:
@@ -902,9 +921,10 @@ class PatchSysVolume:
                                     logging.warning(f"- MetallibSupportPkg is missing {install_patch_directory}/{install_file} for this build, skipping")
                                     del required_patches[patch][method_type][install_patch_directory][install_file]
                                     continue
-                                logging.error(f"Failed to find {source_file}")
-                                logging.exception("Stack Trace:")
-                                raise Exception(f"Failed to find {source_file}")
+                                else:
+                                    logging.error(f"Failed to find {source_file}")
+                                    logging.exception("Stack Trace:")
+                                    raise Exception(f"Failed to find {source_file}")
 
                         logging.debug(f"Verified file exists: {source_file}")
 
