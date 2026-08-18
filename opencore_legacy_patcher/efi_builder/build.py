@@ -83,7 +83,6 @@ class BuildOpenCore:
         """
         Build EFI folder
         """
-        logging.info("---OpenCore Legacy Patcher T2 by Albert Müller---")
         try:
             if self.constants.detected_os >= os_data.os_data.golden_gate:
                 if not self.constants.custom_model:
@@ -127,8 +126,8 @@ class BuildOpenCore:
                     "SyncRuntimePermissions": False,
                     "DevirtualiseMmio": False,
                 })
-                self.config.setdefault("PlatformInfo", {})["UpdateSMBIOSMode"] = "Custom"
-                self.config.setdefault("Kernel", {}).setdefault("Quirks", {})["CustomSMBIOSGuid"] = True
+                self.config.setdefault("PlatformInfo", {})["UpdateSMBIOSMode"] = "Create" # Costum verursacht Probleme auf T2 Macs, insbesonders auf T2 Macs mit gespoofter SMBIOS, indem einige Sachen erst gar nicht funktionieren oder funktionieren nicht richtig, wie die Batteries des MacBook zu laden.
+                ## self.config.setdefault("Kernel", {}).setdefault("Quirks", {})["CustomSMBIOSGuid"] = True - das funktioniert gar nicht richtig und CostumSMBIOSGuid wurde sowieso nie eingeschaltet, und wahrscheinlich verurascht auf T2 Macs auch Probleme
                 self.config.setdefault("Misc", {}).setdefault("Security", {})["SecureBootModel"] = "Disabled"
             except Exception as e:
                 logging.error("Whoops, applying in-memory T2 booter and SMBIOS alignments failed because of the following error:")
