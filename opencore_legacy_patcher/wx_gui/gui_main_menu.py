@@ -230,52 +230,57 @@ class MainFrame(wx.Frame):
 
     def _check_for_updates(self):
         if self.constants.has_checked_updates is True:
+            logging.info("We have already checked for updates.")
             return
-    
-        ignore_updates = global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates")
-        if ignore_updates is True:
-            self.constants.ignore_updates = True
-            return
-    
-        self.constants.ignore_updates = False
-        self.constants.has_checked_updates = True
+        # behebt eine Sicherheitslücke, die erlaubt Angreifern, trotz es schon nach Updates gesucht wurden, wieder nach Updates zu suchen, um den Mac und die API fürs Updates zu überlasten.
+        # behebt auch eine Sicherheitslücke, die erlaubt Angreifern, Updates zu deaktivieren, um aus bereits bekannten Sicherheitslücken auszunutzen.
+        else:
+            logging.info("Checking for updates")
+            self.constants.has_checked_updates = True
+            
+            update_dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
+            if not update_dict:
+                return
         
-        update_dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
-        if not update_dict:
-            return
-    
-        remote_version_str = update_dict["Version"]
-        local_version_str = self.constants.patcher_version
-    
-        try:
-            remote_v = version.parse(str(remote_version_str))
-            local_v = version.parse(local_version_str)
-    
-            if remote_v <= local_v:
-                logging.info(f"{self.constants.patcher_name} is up to date. (Local: {local_v} >= Remote: {remote_v})")
+            remote_version_str = update_dict["Version"]
+            local_version_str = self.constants.patcher_version
+        
+            try:
+                remote_v = version.parse(str(remote_version_str))
+                local_v = version.parse(local_version_str)
+        
+                if remote_v <= local_v:
+                    logging.info(f"{self.constants.patcher_name} is up to date. (Local: {local_v} >= Remote: {remote_v})")
+                    return
+        
+            except version.InvalidVersion:
+                logging.error("Your version is invalid")
+                if remote_version_str == local_version_str:
+                    return
+            # behebt eine Sicherheitslücke, indem beim unerwartetes Fehler das App einfach abstürzt. Angreifern können davon ausnutzen, um invalider Syntax zu schreiben, um beliebiges Code auszuführen.
+            except Exception as e:
+                logging.error("We face some issues checking for updates. The error is the following:")
+                logging.exception("Stack Trace:")
+                logging.info("Check for available updates in the OpenCore Legacy Patcher T2 repository. At the moment, the builtin updater is not working as intended.")
+                return
+        
+            if getattr(self, 'exiting_app', False) or gui_support.is_app_exiting():
                 return
     
-        except version.InvalidVersion:
-            if remote_version_str == local_version_str:
-                return
+            logging.info(f"Newer version detected: {remote_version_str}")
+            
+            url = "https://api.github.com/repos/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/latest"
+            changelog = """## Unable to fetch changelog\n\nPlease check the Github page for more information."""
+            try:
+                response = requests.get(url, headers={"User-Agent": "OpenCore-Legacy-Patcher-T2"}, timeout=10).json()
+                if "body" in response:
+                    changelog = response["body"].split("## Asset Information")[0]
+            except Exception as e:
+                logging.error(f"Failed to fetch changelog text: {e}")
+                logging.exception("Stack Trace:")
     
-        if getattr(self, 'exiting_app', False) or gui_support.is_app_exiting():
-            return
-
-        logging.info(f"Newer version detected: {remote_version_str}")
-        
-        url = "https://api.github.com/repos/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/latest"
-        changelog = """## Unable to fetch changelog\n\nPlease check the Github page for more information."""
-        try:
-            response = requests.get(url, headers={"User-Agent": "OpenCore-Legacy-Patcher-T2"}, timeout=10).json()
-            if "body" in response:
-                changelog = response["body"].split("## Asset Information")[0]
-        except Exception as e:
-            logging.error(f"Failed to fetch changelog text: {e}")
-            logging.error(f"Es hat fehlgeschlagen, den Changelog-Text anzuzeigen: {e}")
-
-        if not getattr(self, 'exiting_app', False) and not gui_support.is_app_exiting():
-            wx.CallAfter(self.on_update, update_dict["Link"], remote_version_str, update_dict["Github Link"], changelog)
+            if not getattr(self, 'exiting_app', False) and not gui_support.is_app_exiting():
+                wx.CallAfter(self.on_update, update_dict["Link"], remote_version_str, update_dict["Github Link"], changelog)
         
     def on_update(self, oclp_url: str, oclp_version: str, oclp_github_url: str, changelog_text: str):
         if not self or gui_support.is_app_exiting():
@@ -386,6 +391,7 @@ class MainFrame(wx.Frame):
         except Exception as e:
             logging.error(f"We failed to open up Build and Install OpenCore: {e}")
             logging.exception("Stack Trace:")
+            return
 
     def on_post_install_root_patch(self, event: wx.Event = None):    
         try:
@@ -393,6 +399,7 @@ class MainFrame(wx.Frame):
         except Exception as e:
             logging.error(f"Failed to open Install drivers and patches: {e}")
             logging.exception("Stack Trace:")
+            return
 
     def on_create_macos_installer(self, event: wx.Event = None):
         try:
@@ -400,6 +407,7 @@ class MainFrame(wx.Frame):
         except Exception as e:
             logging.error(f"We failed to open up Download macOS: {e}")
             logging.exception("Stack Trace:")
+            return
 
     def on_settings(self, event: wx.Event = None):
         try:
@@ -407,6 +415,7 @@ class MainFrame(wx.Frame):
         except Exception as e:
             logging.error(f"We failed to open up Settings: {e}")
             logging.exception("Stack Trace:")
+            return
 
     def on_help(self, event: wx.Event = None):
         try:
@@ -414,3 +423,4 @@ class MainFrame(wx.Frame):
         except Exception as e:
             logging.error(f"We failed to open up Help: {e}")
             logging.exception("Stack Trace:")
+            return
