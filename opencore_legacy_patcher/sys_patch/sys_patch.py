@@ -544,7 +544,7 @@ class PatchSysVolume:
             str: Full destination path
         """
         try:
-            if method_type in [PatchType.OVERWRITE_SYSTEM_VOLUME, PatchType.MERGE_SYSTEM_VOLUME]:
+            if method_type in [PatchType.OVERWRITE_SYSTEM_VOLUME, PatchType.MERGE_SYSTEM_VOLUME, PatchType.REMOVE_SYSTEM_VOLUME]:
                 return str(self.mount_location) + patch_directory
             else:
                 return str(self.mount_location_data) + patch_directory
