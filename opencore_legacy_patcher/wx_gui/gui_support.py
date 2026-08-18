@@ -238,6 +238,14 @@ class CheckProperties:
             return True
         if self.constants.allow_oc_everywhere is True:
             return True
+        # Real T2 Macs (Macmini8,1, MacBookPro16,3, iMacPro1,1, etc.) are genuine, natively
+        # supported hardware that happen to also be listed in SupportedSMBIOS for T2 root
+        # patching purposes. Building/installing OpenCore on them is inherently spoofing native
+        # hardware, so - unlike the legacy (non-T2) SupportedSMBIOS entries below - it must stay
+        # gated behind the user explicitly opting in via "Allow spoofing native Macs", rather
+        # than being auto-enabled just because the model is on the SupportedSMBIOS list.
+        if self.constants.host_is_hackintosh is False and self.constants.computer.real_model in model_array.T2Macs:
+            return self.constants.allow_native_spoofs is True
         if self.constants.computer.real_model in model_array.SupportedSMBIOS:
             return True
 
