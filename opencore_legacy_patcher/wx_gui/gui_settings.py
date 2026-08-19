@@ -374,7 +374,7 @@ class SettingsFrame(wx.Frame):
                 },
             },
             "Debug": {
-                "General (Continued)": {
+                "Debug features": {
                     "type": "title",
                 },
                 "Verbose": {
@@ -519,6 +519,9 @@ class SettingsFrame(wx.Frame):
                     "type": "populate",
                     "function": self._populate_graphics_override,
                     "args": wx.Frame,
+                },
+                "Advanced features" : {
+                    "type": "title",
                 },
                 "Wake on WLAN": {
                     "type": "checkbox",
