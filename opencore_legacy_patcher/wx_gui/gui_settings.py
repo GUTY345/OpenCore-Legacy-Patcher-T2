@@ -1007,7 +1007,7 @@ class SettingsFrame(wx.Frame):
             next_y += warning_label.GetSize()[1] + 6
 
         # Label: Flip individual bits corresponding to XNU's csr.h
-        # If you're unfamiliar with how SIP works, do not touch this menu
+        # If you're unfamiliar with how SIP works, do not touch this menu. Touching this menu without knowing how SIP works carries significant security and stability risks.
         sip_label = wx.StaticText(panel, label="Flip individual bits corresponding to", pos=(sip_title.GetPosition()[0] - 20, next_y))
         sip_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
 
