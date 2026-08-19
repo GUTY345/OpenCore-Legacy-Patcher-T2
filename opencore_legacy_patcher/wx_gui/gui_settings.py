@@ -239,11 +239,12 @@ class SettingsFrame(wx.Frame):
                 if height > lowest_height_reached:
                     lowest_height_reached = height
 
-            # All controls for this tab are now in place; recalculate the
-            # panel's virtual (scrollable) size from their actual positions so
-            # tabs taller than the visible area get a working scrollbar instead
-            # of clipping their bottom rows.
-            panel.FitInside()
+            # All controls for this tab are now in place. FitInside()/GetBestSize()
+            # don't work here since these panels have no sizer - wx never scans
+            # absolutely-positioned children for a "best size" without one, so the
+            # virtual size never grew and no scrollbar ever appeared. Set the
+            # virtual size explicitly from the height already tracked above.
+            panel.SetVirtualSize((int(horizontal_center * 2), lowest_height_reached + 50))
 
 
     def _settings(self) -> dict:
