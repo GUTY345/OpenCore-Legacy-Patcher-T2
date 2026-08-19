@@ -387,14 +387,43 @@ class macOSInstallerFlashFrame(wx.Frame):
         with open(self.constants.installer_sh_path, "r") as f:
             logging.info(f"installer.sh contents:\n{f.read()}")
 
+        # DEBUG: capture TCC activity for the duration of the privileged-helper run.
+        # createinstallmedia's own error text ("Operation not permitted") doesn't say
+        # which process/service TCC actually denied, which makes FDA-related failures
+        # (esp. on external/removable volumes) impossible to diagnose from the dialog
+        # alone. Stream com.apple.TCC log entries in parallel and fold any denials into
+        # the error popup so the real cause is visible without a second Terminal window.
+        tcc_log_proc = None
+        try:
+            tcc_log_proc = subprocess.Popen(
+                ["/usr/bin/log", "stream", "--style", "compact", "--predicate", 'subsystem == "com.apple.TCC"'],
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+            )
+        except Exception as e:
+            logging.info(f"Could not start TCC log capture: {e}")
+
         args   = ["/bin/sh", self.constants.installer_sh_path]
         result = subprocess_wrapper.run_as_root(args, capture_output=True, text=True)
         output = result.stdout
         error  = result.stderr if result.stderr else ""
 
+        tcc_denials = ""
+        if tcc_log_proc is not None:
+            tcc_log_proc.terminate()
+            try:
+                tcc_output, _ = tcc_log_proc.communicate(timeout=2)
+            except subprocess.TimeoutExpired:
+                tcc_log_proc.kill()
+                tcc_output, _ = tcc_log_proc.communicate()
+            if tcc_output:
+                tcc_denials = "\n".join(line for line in tcc_output.splitlines() if "deny" in line.lower())
+                if tcc_denials:
+                    logging.info(f"TCC denials during installer creation:\n{tcc_denials}")
+
         if "Install media now available at" not in output:
             logging.info("Failed to create macOS installer")
-            popup = wx.MessageDialog(self, f"Failed to create macOS installer\n\nOutput: {output}\n\nError: {error}", "Error", wx.OK | wx.ICON_ERROR)
+            extra = f"\n\nTCC Denials During Run:\n{tcc_denials}" if tcc_denials else ""
+            popup = wx.MessageDialog(self, f"Failed to create macOS installer\n\nOutput: {output}\n\nError: {error}{extra}", "Error", wx.OK | wx.ICON_ERROR)
             popup.ShowModal()
             return False
 
