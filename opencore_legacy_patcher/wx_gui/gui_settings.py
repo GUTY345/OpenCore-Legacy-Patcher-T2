@@ -86,7 +86,15 @@ class SettingsFrame(wx.Frame):
         if not Path("~/.dortania_developer").expanduser().exists():
             tabs.remove("Developer")
         for tab in tabs:
-            panel = wx.Panel(notebook)
+            # wx.ScrolledWindow instead of wx.Panel: tabs are populated below with
+            # absolutely-positioned controls (no sizer), so a plain wx.Panel never
+            # grows or scrolls once its content is taller than the fixed-size dialog.
+            # Tabs with a lot of settings (e.g. Advanced) silently clipped their
+            # bottom rows with no way to reach them. ScrollRate enables vertical-only
+            # scrolling; the virtual size is (re)computed per-tab via FitInside()
+            # once all of that tab's controls have been added, below.
+            panel = wx.ScrolledWindow(notebook)
+            panel.SetScrollRate(0, 10)
             notebook.AddPage(panel, tab)
 
         sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 10)
@@ -230,6 +238,12 @@ class SettingsFrame(wx.Frame):
 
                 if height > lowest_height_reached:
                     lowest_height_reached = height
+
+            # All controls for this tab are now in place; recalculate the
+            # panel's virtual (scrollable) size from their actual positions so
+            # tabs taller than the visible area get a working scrollbar instead
+            # of clipping their bottom rows.
+            panel.FitInside()
 
 
     def _settings(self) -> dict:
