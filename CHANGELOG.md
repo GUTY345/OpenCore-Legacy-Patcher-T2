@@ -1,7 +1,7 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
 ## 4.0.0.16911 -  4.0.0 pre-alpha 5.1 for alpha 17:
 This release fixes a bug where on unsupported T2 Macs, Build and install OpenCore is greyed out.
-Diese Version behebet einen Fehler, indem auf nicht unterstutzte T2 Macs Build and Install OpenCore ausgegraut wurde.
+Diese Version behebet einen Fehler, indem auf nicht unterstützte T2 Macs Build and Install OpenCore ausgegraut wurde.
 
 ## 4.0.0.16910 - 4.0.0 pre-alpha 5 for alpha 17:
 This release:
