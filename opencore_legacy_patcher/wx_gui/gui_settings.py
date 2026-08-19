@@ -337,10 +337,11 @@ class SettingsFrame(wx.Frame):
                     ],
                     "condition": (self.constants.custom_model and self.constants.custom_model in ["MacPro3,1", "Xserve2,1"]) or self.constants.computer.real_model in ["MacPro3,1", "Xserve2,1"]
                 },
-                "Debug": {
+            },
+            "Debug":{
+                "General (Continued)": {
                     "type": "title",
                 },
-
                 "Verbose": {
                     "type": "checkbox",
                     "value": self.constants.verbose_debug,
@@ -371,116 +372,7 @@ class SettingsFrame(wx.Frame):
                         "and enables additional logging.",
                     ],
                 },
-            },
-            "Extras": {
-                "General (Continued)": {
-                    "type": "title",
-                },
-                "Wake on WLAN": {
-                    "type": "checkbox",
-                    "value": self.constants.enable_wake_on_wlan,
-                    "variable": "enable_wake_on_wlan",
-                    "description": [
-                        "Disabled by default due to",
-                        "performance degradation",
-                        "on some systems from wake.",
-                        "Only applies to BCM943224, 331,",
-                        "360 and 3602 chipsets.",
-                    ],
-                },
-                "Disable Thunderbolt": {
-                    "type": "checkbox",
-                    "value": self.constants.disable_tb,
-                    "variable": "disable_tb",
-                    "description": [
-                        "For MacBookPro11,x with faulty",
-                        "PCHs that may crash sporadically.",
-                    ],
-                    "condition": (self.constants.custom_model and self.constants.custom_model in ["MacBookPro11,1", "MacBookPro11,2", "MacBookPro11,3"]) or self.constants.computer.real_model in ["MacBookPro11,1", "MacBookPro11,2", "MacBookPro11,3"]
-                },
-                "Windows GMUX": {
-                    "type": "checkbox",
-                    "value": self.constants.dGPU_switch,
-                    "variable": "dGPU_switch",
-                    "description": [
-                        "Allow iGPU to be exposed in Windows",
-                        "for dGPU-based MacBooks.",
-                    ],
-                },
-                "Disable CPUFriend": {
-                    "type": "checkbox",
-                    "value": self.constants.disallow_cpufriend,
-                    "variable": "disallow_cpufriend",
-                    "description": [
-                        "Disables power management helper",
-                        "for unsupported models.",
-                    ],
-                },
-                "Disable mediaanalysisd service": {
-                    "type": "checkbox",
-                    "value": self.constants.disable_mediaanalysisd,
-                    "variable": "disable_mediaanalysisd",
-                    "description": [
-                        "For systems that are the primary iCloud",
-                        "Photo Library host with a 3802-based GPU,",
-                        "this may aid in prolonged idle stability.",
-                    ],
-                    "condition": gui_support.CheckProperties(self.constants).host_has_3802_gpu()
-                },
-                "wrap_around 1": {
-                    "type": "wrap_around",
-                },
-                "Allow AppleALC Audio": {
-                    "type": "checkbox",
-                    "value": self.constants.set_alc_usage,
-                    "variable": "set_alc_usage",
-                    "description": [
-                        "Allow AppleALC to manage audio",
-                        "if applicable.",
-                        "Only disable if your host lacks",
-                        "a GOP ROM.",
-                    ],
-                },
-                "NVRAM WriteFlash": {
-                    "type": "checkbox",
-                    "value": self.constants.nvram_write,
-                    "variable": "nvram_write",
-                    "description": [
-                        "Allow OpenCore to write to NVRAM.",
-                        "Disable on systems with faulty or",
-                        "degraded NVRAM.",
-                    ],
-                },
-
-                "3rd Party NVMe PM": {
-                    "type": "checkbox",
-                    "value": self.constants.allow_nvme_fixing,
-                    "variable": "allow_nvme_fixing",
-                    "description": [
-                        "Enable non-stock NVMe power",
-                        "management in macOS.",
-                    ],
-                },
-                "3rd Party SATA PM": {
-                    "type": "checkbox",
-                    "value": self.constants.allow_3rd_party_drives,
-                    "variable": "allow_3rd_party_drives",
-                    "description": [
-                        "Enable non-stock SATA power",
-                        "management in macOS.",
-                    ],
-                    "condition": not bool(self.constants.computer.third_party_sata_ssd is False and not self.constants.custom_model)
-                },
-                "APFS Trim": {
-                    "type": "checkbox",
-                    "value": self.constants.apfs_trim_timeout,
-                    "variable": "apfs_trim_timeout",
-                    "description": [
-                        "Recommended for all users, however faulty",
-                        "SSDs may benefit from disabling this.",
-                    ],
-                },
-            },
+            }
             "Advanced": {
                 "Miscellaneous": {
                     "type": "title",
@@ -592,7 +484,110 @@ class SettingsFrame(wx.Frame):
                     "function": self._populate_graphics_override,
                     "args": wx.Frame,
                 },
+                "Wake on WLAN": {
+                    "type": "checkbox",
+                    "value": self.constants.enable_wake_on_wlan,
+                    "variable": "enable_wake_on_wlan",
+                    "description": [
+                        "Disabled by default due to",
+                        "performance degradation",
+                        "on some systems from wake.",
+                        "Only applies to BCM943224, 331,",
+                        "360 and 3602 chipsets.",
+                    ],
+                },
+                "Disable Thunderbolt": {
+                    "type": "checkbox",
+                    "value": self.constants.disable_tb,
+                    "variable": "disable_tb",
+                    "description": [
+                        "For MacBookPro11,x with faulty",
+                        "PCHs that may crash sporadically.",
+                    ],
+                    "condition": (self.constants.custom_model and self.constants.custom_model in ["MacBookPro11,1", "MacBookPro11,2", "MacBookPro11,3"]) or self.constants.computer.real_model in ["MacBookPro11,1", "MacBookPro11,2", "MacBookPro11,3"]
+                },
+                "Windows GMUX": {
+                    "type": "checkbox",
+                    "value": self.constants.dGPU_switch,
+                    "variable": "dGPU_switch",
+                    "description": [
+                        "Allow iGPU to be exposed in Windows",
+                        "for dGPU-based MacBooks.",
+                    ],
+                },
+                "Disable CPUFriend": {
+                    "type": "checkbox",
+                    "value": self.constants.disallow_cpufriend,
+                    "variable": "disallow_cpufriend",
+                    "description": [
+                        "Disables power management helper",
+                        "for unsupported models.",
+                    ],
+                },
+                "Disable mediaanalysisd service": {
+                    "type": "checkbox",
+                    "value": self.constants.disable_mediaanalysisd,
+                    "variable": "disable_mediaanalysisd",
+                    "description": [
+                        "For systems that are the primary iCloud",
+                        "Photo Library host with a 3802-based GPU,",
+                        "this may aid in prolonged idle stability.",
+                    ],
+                    "condition": gui_support.CheckProperties(self.constants).host_has_3802_gpu()
+                },
+                "wrap_around 1": {
+                    "type": "wrap_around",
+                },
+                "Allow AppleALC Audio": {
+                    "type": "checkbox",
+                    "value": self.constants.set_alc_usage,
+                    "variable": "set_alc_usage",
+                    "description": [
+                        "Allow AppleALC to manage audio",
+                        "if applicable.",
+                        "Only disable if your host lacks",
+                        "a GOP ROM.",
+                    ],
+                },
+                "NVRAM WriteFlash": {
+                    "type": "checkbox",
+                    "value": self.constants.nvram_write,
+                    "variable": "nvram_write",
+                    "description": [
+                        "Allow OpenCore to write to NVRAM.",
+                        "Disable on systems with faulty or",
+                        "degraded NVRAM.",
+                    ],
+                },
 
+                "3rd Party NVMe PM": {
+                    "type": "checkbox",
+                    "value": self.constants.allow_nvme_fixing,
+                    "variable": "allow_nvme_fixing",
+                    "description": [
+                        "Enable non-stock NVMe power",
+                        "management in macOS.",
+                    ],
+                },
+                "3rd Party SATA PM": {
+                    "type": "checkbox",
+                    "value": self.constants.allow_3rd_party_drives,
+                    "variable": "allow_3rd_party_drives",
+                    "description": [
+                        "Enable non-stock SATA power",
+                        "management in macOS.",
+                    ],
+                    "condition": not bool(self.constants.computer.third_party_sata_ssd is False and not self.constants.custom_model)
+                },
+                "APFS Trim": {
+                    "type": "checkbox",
+                    "value": self.constants.apfs_trim_timeout,
+                    "variable": "apfs_trim_timeout",
+                    "description": [
+                        "Recommended for all users, however faulty",
+                        "SSDs may benefit from disabling this.",
+                    ],
+                },
             },
             "Security": {
                 "Kernel Security": {
@@ -1365,36 +1360,7 @@ class SettingsFrame(wx.Frame):
         self.frame_modal.Destroy()
 
 
-    def on_nightly(self, event: wx.Event) -> None:
-        # Ask prompt for which branch
-        branches = ["main"]
-        if self.constants.commit_info[0] not in ["Running from source", "Built from source"]:
-            branches = [self.constants.commit_info[0].split("/")[-1]]
-        result = network_handler.NetworkUtilities().get("https://api.github.com/repos/dortania/OpenCore-Legacy-Patcher/branches")
-        if result is not None:
-            result = result.json()
-            for branch in result:
-                if branch["name"] == "gh-pages":
-                    continue
-                if branch["name"] not in branches:
-                    branches.append(branch["name"])
-
-            with wx.SingleChoiceDialog(self.parent, "Which branch would you like to download?", "Branch Selection", branches) as dialog:
-                if dialog.ShowModal() == wx.ID_CANCEL:
-                    return
-
-                branch = dialog.GetStringSelection()
-        else:
-            branch = "main"
-
-        gui_update.UpdateFrame(
-            parent=self.parent,
-            title=self.title,
-            global_constants=self.constants,
-            screen_location=self.parent.GetPosition(),
-            url=f"https://nightly.link/dortania/OpenCore-Legacy-Patcher/workflows/build-app-wxpython/{branch}/OpenCore-Patcher.pkg.zip",
-            version_label="(Nightly)"
-        )
+   # def on_nightly ist entfernt, um eine Sicherheitslücke zu beheben, die erlaubt Angreifern, das App durch OpenCore Legacy Patcher von Dortania zu ersetzen unangemerkt
 
 
     def on_export_constants(self, event: wx.Event) -> None:
