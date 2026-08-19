@@ -338,7 +338,7 @@ class SettingsFrame(wx.Frame):
                     "condition": (self.constants.custom_model and self.constants.custom_model in ["MacPro3,1", "Xserve2,1"]) or self.constants.computer.real_model in ["MacPro3,1", "Xserve2,1"]
                 },
             },
-            "Debug":{
+            "Debug": {
                 "General (Continued)": {
                     "type": "title",
                 },
