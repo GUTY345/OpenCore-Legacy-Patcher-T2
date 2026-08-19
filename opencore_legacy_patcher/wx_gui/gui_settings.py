@@ -91,7 +91,7 @@ class SettingsFrame(wx.Frame):
             # grows or scrolls once its content is taller than the fixed-size dialog.
             # Tabs with a lot of settings (e.g. Advanced) silently clipped their
             # bottom rows with no way to reach them. ScrollRate enables vertical-only
-            # scrolling; the virtual size is (re)computed per-tab via FitInside()
+            # scrolling; the virtual size is (re)computed per-tab via SetVirtualSize()
             # once all of that tab's controls have been added, below.
             panel = wx.ScrolledWindow(notebook)
             panel.SetScrollRate(0, 10)
@@ -106,6 +106,12 @@ class SettingsFrame(wx.Frame):
         sizer.Add(return_button, 0, wx.ALIGN_CENTER | wx.ALL, 10)
 
         frame.SetSizer(sizer)
+        # wx.Notebook only resizes its *currently selected* page as part of this
+        # layout pass; without it, that page's ScrolledWindow still has whatever
+        # (undersized) client size it had at construction when SetVirtualSize()
+        # below runs, so AdjustScrollbars() compares the virtual height against
+        # the wrong client height and the scrollbar never appears.
+        frame.Layout()
 
         horizontal_center = frame.GetSize()[0] / 2
         for tab in tabs:
@@ -245,6 +251,20 @@ class SettingsFrame(wx.Frame):
             # virtual size never grew and no scrollbar ever appeared. Set the
             # virtual size explicitly from the height already tracked above.
             panel.SetVirtualSize((int(horizontal_center * 2), lowest_height_reached + 50))
+
+        # frame.Layout() above only gives the initially-selected tab its real
+        # client size. Every other tab's ScrolledWindow still has the wrong
+        # size baked into its scrollbar state from the loop above, since it
+        # was never actually resized to the notebook's display area. Recompute
+        # once each tab is shown for the first time, when it does get resized.
+        notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_settings_tab_changed)
+
+
+    def on_settings_tab_changed(self, event: wx.BookCtrlEvent) -> None:
+        page = event.GetEventObject().GetPage(event.GetSelection())
+        if isinstance(page, wx.ScrolledWindow):
+            page.AdjustScrollbars()
+        event.Skip()
 
 
     def _settings(self) -> dict:
