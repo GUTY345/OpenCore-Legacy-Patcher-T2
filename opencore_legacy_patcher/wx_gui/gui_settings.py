@@ -374,7 +374,7 @@ class SettingsFrame(wx.Frame):
                 },
             },
             "Debug": {
-                "General (Continued)": {
+                "Debug features": {
                     "type": "title",
                 },
                 "Verbose": {
@@ -520,6 +520,9 @@ class SettingsFrame(wx.Frame):
                     "function": self._populate_graphics_override,
                     "args": wx.Frame,
                 },
+                "Advanced features" : {
+                    "type": "title",
+                },
                 "Wake on WLAN": {
                     "type": "checkbox",
                     "value": self.constants.enable_wake_on_wlan,
@@ -643,8 +646,11 @@ class SettingsFrame(wx.Frame):
                     "value": self.constants.disable_amfi,
                     "variable": "disable_amfi",
                     "description": [
+                        "Disables Apple Mobile File Integrity,"
                         "Extended version of 'Disable",
-                        "Library Validation', required",
+                        "Library Validation'," 
+                        ""
+                        "required",
                         "for systems with deeper",
                         "root patches.",
                     ],
@@ -982,6 +988,10 @@ class SettingsFrame(wx.Frame):
 
         # Label: Flip individual bits corresponding to XNU's csr.h
         # If you're unfamiliar with how SIP works, do not touch this menu
+        sip_label = wx.StaticText(panel, label="SIP, in short for System Integrity Protection, is a function that prevents attackers from tampering core system files.", pos=(sip_title.GetPosition()[0] - 20, sip_title.GetPosition()[1] + 30))
+        sip_label = wx.StaticText(panel, label="Unless you know what you're doing, touching this menu is not recommended, especially if a random person in internet instructs you to disable SIP without explaining why.", pos=(sip_title.GetPosition()[0] - 20, sip_title.GetPosition()[1] + 30))
+        sip_label = wx.StaticText(panel, label="Unless you know what you're doing, touching this menu is not recommended, especially if a random person in internet instructs you to disable SIP without explaining why.", pos=(sip_title.GetPosition()[0] - 20, sip_title.GetPosition()[1] + 30))
+        sip_label = wx.StaticText(panel, label="If someone tells to set SIP to 0xFFF to run a random application from internet, then it's likely to be malicious.", pos=(sip_title.GetPosition()[0] - 20, sip_title.GetPosition()[1] + 30))
         sip_label = wx.StaticText(panel, label="Flip individual bits corresponding to", pos=(sip_title.GetPosition()[0] - 20, sip_title.GetPosition()[1] + 30))
         sip_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
 
