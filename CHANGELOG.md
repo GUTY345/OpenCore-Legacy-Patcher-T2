@@ -1,158 +1,163 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
 ## 4.0.0.16050 - 4.0.0 alpha 16.4.0
+## 4.0.0.16050 - 4.0.0 alpha 16.4.0
 This release:
-
-fixes UI bugs in the update screen where it says Would you like to instead of Would you like to update due to not enough space on the screen
-fixes a bug where root-volume file removal writing to the sealed live volume instead of the mounted copy when root patching on a Mac that requires Metallibs 059cc9a
-moves all debugging features in Settings in a seperate Debug tab to make it easier to find these debugging features when needed - such as, Kext Debugging
-All settings from Extras are moved to Advanced to make it easier to navigate
-adds an experimental EF for macOS 26I to the repository for MacBookPro14,3 - if it works, report here: #190 . If it doesn't, report an issue., thx @Medelcartelinc
-fixes the following vulnerabilities:
-fixes a vulnerability where an attacker or bad Hackintosh user could trick a Hackintosh user into building OpenCore EFIs for real Macs by spoofing the SMBIOS as a Mac computer
-fixes a bug and a vulnerability where the patcher itself checks if the config the current OpenCore is running was checked against the SMBIOS instead of checking real hardware. This could cause false alarms. An attacker could abuse this to cause a DoS attack by tricking the user into building an EFI that is not suitable for their Mac.
-fixes a vulnerability where it doesn't mention what SIP is in Settings > Security. An attacker could trick an unaware user into completely disabling SIP to trick the user into launching a malicious application that tampers with core system files. This is fixed by explaining what SIP is, what does it do and if they don't know how SIP does work, not to recommend touching that menu.
+- fixes UI bugs in the update screen where it says Would you like to instead of Would you like to update due to not enough space on the screen
+- fixes a bug where root-volume file removal writing to the sealed live volume instead of the mounted copy when root patching on a Mac that requires Metallibs https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/commit/059cc9a659e9ff3c240b732b66b950916d44a007
+- moves all debugging features in Settings in a seperate Debug tab to make it easier to find these debugging features when needed - such as, Kext Debugging
+- All settings from Extras are moved to Advanced to make it easier to navigate
+- adds an experimental EF for macOS 26I to the repository for MacBookPro14,3 - if it works, report here: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/pull/190 . If it doesn't, report an issue., thx @Medelcartelinc
+- fixes the following vulnerabilities:
+- fixes a vulnerability where an attacker or bad Hackintosh user could trick a Hackintosh user into building OpenCore EFIs for real Macs by spoofing the SMBIOS as a Mac computer
+- fixes a bug and a vulnerability where the patcher itself checks if the config the current OpenCore is running was checked against the SMBIOS instead of checking real hardware. This could cause false alarms. An attacker could abuse this to cause a DoS attack by tricking the user into building an EFI that is not suitable for their Mac.
+- fixes a vulnerability where it doesn't mention what SIP is in Settings > Security. An attacker could trick an unaware user into completely disabling SIP to trick the user into launching a malicious application that tampers with core system files. This is fixed by explaining what SIP is, what does it do and if they don't know how SIP does work, not to recommend touching that menu.
 in sys_patch.py:
-an attacker could crash the application to cause a DoS attack or execute arbitary code:
-# <- here's the vulnerability - there's no try/except block to isolate any errors. Like this, an attacker could launch a DoS attack to crash the app or execute arbitary code. Furthermore, when it fails to resolve the dynamic patchset and causes an expected error, it only says Unknown Dynamic Patchset without any more information. An attacker could abuse this to launch a ClickFix attack.
-if variant == DynamicPatchset.MetallibSupportPkg:
-return self._resolve_metallib_support_pkg()
-else:
-logging.error(f"Unknown Dynamic Patchset: {variant}")
-Impact: an attacker could supply the if condition with an invalid syntax to crash the application or execute arbitary code.
+- an attacker could crash the application to cause a DoS attack or execute arbitary code:
+          # <- here's the vulnerability - there's no try/except block to isolate any errors. Like this, an attacker could launch a DoS attack to crash the app or execute arbitary code. Furthermore, when it fails to resolve the dynamic patchset and causes an expected error, it only says Unknown Dynamic Patchset without any more information. An attacker could abuse this to launch a ClickFix attack.
+       if variant == DynamicPatchset.MetallibSupportPkg:
+                  return self._resolve_metallib_support_pkg()
+              else:
+                  logging.error(f"Unknown Dynamic Patchset: {variant}")
+
+Impact: an attacker could supply the if condition with an invalid syntax to crash the application or execute arbitary code. 
 Another impact: an attacker could also launch a ClickFix attack due to only saying Unknown Dynamic Patchset without any more information.
+- an attacker could execute arbitary code due to lack of error handling when there is an unexpected error when running a preflight check:
+            def _preflight_checks(self, required_patches: dict, source_files_path: Path) -> dict:
+                    """
+                    Run preflight checks before patching.
+                    
+                    Validates:
+                    - All required files exist
+                    - Dynamic patchsets are resolved
+                    - Legacy plugin cleanup
+                    - Kernel cache cleanup
+                    - Hardware-specific setup (SNB, KDK)
+            
+                    Parameters:
+                        required_patches (dict): Patchset dictionary (from HardwarePatchsetDetection)
+                        source_files_path (Path): Path to the source files (PatcherSupportPkg)
+            
+                    Returns:
+                        dict: Updated patchset dictionary
+                        
+                    Raises:
+                        Exception: If critical preflight check fails
+                    """
+                    logging.info("- Running Preflight Checks before patching")
+            
+                    # Validate all required files exist
+                    for patch in required_patches:
+                        for method_type in [
+                            PatchType.OVERWRITE_SYSTEM_VOLUME,
+                            PatchType.OVERWRITE_DATA_VOLUME,
+                            PatchType.MERGE_SYSTEM_VOLUME,
+                            PatchType.MERGE_DATA_VOLUME
+                        ]:
+                            if method_type not in required_patches[patch]:
+                                continue
+            
+                            for install_patch_directory in list(required_patches[patch][method_type]):
+                                for install_file in list(required_patches[patch][method_type][install_patch_directory]):
+                                    is_dynamic_patchset = False
+                                    try:
+                                        # Resolve dynamic patchsets
+                                        if required_patches[patch][method_type][install_patch_directory][install_file] in DynamicPatchset:
+                                            is_dynamic_patchset = True
+                                            required_patches[patch][method_type][install_patch_directory][install_file] = self._resolve_dynamic_patchset(
+                                                required_patches[patch][method_type][install_patch_directory][install_file]
+                                            )
+                                    except TypeError:
+                                        pass
+                                 # <- here's the vulnerability right after except TypeError - it lacks error handling when an unexpected error happens
 
-an attacker could execute arbitary code due to lack of error handling when there is an unexpected error when running a preflight check:
-def _preflight_checks(self, required_patches: dict, source_files_path: Path) -> dict:
-"""
-Run preflight checks before patching.
-
-              Validates:
-              - All required files exist
-              - Dynamic patchsets are resolved
-              - Legacy plugin cleanup
-              - Kernel cache cleanup
-              - Hardware-specific setup (SNB, KDK)
-      
-              Parameters:
-                  required_patches (dict): Patchset dictionary (from HardwarePatchsetDetection)
-                  source_files_path (Path): Path to the source files (PatcherSupportPkg)
-      
-              Returns:
-                  dict: Updated patchset dictionary
-                  
-              Raises:
-                  Exception: If critical preflight check fails
-              """
-              logging.info("- Running Preflight Checks before patching")
-      
-              # Validate all required files exist
-              for patch in required_patches:
-                  for method_type in [
-                      PatchType.OVERWRITE_SYSTEM_VOLUME,
-                      PatchType.OVERWRITE_DATA_VOLUME,
-                      PatchType.MERGE_SYSTEM_VOLUME,
-                      PatchType.MERGE_DATA_VOLUME
-                  ]:
-                      if method_type not in required_patches[patch]:
-                          continue
-      
-                      for install_patch_directory in list(required_patches[patch][method_type]):
-                          for install_file in list(required_patches[patch][method_type][install_patch_directory]):
-                              is_dynamic_patchset = False
-                              try:
-                                  # Resolve dynamic patchsets
-                                  if required_patches[patch][method_type][install_patch_directory][install_file] in DynamicPatchset:
-                                      is_dynamic_patchset = True
-                                      required_patches[patch][method_type][install_patch_directory][install_file] = self._resolve_dynamic_patchset(
-                                          required_patches[patch][method_type][install_patch_directory][install_file]
-                                      )
-                              except TypeError:
-                                  pass
-                           # <- here's the vulnerability right after except TypeError - it lacks error handling when an unexpected error happens
 Impact: an attacker could write intentionally invalid syntax to cause the process to crash to cause an unexpected error and then to execute arbitary code. This is fixed by adding error handling when an unexpected error happens.
 
-A couple of lines later, there's another vulnerability that when it fails to force refresh MetallibSupportPkg, the process may not quit, which could lead to a Root patching is complete message unconditionally. And another vulnerability where it doesn't say clearly what is exactly failing:
-try:
-refreshed_path = self._resolve_metallib_support_pkg(force_refresh=True)
-self._resolve_dynamic_patchset.cache_clear()
-required_patches[patch][method_type][install_patch_directory][install_file] = refreshed_path
-source_file = refreshed_path + install_patch_directory + "/" + install_file
+- A couple of lines later, there's another vulnerability that when it fails to force refresh MetallibSupportPkg, the process may not quit, which could lead to a Root patching is complete message unconditionally. And another vulnerability where it doesn't say clearly what is exactly failing:
+                  try:
+                          refreshed_path = self._resolve_metallib_support_pkg(force_refresh=True)
+                          self._resolve_dynamic_patchset.cache_clear()
+                          required_patches[patch][method_type][install_patch_directory][install_file] = refreshed_path
+                          source_file = refreshed_path + install_patch_directory + "/" + install_file
+  
+                      except Exception as e: # <- here's the vulnerability - the app may say unconditionally that the Root patches have been installed despite not done so, and doesn't say what exactly is failing
+                          logging.error(f"- Failed to force-refresh MetallibSupportPkg: {e}")
 
-                except Exception as e: # <- here's the vulnerability - the app may say unconditionally that the Root patches have been installed despite not done so, and doesn't say what exactly is failing
-                    logging.error(f"- Failed to force-refresh MetallibSupportPkg: {e}")
 Impact: an attacker could write an invalid syntax to execute arbitary code without the user's knowledge. And also an attacker could launch a DoS attack by tricking the user that the Root patching process is completed while their system no longer boots up. This is fixed by adding in the error handling logging.exception and sys.exit(3).
 
-A few lines later, another vulnerability appears that unconditionally it may throw Failed to find a source file:
+- A few lines later, another vulnerability appears that unconditionally it may throw Failed to find a source file:
 
-                  if not Path(source_file).exists():
-                                                  if is_dynamic_patchset:
-                                                      # Even after a fresh MetallibSupportPkg pull, this specific file is
-                                                      # still missing. MetallibSupportPkg packages are generated per exact
-                                                      # macOS build by a third-party service and aren't guaranteed to
-                                                      # contain every single metallib for every build/Mac combination (see
-                                                      # reports of e.g. missing VisionKitInternal.framework/.../default.metallib
-                                                      # on multiple different builds, even after updating macOS). Treat a
-                                                      # missing file sourced from it as non-fatal: skip installing just this
-                                                      # one file instead of aborting root patching entirely, since these are
-                                                      # supplemental shader libraries, not files every patch set depends on
-                                                      # to function.
-                                                      logging.warning(f"- MetallibSupportPkg is missing {install_patch_directory}/{install_file} for this build, skipping")
-                                                      del required_patches[patch][method_type][install_patch_directory][install_file]
-                                                      continue
-                                                  logging.error(f"Failed to find {source_file}") # <- here's the vulnerability - an attacker could delete the if not Path condition to force the patcher into throwing an error to cause a denial of service attack.
-                                                  logging.exception("Stack Trace:")
-                                                  raise Exception(f"Failed to find {source_file}")
+                        if not Path(source_file).exists():
+                                                        if is_dynamic_patchset:
+                                                            # Even after a fresh MetallibSupportPkg pull, this specific file is
+                                                            # still missing. MetallibSupportPkg packages are generated per exact
+                                                            # macOS build by a third-party service and aren't guaranteed to
+                                                            # contain every single metallib for every build/Mac combination (see
+                                                            # reports of e.g. missing VisionKitInternal.framework/.../default.metallib
+                                                            # on multiple different builds, even after updating macOS). Treat a
+                                                            # missing file sourced from it as non-fatal: skip installing just this
+                                                            # one file instead of aborting root patching entirely, since these are
+                                                            # supplemental shader libraries, not files every patch set depends on
+                                                            # to function.
+                                                            logging.warning(f"- MetallibSupportPkg is missing {install_patch_directory}/{install_file} for this build, skipping")
+                                                            del required_patches[patch][method_type][install_patch_directory][install_file]
+                                                            continue
+                                                        logging.error(f"Failed to find {source_file}") # <- here's the vulnerability - an attacker could delete the if not Path condition to force the patcher into throwing an error to cause a denial of service attack.
+                                                        logging.exception("Stack Trace:")
+                                                        raise Exception(f"Failed to find {source_file}")
 Impact: an attacker could leave a Mac in a half patched state by removing the if not Path condition to force displaying an error Failed to find source file to cause a denial of service attack. This is fixed by nesting the error handling in an else condition.
 
 gui_settings.py:
+- fixes a vulnerability where an attacker could silently replace OpenCore Legacy Patcher T2 with OpenCore Legacy Patcher Nightly by Dortania by simply calling the on_nightly function. This is fixed by retiring the unused on_nightly function.
 
-fixes a vulnerability where an attacker could silently replace OpenCore Legacy Patcher T2 with OpenCore Legacy Patcher Nightly by Dortania by simply calling the on_nightly function. This is fixed by retiring the unused on_nightly function.
 constants.py:
+- fixes a 0 day vulnerability where an attacker could disable automatic updates to trick the user into staying on a vulnerable version to exploit other unpatched flaws - this is known to be already exploited in the wild to return the Disable automatic updates function that I retired
 
-fixes a 0 day vulnerability where an attacker could disable automatic updates to trick the user into staying on a vulnerable version to exploit other unpatched flaws - this is known to be already exploited in the wild to return the Disable automatic updates function that I retired
 What does this mean for genuine fork developers who are returning this function to keep users from switching from their forks back to my mainstream repository? This means that this is no longer possible and fork developers to avoid this, they need to change the update API sources to their own to avoid getting users switching back to the mainstream project by accident.
 
 gui_main_menu.py:
 
-        def _check_for_updates(self):
-                if self.constants.has_checked_updates is True:
-                    logging.info("We have already checked for updates.")
-                    return
-            # <- here's a vulnerability - an attacker could delete the if self.constants.has_checked_updates is True condition to overload OpenCore Legacy Patcher T2's update API to cause a DoS attack against GitHub's API
-                ignore_updates = global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates") # <- another vulnerability that lets attackers disable automatic updates to trick the user into using known vulnerable versions to exploit already known vulnerabilities
-                if ignore_updates is True:
-                    self.constants.ignore_updates = True
-                    return
-            
-                self.constants.ignore_updates = False
-                self.constants.has_checked_updates = True
+            def _check_for_updates(self):
+                    if self.constants.has_checked_updates is True:
+                        logging.info("We have already checked for updates.")
+                        return
+                # <- here's a vulnerability - an attacker could delete the if self.constants.has_checked_updates is True condition to overload OpenCore Legacy Patcher T2's update API to cause a DoS attack against GitHub's API
+                    ignore_updates = global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates") # <- another vulnerability that lets attackers disable automatic updates to trick the user into using known vulnerable versions to exploit already known vulnerabilities
+                    if ignore_updates is True:
+                        self.constants.ignore_updates = True
+                        return
+                
+                    self.constants.ignore_updates = False
+                    self.constants.has_checked_updates = True
+
 Impact: an attacker could remove the if ignore_updates is True condition to cause the app to check unconditionally to check for updates to cause a DoS by overloading the victim's Mac with unconditional checking for update requests to cause a DoS attack against the GitHub API. This is fixed by nesting the code for checking for updates under else like this:
-else:
-logging.info("Checking for updates")
-self.constants.has_checked_updates = True
+       else:
+                logging.info("Checking for updates")
+                self.constants.has_checked_updates = True
+                
+                update_dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
+                if not update_dict:
+                    return
+- 4 line later, starting from line 247, starts another vulnerability where an unexpected error handling if it unexpectedly fails to check for updates, an attacker could crash the app to cause a DoS attack and trick the user into using a known vulnerable version to exploit already known vulnerabilities:
 
-            update_dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
-            if not update_dict:
-                return
-4 line later, starting from line 247, starts another vulnerability where an unexpected error handling if it unexpectedly fails to check for updates, an attacker could crash the app to cause a DoS attack and trick the user into using a known vulnerable version to exploit already known vulnerabilities:
+                  remote_version_str = update_dict["Version"]
+                              local_version_str = self.constants.patcher_version
+                          
+                              try:
+                                  remote_v = version.parse(str(remote_version_str))
+                                  local_v = version.parse(local_version_str)
+                          
+                                  if remote_v <= local_v:
+                                      logging.info(f"{self.constants.patcher_name} is up to date. (Local: {local_v} >= Remote: {remote_v})")
+                                      return
+                          
+                              except version.InvalidVersion:
+                                  logging.error("Your version is invalid")
+                                  if remote_version_str == local_version_str:
+                                      return
+                             # <- exactly here is the next vulnerability - an attacker could launch a DoS attack to trick the user into using a known vulnerable version
 
-            remote_version_str = update_dict["Version"]
-                        local_version_str = self.constants.patcher_version
-                    
-                        try:
-                            remote_v = version.parse(str(remote_version_str))
-                            local_v = version.parse(local_version_str)
-                    
-                            if remote_v <= local_v:
-                                logging.info(f"{self.constants.patcher_name} is up to date. (Local: {local_v} >= Remote: {remote_v})")
-                                return
-                    
-                        except version.InvalidVersion:
-                            logging.error("Your version is invalid")
-                            if remote_version_str == local_version_str:
-                                return
-                       # <- exactly here is the next vulnerability - an attacker could launch a DoS attack to trick the user into using a known vulnerable version
 Impact: an attacker could supply the checking for updates function with an invalid syntax to cause an unexpected error to crash the app to force a user into using a known, vulnerable version
+
 
 ## 4.0.0.16049 - 4.0.0 alpha 16.3.9
 Note: if your Mac requires dart=0 to be added as a boot argument to get WiFi and isn't done so automatically by the patcher, please report and I'll add it to the list of Macs that requires this boot argument. I added this boot argument on the Macs that are tested and confirmed to require this argument.
