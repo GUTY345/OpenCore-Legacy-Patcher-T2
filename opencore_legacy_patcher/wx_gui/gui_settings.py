@@ -986,13 +986,29 @@ class SettingsFrame(wx.Frame):
                 break
 
 
+        # Warning text: each line below previously reused the same "sip_label"
+        # variable AND the exact same fixed pos=(sip_title...+30) for every
+        # line, so all wx.StaticText controls were stacked directly on top of
+        # one another instead of one below the next - rendering as overlapping,
+        # garbled text. Also dropped one line that was an exact duplicate of
+        # the one before it. Each line now gets its own y-position, advancing
+        # by that line's actual (wrapped) height so nothing overlaps.
+        warning_lines = [
+            "SIP, in short for System Integrity Protection, is a function that prevents attackers from tampering core system files.",
+            "Unless you know what you're doing, touching this menu is not recommended, especially if a random person in internet instructs you to disable SIP without explaining why.",
+            "If someone tells to set SIP to 0xFFF to run a random application from internet, then it's likely to be malicious.",
+        ]
+
+        next_y = sip_title.GetPosition()[1] + 30
+        for line in warning_lines:
+            warning_label = wx.StaticText(panel, label=line, pos=(sip_title.GetPosition()[0] - 20, next_y))
+            warning_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+            warning_label.Wrap(440)
+            next_y += warning_label.GetSize()[1] + 6
+
         # Label: Flip individual bits corresponding to XNU's csr.h
         # If you're unfamiliar with how SIP works, do not touch this menu
-        sip_label = wx.StaticText(panel, label="SIP, in short for System Integrity Protection, is a function that prevents attackers from tampering core system files.", pos=(sip_title.GetPosition()[0] - 20, sip_title.GetPosition()[1] + 30))
-        sip_label = wx.StaticText(panel, label="Unless you know what you're doing, touching this menu is not recommended, especially if a random person in internet instructs you to disable SIP without explaining why.", pos=(sip_title.GetPosition()[0] - 20, sip_title.GetPosition()[1] + 30))
-        sip_label = wx.StaticText(panel, label="Unless you know what you're doing, touching this menu is not recommended, especially if a random person in internet instructs you to disable SIP without explaining why.", pos=(sip_title.GetPosition()[0] - 20, sip_title.GetPosition()[1] + 30))
-        sip_label = wx.StaticText(panel, label="If someone tells to set SIP to 0xFFF to run a random application from internet, then it's likely to be malicious.", pos=(sip_title.GetPosition()[0] - 20, sip_title.GetPosition()[1] + 30))
-        sip_label = wx.StaticText(panel, label="Flip individual bits corresponding to", pos=(sip_title.GetPosition()[0] - 20, sip_title.GetPosition()[1] + 30))
+        sip_label = wx.StaticText(panel, label="Flip individual bits corresponding to", pos=(sip_title.GetPosition()[0] - 20, next_y))
         sip_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
 
         # Hyperlink: csr.h
