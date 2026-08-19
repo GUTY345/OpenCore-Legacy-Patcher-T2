@@ -244,7 +244,18 @@ class CheckProperties:
         # hardware, so - unlike the legacy (non-T2) SupportedSMBIOS entries below - it must stay
         # gated behind the user explicitly opting in via "Allow spoofing native Macs", rather
         # than being auto-enabled just because the model is on the SupportedSMBIOS list.
+        #
+        # Exception: if the detected/running OS is newer than what this real model natively
+        # supports (eg. macOS 26 Tahoe on a Macmini8,1, since Apple dropped T2 support for
+        # Tahoe entirely), OpenCore isn't an optional native-model spoof here - it's required
+        # for the machine to boot this OS at all, which is this fork's entire purpose. Without
+        # this check, every genuinely unsupported real T2 Mac (the exact hardware this fork
+        # targets) stayed stuck behind a greyed-out "Build and Install OpenCore" button unless
+        # the user separately opted into "Allow spoofing native Macs" first.
         if self.constants.host_is_hackintosh is False and self.constants.computer.real_model in model_array.T2Macs:
+            if self.constants.computer.real_model in smbios_data.smbios_dictionary:
+                if self.constants.detected_os > smbios_data.smbios_dictionary[self.constants.computer.real_model]["Max OS Supported"]:
+                    return True
             return self.constants.allow_native_spoofs is True
         if self.constants.computer.real_model in model_array.SupportedSMBIOS:
             return True
