@@ -351,6 +351,7 @@ class SettingsFrame(wx.Frame):
                     ],
 
                 },
+                
                 "Kext Debugging": {
                     "type": "checkbox",
                     "value": self.constants.kext_debug,
@@ -372,7 +373,7 @@ class SettingsFrame(wx.Frame):
                         "and enables additional logging.",
                     ],
                 },
-            }
+            },
             "Advanced": {
                 "Miscellaneous": {
                     "type": "title",
