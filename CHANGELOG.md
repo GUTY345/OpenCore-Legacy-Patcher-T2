@@ -1,6 +1,5 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
 ## 4.0.0.16050 - 4.0.0 alpha 16.4.0
-## 4.0.0.16050 - 4.0.0 alpha 16.4.0
 This release:
 - fixes UI bugs in the update screen where it says Would you like to instead of Would you like to update due to not enough space on the screen
 - fixes a bug where root-volume file removal writing to the sealed live volume instead of the mounted copy when root patching on a Mac that requires Metallibs https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/commit/059cc9a659e9ff3c240b732b66b950916d44a007
