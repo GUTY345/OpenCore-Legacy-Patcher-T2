@@ -140,6 +140,7 @@ body:
         4. Hold Option and choose Macintosh HD (or whatever is called your main drive)
         5. Open the OpenCore Legacy Patcher T2 app
         6. Click on Settings
+        7. Go to Debugging
         7. Enable Verbose, OpenCore Debugging and Kext Debugging
         8. Click on Return
         9. Build OpenCore as usual
@@ -162,6 +163,7 @@ body:
         4. Halten Sie die Wahltaste (⌥) gedrückt und wählen Sie „Macintosh HD“ (oder wie auch immer Ihr Hauptlaufwerk heißt).
         5. Öffnen Sie die App „OpenCore Legacy Patcher T2“.
         6. Klicken Sie auf „Settings“.
+        7. Gehen Sie nach Debugging
         7. Aktivieren Sie „Verbose“, „OpenCore Debugging“ und „Kext Debugging“.
         8. Klicken Sie auf „Return“.
         9. Bauen Sie OpenCore wie gewohnt.
