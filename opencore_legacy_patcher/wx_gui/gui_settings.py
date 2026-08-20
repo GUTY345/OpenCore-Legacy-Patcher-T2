@@ -306,6 +306,23 @@ class SettingsFrame(wx.Frame):
                 "General": {
                     "type": "title",
                 },
+                "Allow native models": {
+                    "type": "checkbox",
+                    "value": self.constants.allow_oc_everywhere,
+                    "variable": "allow_oc_everywhere",
+                    "description": [
+                        "Allow OpenCore to be installed",
+                        "on natively supported Macs.",
+                        "Note this will not allow unsupported",
+                        "macOS versions to be installed on",
+                        "your system.",
+                        "NOTE: if you want to spoof your SMBIOS,"
+                        "you need to go afterwards to the SMBIOS tab"
+                        "and tick the box next to",
+                        "Allow spoofing native Macs"
+                    ],
+                    "warning": "This option should only be used if your Mac natively supports the OSes you wish to run.\n\nIf you are currently running an unsupported OS, this option will break booting. Only toggle for enabling OS features on a native Mac.\n\nAre you certain you want to continue?",
+                },
                 "FireWire Booting": {
                     "type": "checkbox",
                     "value": self.constants.firewire_boot,
@@ -313,6 +330,9 @@ class SettingsFrame(wx.Frame):
                     "description": [
                         "Enable booting macOS from",
                         "FireWire drives.",
+                        "Nowadays most people don't need this setting.",
+                        "Most people don't use FireWire drives",
+                        "and macOS 26 Tahoe removed FireWire support."
                     ],
                     "condition": not (generate_smbios.check_firewire(self.constants.custom_model or self.constants.computer.real_model) is False)
                 },
@@ -324,6 +344,9 @@ class SettingsFrame(wx.Frame):
                         "Enable booting macOS from add-in",
                         "USB 3.0 expansion cards on systems",
                         "without native support.",
+                        "For example if you have a Mac Pro 2010",
+                        "and you have upgraded your USB expansion card",
+                        "to USB 3.0, you'll benefit from this setting."
                     ],
                     "condition": not gui_support.CheckProperties(self.constants).host_has_cpu_gen(cpu_data.CPUGen.ivy_bridge) # Sandy Bridge and older do not natively support XHCI booting
                 },
@@ -848,19 +871,7 @@ class SettingsFrame(wx.Frame):
                 "General": {
                     "type": "title",
                 },
-                "Allow native models": {
-                    "type": "checkbox",
-                    "value": self.constants.allow_oc_everywhere,
-                    "variable": "allow_oc_everywhere",
-                    "description": [
-                        "Allow OpenCore to be installed",
-                        "on natively supported Macs.",
-                        "Note this will not allow unsupported",
-                        "macOS versions to be installed on",
-                        "your system.",
-                    ],
-                    "warning": "This option should only be used if your Mac natively supports the OSes you wish to run.\n\nIf you are currently running an unsupported OS, this option will break booting. Only toggle for enabling OS features on a native Mac.\n\nAre you certain you want to continue?",
-                },
+
                 # um zu sicherstellen, dass Benutzer auf den neuesten Stand bleiben, um die letzte Fehlerbehebungen zu erhalten und Sicherheitslücken zu schließen, das Menü zum Deaktivieren von automatische Updates ist entfernt
                
                 "wrap_around 1": {
