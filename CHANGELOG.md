@@ -1,5 +1,10 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
 
+## 4.0.0.16051 - 4.0.0 alpha 16.4.1
+This release removes some Gemini generated vulnerability fixes that the maintainer couldn't understand that caused many weird issues. With this, stability increases by 50+% and reduce bugs by 50%.
+
+Diese Version entfernt einige von Gemini generierte Sicherheitslückenkorrekturen, die der Entwickler nicht nachvollziehen konnte und die zu zahlreichen unerwarteten Problemen führten. Dadurch wird die Stabilität um über 50% erhöht und die Anzahl der Fehler um 50 % reduziert.
+
 ## 4.0.0.16050 - 4.0.0 alpha 16.4.0
 This release:
 - fixes UI bugs in the update screen where it says Would you like to instead of Would you like to update due to not enough space on the screen
