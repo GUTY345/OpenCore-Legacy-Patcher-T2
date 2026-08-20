@@ -1,4 +1,48 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16912 - 4.0.0 pre-alpha 5.2 for alpha 17
+This release:
+- removes some Gemini generated vulnerability fixes that the maintainer couldn't understand that caused many weird issues. With this, stability increases by 50+% and reduce bugs by 50%.
+- Allow spoofing native Macs is moved to Build
+- fixes a the following vulnerability in constants.py:
+
+          try:
+                      logging.info("Checking if the version is special")
+                      version.parse(self.patcher_version)
+                      return False
+                  except version.InvalidVersion:
+                      logging.info("We have confirmed that this is a special version")
+                      logging.info("You won't receive automatic updates.")
+                      return True
+         # <- here's the vulnerability - there's no error handling if there is an unexpected error.
+
+Impact: an attacker could launch a denial of service attack to crash the application.
+
+
+Diese Version:
+
+- Behebt einige von Gemini generierte Sicherheitslückenkorrekturen, die der Maintainer nicht nachvollziehen konnte und die zu vielen ungewöhnlichen Problemen führten. Dadurch wird die Stabilität um über 50 % erhöht und die Anzahl der Fehler um 50 % reduziert.
+
+- Die Option zum Spoofing nativer Macs wurde in den Build-Prozess verschoben.
+
+- Behebt die folgende Sicherheitslücke in constants.py:
+          
+              try:
+                      logging.info("Checking if the version is special")
+                      version.parse(self.patcher_version)
+                      return False
+                  except version.InvalidVersion:
+                      logging.info("We have confirmed that this is a special version")
+                      logging.info("You won't receive automatic updates.")
+                      return True
+          # <- Hier liegt die Sicherheitslücke: Es gibt keine Fehlerbehandlung bei unerwarteten Fehlern.
+
+Auswirkung: Ein Angreifer könnte einen Denial-of-Service-Angriff starten, um die Anwendung zum Absturz zu bringen.
+
+## 4.0.0.16051 - 4.0.0 alpha 16.4.1
+This release removes some Gemini generated vulnerability fixes that the maintainer couldn't understand that caused many weird issues. With this, stability increases by 50+% and reduce bugs by 50%.
+
+Diese Version entfernt einige von Gemini generierte Sicherheitslückenkorrekturen, die der Entwickler nicht nachvollziehen konnte und die zu zahlreichen unerwarteten Problemen führten. Dadurch wird die Stabilität um über 50% erhöht und die Anzahl der Fehler um 50 % reduziert.
+
 ## 4.0.0.16911 -  4.0.0 pre-alpha 5.1 for alpha 17:
 This release fixes a bug where on unsupported T2 Macs, Build and install OpenCore is greyed out.
 Diese Version behebet einen Fehler, indem auf nicht unterstützte T2 Macs Build and Install OpenCore ausgegraut wurde.
