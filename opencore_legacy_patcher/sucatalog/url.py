@@ -13,8 +13,6 @@ from .constants import (
 )
 from ..support import network_handler
 
-logger = logging.getLogger(__name__)
-
 
 class CatalogURL:
     """
@@ -193,6 +191,6 @@ class CatalogURL:
             if response and hasattr(response, "content") and response.content:
                 return plistlib.loads(response.content)
         except Exception as e:
-            logger.error(f"Failed to fetch or parse URL contents from {self.url}: {e}")
+            logging.error(f"Failed to fetch or parse URL contents from {self.url}: {e}")
             
         return {}
