@@ -4,6 +4,10 @@
 
 A Python-based project revolving around [Acidanthera's OpenCorePkg](https://github.com/acidanthera/OpenCorePkg) and [Lilu](https://github.com/acidanthera/Lilu) for both running and unlocking features in macOS on supported and unsupported Macs.
 
+> **⚠️ Building EFIs on Hackintoshes is unsupported by this patcher!** Building EFIs for Hackintoshes is unsupported by this patcher. I’ll explain clearly why: like Dortania’s OCLP, it generates EFIs for real Macs. They wouldn’t work on Hackintoshes. While OpenCore Legacy Patcher T2 uses OpenCore under the hood, real Macs boot differently macOS from a Hackintosh. Also, a GIGABYTE board with let’s say, i7-8700B may offer the exact same board with different configurations, so predicting what patches are needed is infeasible on something no one does know.
+>
+> 
+
 > **⚠️⚠️⚠️⚠️⚠️ Warning** Installing drivers and patches (root patches) on older macOS 26 Tahoe versions, e.g 26.5 and earlier will not work. Those who want to install drivers and patches with this patcher, you need to update to 26.5 or later.
 
 > **⚠️⚠️⚠️⚠️⚠️ Warnung** Die Installation von Treibern und Patches (Root-Patches) auf älteren macOS 26 Tahoe-Versionen, z. B. 26.5 und älter, funktioniert nicht. Wer Treiber und Patches mit diesem Patcher installieren möchte, muss auf Version 26.5 oder höher aktualisieren.
