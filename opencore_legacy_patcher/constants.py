@@ -270,6 +270,10 @@ class Constants:
             logging.info("We have confirmed that this is a special version")
             logging.info("You won't receive automatic updates.")
             return True
+        except Exception as e:
+            logging.error("We could not confirm whether you're using a special version.")
+            logging.info("You won't receive any updates to prevent an attacker from abusing the update API for malware delivery or denial of service attacks.")
+            return True
 
     # Payload Location
 
