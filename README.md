@@ -4,7 +4,7 @@
 
 A Python-based project revolving around [Acidanthera's OpenCorePkg](https://github.com/acidanthera/OpenCorePkg) and [Lilu](https://github.com/acidanthera/Lilu) for both running and unlocking features in macOS on supported and unsupported Macs.
 
-> **⚠️ Building EFIs on Hackintoshes is unsupported by this patcher!** Building EFIs for Hackintoshes is unsupported by this patcher. I’ll explain clearly why: like Dortania’s OCLP, it generates EFIs for real Macs. They wouldn’t work on Hackintoshes. While OpenCore Legacy Patcher T2 uses OpenCore under the hood, real Macs boot differently macOS from a Hackintosh. Also, a GIGABYTE board with let’s say, i7-8700B may offer the exact same board with different configurations, so predicting what patches are needed is infeasible on something no one does know.
+> **⚠️ Building EFIs on Hackintoshes is unsupported by this patcher!** Building EFIs for Hackintoshes is unsupported by this patcher. I’ll explain clearly why: like Dortania’s OCLP, it generates EFIs for real Macs. They wouldn’t work on Hackintoshes. While OpenCore Legacy Patcher T2 uses OpenCore under the hood, real Macs boot differently macOS from a Hackintosh. Also, a GIGABYTE board with let’s say, i7-8700B may offer the exact same board with different configurations, so predicting what patches are needed is infeasible on something no one does know. Also, on the same board depending on the config you may need different boot arguments. And also, it doesn’t use OpenCore’s version of boot.efi, it uses the one that works on real Macs. Standard Hackintoshes rely on BOOTx64.efi.
 >
 > 
 
