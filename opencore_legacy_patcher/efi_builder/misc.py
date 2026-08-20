@@ -447,10 +447,7 @@ class BuildMiscellaneous:
             logging.error(f"{self.model} is not a T2 Mac.")
             return
         else:
-            enable_experimental_patches = False # Nur auf True setzen wenn der Benutzer manuell selbst bearbeitet und wechselt enable_experimental_patches von False auf True
-            logging.info("If you want to enable optional patches that haven't been tested yet, you should download go to releases")
-            logging.info(", then download the zip file, extract it, and then, open up misc.py.")
-            logging.info("And afterwards, you need manually to set enable_experimental_patches from False to True")
+            logging.info(f"{self.model} is a T2 Mac.")
             builder = support.BuildSupport(self.model, self.constants, self.config)
             self.config.setdefault("Kernel", {}).setdefault("Patch", [])
     
