@@ -14,6 +14,8 @@ import applescript
 from pathlib import Path
 from datetime import datetime
 
+from logging.handlers import RotatingFileHandler
+
 from .. import constants
 
 
@@ -129,26 +131,52 @@ class InitializeLoggingSupport:
 
         """
 
-        logging.basicConfig(
-            level=logging.NOTSET,
-            format="[%(asctime)s] [%(filename)-32s] [%(lineno)-4d]: %(message)s",
-            handlers=[
-                logging.StreamHandler(stream = sys.stdout),
-                logging.FileHandler(self.log_filepath) if log_to_file is True else logging.NullHandler()
-            ],
-        )
-        
+        # Configure basic stream handler. Use force=True to ensure we replace
+        # any handlers that were configured earlier (entry scripts sometimes
+        # call basicConfig which prevents later reconfiguration).
+        try:
+            logging.basicConfig(
+                level=logging.NOTSET,
+                format="[%(asctime)s] [%(filename)-32s] [%(lineno)-4d]: %(message)s",
+                handlers=[logging.StreamHandler(stream = sys.stdout)],
+                force=True,
+            )
+        except TypeError:
+            # Older Python may not support force; fall back to clearing handlers
+            root = logging.getLogger()
+            for h in list(root.handlers):
+                root.removeHandler(h)
+            logging.basicConfig(
+                level=logging.NOTSET,
+                format="[%(asctime)s] [%(filename)-32s] [%(lineno)-4d]: %(message)s",
+                handlers=[logging.StreamHandler(stream = sys.stdout)],
+            )
+
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
-        
-        # FIX: Check if handlers exist before accessing by index
+
+        # Ensure the stream handler uses a simple message-only formatter to
+        # mimic print() behavior in the terminal.
         if len(logger.handlers) > 0:
             logger.handlers[0].setFormatter(logging.Formatter("%(message)s"))
-            
-        if len(logger.handlers) > 1:
-            # Only set maxBytes if it's actually a FileHandler (NullHandler doesn't have it)
-            if hasattr(logger.handlers[1], 'maxBytes'):
-                logger.handlers[1].maxBytes = self.max_file_size
+
+        # Attach a rotating file handler if requested and not already present.
+        if log_to_file is True:
+            existing_file_handlers = [h for h in logger.handlers if hasattr(h, 'baseFilename') and str(getattr(h, 'baseFilename')) == str(self.log_filepath)]
+            if not existing_file_handlers:
+                try:
+                    rotating = RotatingFileHandler(str(self.log_filepath), maxBytes=self.max_file_size, backupCount=5)
+                    rotating.setFormatter(logging.Formatter("[%(asctime)s] [%(filename)-32s] [%(lineno)-4d]: %(message)s"))
+                    logger.addHandler(rotating)
+                except Exception as e:
+                    # If we fail to create a file handler (permission issue, etc.),
+                    # log to stdout only and continue.
+                    print(f"Failed to attach file logger: {e}")
+
+        # If a file-like handler exists, we may want to set rotation limits
+        for h in logger.handlers:
+            if isinstance(h, RotatingFileHandler):
+                h.maxBytes = self.max_file_size
 
     def _attempt_initialize_logging_configuration(self) -> None:
         """
@@ -215,7 +243,7 @@ class InitializeLoggingSupport:
 
             # Ask user if they want to send crash report
             try:
-                result = applescript.AppleScript(f'display dialog "{error_msg}" with title "OpenCore Legacy Patcher ({self.constants.patcher_version})" buttons {{"Yes", "No"}} default button "Yes" with icon caution').run()
+                result = applescript.AppleScript(f'display dialog "{error_msg}" with title "OpenCore Legacy Patcher ({self.constants.patcher_version})" buttons {{"Yes", "No"}} default button "Yes")')
             except Exception as e:
                 logging.error(f"Failed to display crash report dialog: {e}")
                 return
