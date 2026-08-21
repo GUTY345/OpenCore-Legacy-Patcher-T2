@@ -924,7 +924,7 @@ class OCSettingsFrame(wx.Frame):
         
     def on_save(self, event):
          # Throw pop up to get save location
-        with wx.FileDialog(self.parent, wildcard="", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT, defaultFile=f"OpenCore-Build-{self.constants.custom_model or self.constants.computer.real_model}", name="Save OpenCore Build") as fileDialog:
+        with wx.FileDialog(self.parent, wildcard="All files (*.*)|*.*", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT, defaultFile=f"OpenCore-Build-{self.constants.custom_model or self.constants.computer.real_model}", name="Save OpenCore Build") as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
 
