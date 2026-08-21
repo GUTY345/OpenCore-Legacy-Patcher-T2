@@ -27,7 +27,7 @@ class BuildFrame(wx.Frame):
     Create a frame for building OpenCore
     Uses a Modal Dialog for smoother transition from other frames
     """
-    def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None) -> None:
+    def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None, save: bool = False, install: bool = False) -> None:
         logging.info("Initializing Build Frame")
         super(BuildFrame, self).__init__(parent, title=title, size=(350, 200), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
         gui_support.GenerateMenubar(self, global_constants).generate()
@@ -40,6 +40,8 @@ class BuildFrame(wx.Frame):
 
         self.constants: constants.Constants = global_constants
         self.title: str = title
+        self.install = install
+        self.save = save
         self.stock_output = logging.getLogger().handlers[0].stream
 
         self.frame_modal = wx.Dialog(self, title=title, size=(400, 200))
@@ -146,15 +148,8 @@ class BuildFrame(wx.Frame):
         model_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         model_label.Centre(wx.HORIZONTAL)
 
-        # Button: Install OpenCore
-        install_button = wx.Button(frame, label="🔩 Install OpenCore", pos=(-1, model_label.GetPosition()[1] + model_label.GetSize()[1]), size=(150, 30))
-        install_button.Bind(wx.EVT_BUTTON, self.on_install)
-        install_button.Centre(wx.HORIZONTAL)
-        install_button.Disable()
-        self.install_button = install_button
-
         # Read-only text box: {empty}
-        text_box = wx.TextCtrl(frame, value="", pos=(-1, install_button.GetPosition()[1] + install_button.GetSize()[1] + 10), size=(380, 350), style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_RICH2)
+        text_box = wx.TextCtrl(frame, value="", pos=(-1, model_label.GetPosition()[1] + model_label.GetSize()[1] + 10), size=(380, 350), style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_RICH2)
         text_box.Centre(wx.HORIZONTAL)
         self.text_box = text_box
 
@@ -167,6 +162,7 @@ class BuildFrame(wx.Frame):
 
         # Adjust window size to fit all elements
         frame.SetSize((-1, return_button.GetPosition()[1] + return_button.GetSize()[1] + 40))
+
 
 
     def _invoke_build(self) -> None:
@@ -182,23 +178,35 @@ class BuildFrame(wx.Frame):
 
         gui_support.wait_for_thread(thread)
 
-        self.return_button.Enable()
-
-        # Check if config.plist was built
         if self.build_successful is False:
-            self.on_build_failure()
-            return
-        else:
             dialog = wx.MessageDialog(
                 parent=self,
-                message=f"Would you like to install OpenCore now?",
-                caption="Finished building your OpenCore configuration!",
-                style=wx.YES_NO | wx.ICON_QUESTION
+                message="An error occurred while building OpenCore",
+                caption="Error building OpenCore",
+                style=wx.OK | wx.ICON_ERROR
             )
-            dialog.SetYesNoLabels("Install to disk", "View build log")
-    
-        self.on_install() if dialog.ShowModal() == wx.ID_YES else self.install_button.Enable()
-
+            dialog.ShowModal()
+            self.return_button.Enable()
+            return
+        if self.save:
+            index = 1
+            number_lines = self.text_box.GetNumberOfLines()
+            lines = []
+            while index != number_lines:
+                lines.append(f"{self.text_box.GetLineText(index)}\n")
+                index += 1
+            with open(self.constants.oc_build_path / "Build.log", "w") as f:
+                f.writelines(lines)
+            dialog = wx.MessageDialog(
+                parent=self,
+                message=f"OpenCore was built and placed at {self.constants.oc_build_path}",
+                caption="Done Building",
+                style=wx.OK | wx.ICON_INFORMATION
+            )
+            dialog.ShowModal()
+            self.on_return_to_main_menu()
+        elif self.install:
+            self.on_install()
 
     def _build(self) -> None:
         """
