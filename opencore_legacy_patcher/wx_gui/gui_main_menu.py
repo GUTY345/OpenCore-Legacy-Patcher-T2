@@ -28,6 +28,7 @@ from ..wx_gui import (
     gui_support,
     gui_help,
     gui_settings,
+    gui_sys_patch_display,
     gui_macos_configeration,
     gui_model_change,
     gui_oc_settings,
@@ -436,6 +437,14 @@ class MainFrame(wx.Frame):
             logging.error(f"Failed to open Install drivers and patches: {e}")
             logging.exception("Stack Trace:")
             return
+
+    def on_macos_config(self, event: wx.Event = None):
+        gui_macos_configeration.MacosConfigFrame(
+            parent=self,
+            title=self.title,
+            global_constants=self.constants,
+            screen_location=self.GetPosition()
+        )
 
     def on_create_macos_installer(self, event: wx.Event = None):
         try:
