@@ -358,7 +358,8 @@ class macOSInstallerFlashFrame(wx.Frame):
             parent=None,
             title=self.title,
             global_constants=self.constants,
-            screen_location=self.GetPosition()
+            screen_location=self.GetPosition(),
+            install=True
         )
         self.Destroy()
 

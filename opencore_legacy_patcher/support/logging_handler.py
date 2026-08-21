@@ -16,10 +16,6 @@ from datetime import datetime
 
 from .. import constants
 
-from . import (
-    analytics_handler,
-    global_settings
-)
 
 
 class InitializeLoggingSupport:
