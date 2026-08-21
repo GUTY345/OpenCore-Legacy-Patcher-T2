@@ -293,7 +293,7 @@ class MainFrame(wx.Frame):
                 logging.error("Your version is invalid")
                 if remote_version_str == local_version_str:
                     return
-            # behebt eine Sicherheitslücke, indem beim unerwartetes Fehler das App einfach abstürzt. Angreifern können davon ausnutzen, um invalider Syntax zu schreiben, um beliebiges Code auszuführen.
+            # behebt eine Sicherheitslücke, indem beim unerwartetes Fehler das App einfach abstürzt. Angreifern können davon ausnutzen, um invalider Syntax zu schreiben, um beliebiges Code aus[...]
             except Exception as e:
                 logging.error("We face some issues checking for updates. The error is the following:")
                 logging.exception("Stack Trace:")
@@ -335,7 +335,7 @@ class MainFrame(wx.Frame):
         panel = wx.Panel(frame)
         
         self.title_text = wx.StaticText(panel, label=f"A new version of {self.constants.patcher_name} is available!")
-        self.description = wx.StaticText(panel, label=f"{self.constants.patcher_name} {oclp_version} is now available - You have {self.constants.patcher_version_label}. Would you like to update?")
+        self.description = wx.StaticText(panel, label=f"{self.constants.patcher_name} {oclp_version} is now available - You have {self.constants.patcher_version_label}. Would you like to update?"[...]
         self.title_text.SetFont(gui_support.font_factory(19, wx.FONTWEIGHT_BOLD))
         self.description.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         # Ohne Wrap() ragt der Text bei langen Versions-/Produktnamen über die feste Dialogbreite hinaus
@@ -439,12 +439,17 @@ class MainFrame(wx.Frame):
             return
 
     def on_macos_config(self, event: wx.Event = None):
-        gui_macos_configeration.MacosConfigFrame(
-            parent=self,
-            title=self.title,
-            global_constants=self.constants,
-            screen_location=self.GetPosition()
-        )
+        try:
+            gui_macos_configeration.MacosConfigFrame(
+                parent=self,
+                title=self.title,
+                global_constants=self.constants,
+                screen_location=self.GetPosition()
+            )
+        except Exception as e:
+            logging.error(f"We failed to open MacOS Configuration: {e}")
+            logging.exception("Stack Trace:")
+            return
 
     def on_create_macos_installer(self, event: wx.Event = None):
         try:
