@@ -38,7 +38,7 @@ class Constants:
         ## https://github.com/acidanthera
         self.lilu_version:               str = "1.7.2"  #      Lilu
         self.whatevergreen_version:      str = "1.7.0"  #      WhateverGreen
-        self.whatevergreen_navi_version: str = "1.6.9-Navi"  # WhateverGreen (Navi Patch)
+        self.whatevergreen_navi_version: str = "1.7.2-Navi"  # WhateverGreen (Navi Patch)
         self.airportbcrmfixup_version:   str = "2.2.0"  #      AirPortBrcmFixup
         self.nvmefix_version:            str = "1.1.3"  #      NVMeFix
         self.applealc_version:           str = "1.6.7"  #      AppleALC
@@ -159,6 +159,8 @@ class Constants:
         self.update_stage:               int = 0  #     Determine update stage (see gui_support.py)
         self.log_filepath:              Path = None  #  Path to log file
         self.thread_sleep_interval:    float = 0.01  #  Sleep interval between UI updates (seconds) - balance between UI responsiveness and CPU usage
+        self.Developer_Mode:            bool = False 
+        self.oc_build_path:             Path = None
 
         self.commit_info: tuple = (None, None, None)  # Commit info (Branch, Commit Date, Commit URL)
 
@@ -659,7 +661,10 @@ class Constants:
     # Build Location
     @property
     def build_path(self):
-        return self.current_path / Path("Build-Folder/")
+        if self.oc_build_path == None:
+            return self.current_path / Path("Build-Folder/")
+        else:
+            return self.oc_build_path.parent
 
     @property
     def opencore_release_folder(self):
@@ -766,29 +771,39 @@ class Constants:
     @property
     def icns_resource_path(self):
         if self.launcher_script:
-            return self.payload_path / Path("Icon/AppIcons")
+            return self.payload_path / Path("Resources/AppIcons")
         return Path(self.launcher_binary).parent.parent / Path("Resources")
 
 
     @property
+    def patch_icon_path(self):
+       if self.detected_os > os_data.os_data.tahoe:
+           return self.icns_resource_path / Path("OC-Patch-Wrench.icns")
+       elif self.detected_os < os_data.os_data.big_sur:
+           return self.icns_resource_path / Path("OC-Patch-WrenchAndScrewDriver.icns")
+       else:
+            return self.icns_resource_path / Path(f"OC-Patch-{self.detected_os}.icns")
+
+       
+    @property
     def app_icon_path(self):
-        return self.payload_path / Path("Icon/AppIcons/OC-Patcher.icns")
+        return self.payload_path / Path("Resources/AppIcons/OC-Patcher.icns")
 
     @property
     def icon_path_external(self):
-        return self.payload_path / Path("Icon/DriveIcons/External/.VolumeIcon.icns")
+        return self.payload_path / Path("Resources/DriveIcons/External/.VolumeIcon.icns")
 
     @property
     def icon_path_internal(self):
-        return self.payload_path / Path("Icon/DriveIcons/Internal/.VolumeIcon.icns")
+        return self.payload_path / Path("Resources/DriveIcons/Internal/.VolumeIcon.icns")
 
     @property
     def icon_path_sd(self):
-        return self.payload_path / Path("Icon/DriveIcons/SD-Card/.VolumeIcon.icns")
+        return self.payload_path / Path("Resources/DriveIcons/SD-Card/.VolumeIcon.icns")
 
     @property
     def icon_path_ssd(self):
-        return self.payload_path / Path("Icon/DriveIcons/SSD/.VolumeIcon.icns")
+        return self.payload_path / Path("Resources/DriveIcons/SSD/.VolumeIcon.icns")
 
     @property
     def icon_path_macos_generic(self):
@@ -820,7 +835,7 @@ class Constants:
 
     @property
     def gui_path(self):
-        return self.payload_path / Path("Icon/Resources.zip")
+        return self.payload_path / Path("Resources/Resources.zip")
 
     @property
     def installer_pkg_path(self):
