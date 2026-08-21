@@ -354,10 +354,11 @@ class OCSettingsFrame(wx.Frame):
                     ],
                     "condition": (self.constants.custom_model and self.constants.custom_model in ["MacPro3,1", "Xserve2,1"]) or self.constants.computer.real_model in ["MacPro3,1", "Xserve2,1"]
                 },
-                "Debug": {
+            },
+            "Debugging": {
+                "Debugging features ": {
                     "type": "title",
                 },
-
                 "Verbose": {
                     "type": "checkbox",
                     "value": self.constants.verbose_debug,
@@ -389,8 +390,9 @@ class OCSettingsFrame(wx.Frame):
                     ],
                 },
             },
+                
             "Extras": {
-                "General (Continued)": {
+                "Extra features - recommended for troubleshooting": {
                     "type": "title",
                 },
                 "Wake on WLAN": {
@@ -466,6 +468,7 @@ class OCSettingsFrame(wx.Frame):
                         "Allow OpenCore to write to NVRAM.",
                         "Disable on systems with faulty or",
                         "degraded NVRAM.",
+                        "Not recommended for T2 Macs",
                     ],
                 },
 
@@ -542,6 +545,8 @@ class OCSettingsFrame(wx.Frame):
                         "Configure FeatureUnlock level.",
                         "Recommend lowering if your system",
                         "experiences memory instability.",
+                        "Do not enable this feature on T2",
+                        "Macs, it may cause kernel panics.",
                     ],
                 },
                 "Populate FeatureUnlock Override": {
