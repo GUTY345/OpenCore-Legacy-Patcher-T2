@@ -392,9 +392,9 @@ Hardware Information:
         self._update_setting(self.settings[self._find_parent_for_key(label)][label]["variable"], value)
         if label == "Allow native models":
             if gui_support.CheckProperties(self.constants).host_can_build() is True:
-                self.parent.build_button.Enable()
+                self.constants.allow_building = True
             else:
-                self.parent.build_button.Disable()
+                self.constants.allow_building = False
 
 
     def on_spinctrl(self, event: wx.Event, label: str) -> None:
