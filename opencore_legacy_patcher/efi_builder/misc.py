@@ -397,6 +397,7 @@ class BuildMiscellaneous:
             logging.error(f"{self.model} is not a T1 Mac.")
             return
         else:
+            logging.info(f"{self.model} is a T1 Mac.")
             logging.info("- Enabling T1 Security Chip support")
             try:
                 builder = support.BuildSupport(self.model, self.constants, self.config)
@@ -450,13 +451,6 @@ class BuildMiscellaneous:
             logging.info(f"{self.model} is a T2 Mac.")
             builder = support.BuildSupport(self.model, self.constants, self.config)
             self.config.setdefault("Kernel", {}).setdefault("Patch", [])
-    
-            if enable_experimental_patches==False:
-                logging.info("Injecting optional patches are not enabled. That's the standard behavior.")
-            elif enable_experimental_patches==True:
-                logging.info("ATTENTION! Injecting optional patches are enabled. These patches haven't been tested yet and may have bugs, which could lead to for example kernel panics.")
-            else:
-                logging.error("We couldn't verify if injecting optional patcges are enabled or not, but they must be disabled if the variable is not set to True.")
     
             # Prerequisite kext checks
             for kext, ver, path in [
