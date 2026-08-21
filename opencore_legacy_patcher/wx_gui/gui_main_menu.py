@@ -335,7 +335,7 @@ class MainFrame(wx.Frame):
         panel = wx.Panel(frame)
         
         self.title_text = wx.StaticText(panel, label=f"A new version of {self.constants.patcher_name} is available!")
-        self.description = wx.StaticText(panel, label=f"{self.constants.patcher_name} {oclp_version} is now available - You have {self.constants.patcher_version_label}. Would you like to update?"[...]
+        self.description = wx.StaticText(panel, label=f"{self.constants.patcher_name} {oclp_version} is now available - You have {self.constants.patcher_version_label}. Would you like to update?")
         self.title_text.SetFont(gui_support.font_factory(19, wx.FONTWEIGHT_BOLD))
         self.description.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         # Ohne Wrap() ragt der Text bei langen Versions-/Produktnamen über die feste Dialogbreite hinaus
