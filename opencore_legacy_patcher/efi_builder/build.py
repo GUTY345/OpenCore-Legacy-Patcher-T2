@@ -6,10 +6,12 @@ import copy
 import pickle
 import shutil
 import logging
+import subprocess
 import zipfile
 import plistlib
 import sys
 import webbrowser
+import subprocess
 
 from pathlib import Path
 from datetime import date
@@ -249,7 +251,7 @@ class BuildOpenCore:
             Path(self.constants.opencore_zip_copied).unlink()
         if Path(self.constants.opencore_release_folder).exists():
             logging.info("Deleting old copy of OpenCore folder")
-            shutil.rmtree(self.constants.opencore_release_folder, onexc=rmtree_handler)
+            shutil.rmtree(self.constants.opencore_release_folder, onerror=rmtree_handler, ignore_errors=True)
 
         logging.info("")
         logging.info(f"- Adding OpenCore v{self.constants.opencore_version} {'DEBUG' if self.constants.opencore_debug is True else 'RELEASE'}")
@@ -355,38 +357,20 @@ class BuildOpenCore:
         """
 
         # Generate OpenCore Configuration
-        try:
-            logging.info(f"Generating OpenCore configuration for {self.model} ...")
-            self._build_efi()
-        except Exception as e:
-            logging.error(f"Whoops, Generating OpenCore configuration for {self.model} because of the following error:")
-            logging.exception("Stack Trace:") # This prints the full technical error
-            logging.info("Please try again later.")
-            sys.exit(3)
-        try:
-            if self.constants.allow_oc_everywhere is False or self.constants.allow_native_spoofs is True or (self.constants.custom_serial_number != "" and self.constants.custom_board_serial_number != ""):
-                smbios.BuildSMBIOS(self.model, self.constants, self.config).set_smbios()
-            support.BuildSupport(self.model, self.constants, self.config).cleanup()
-            self._save_config()
-        except Exception as e:
-            logging.error(f"Whoops, spoofing the SMBIOS for {self.model} failed because of the following error:")
-            logging.exception("Stack Trace:") # This prints the full technical error
-            logging.info("Please try again later.")
-            sys.exit(3)
+        self._build_efi()
+        if self.constants.allow_oc_everywhere is False or self.constants.allow_native_spoofs is True or (self.constants.custom_serial_number != "" and self.constants.custom_board_serial_number != ""):
+            smbios.BuildSMBIOS(self.model, self.constants, self.config).set_smbios()
+        support.BuildSupport(self.model, self.constants, self.config).cleanup()
+        self._save_config()
 
         # Post-build handling
-        try:
-            logging.info("Post-build handling")
-            support.BuildSupport(self.model, self.constants, self.config).sign_files()
-            support.BuildSupport(self.model, self.constants, self.config).validate_pathing()
-    
-            logging.info("")
-            logging.info(f"Your OpenCore EFI for {self.model} has been built at:")
+        support.BuildSupport(self.model, self.constants, self.config).sign_files()
+        support.BuildSupport(self.model, self.constants, self.config).validate_pathing()
+        logging.info("")
+        logging.info(f"Your OpenCore EFI for {self.model} has been built at:")
+        if self.constants.oc_build_path != None:
+            subprocess.run(["/bin/mv", str(self.constants.opencore_release_folder), str(self.constants.oc_build_path)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.decode().strip()
+            logging.info(f"    {self.constants.oc_build_path}")
+        else:
             logging.info(f"    {self.constants.opencore_release_folder}")
-            logging.info("")
-        except Exception as e:
-            logging.info("")
-            logging.error(f"Your OpenCore EFI for {self.model} is not ready due to an unexpected error:")
-            logging.exception("Stack Trace:")
-            logging.info("Please try again later.")
-            sys.exit(3)
+        logging.info("")

@@ -37,6 +37,7 @@ class HelpFrame(wx.Frame):
             - Button: Community Discord Server
             - Button: Bug Reports / GitHub Issues  <-- Added
             - Button: Community Discussions        <-- Added
+            - Button Gemini
             - Button: Return to Main Menu
         """
         frame = self if not frame else frame
@@ -73,7 +74,11 @@ class HelpFrame(wx.Frame):
             
             # Step the coordinate down for the next item element sequence
             current_y += button_spacing
+        gemini_button = wx.Button(frame, label="✨ Ask Gemini", pos=(-1, current_y), size=(220, 30))
+        gemini_button.Bind(wx.EVT_BUTTON, self.on_gemini_help)
+        gemini_button.Centre(wx.HORIZONTAL)
 
+        current_y += button_spacing
         # 4. Return to Main Menu Action Button
         current_y += 10  # Add a slight visual separation gap before the close action button
         return_button = wx.Button(frame, label="Return to Main Menu", pos=(-1, current_y), size=(160, 30))
@@ -82,3 +87,23 @@ class HelpFrame(wx.Frame):
 
         # Automatically wrap structural layout scaling to avoid text truncation on varied OS platforms
         frame.SetSize((-1, return_button.GetPosition()[1] + return_button.GetSize()[1] + 45))
+
+
+    def on_gemini_help(self, event: wx.Event):
+            import webview # Import here to avoid slowing down OCLP startup
+            
+            logging.info("- Launching Gemini AI Assistant (pywebview)")
+            
+            # Create a sleek, floating window
+            window = webview.create_window(
+                title='Gemini AI Assistant',
+                url='https://gemini.google.com',
+                width=500,
+                height=850,
+                confirm_close=False,
+                background_color='#ffffff'
+            )
+            
+            # start() is blocking by default, but in a wxPython app, 
+            # it usually needs to run in its own flow.
+            webview.start()
