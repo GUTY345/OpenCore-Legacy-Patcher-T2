@@ -1,4 +1,8 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.16913 - 4.0.0 pre-alpha 5.3 for alpha 17
+This release fixes a UI bug in Settings where the description for Allow native models may overlap.
+Diese Version behebt einen Fehler in der Benutzeroberfläche der Einstellungen, bei dem sich die Beschreibung für „Allow native models“ überschneiden konnte.
+
 ## 4.0.0.16912 - 4.0.0 pre-alpha 5.2 for alpha 17
 This release:
 - removes some Gemini generated vulnerability fixes that the maintainer couldn't understand that caused many weird issues. With this, stability increases by 50+% and reduce bugs by 50%.
