@@ -987,6 +987,8 @@ class OCSettingsFrame(wx.Frame):
             self.sip_value = 0x00
         else:
             self.sip_value = 0x803
+        sip_configured_label = wx.StaticText(panel, label="SIP, in short for System Integrity Protection is a function that prevents attackers from tampering with core system files.", pos=(sip_label.GetPosition()[0] + 35, sip_label.GetPosition()[1] + 3))
+        sip_configured_label = wx.StaticText(panel, label="WARNING: If a random person on the internet asks you to set SIP to 0xFFF just to run an app without explaining why, then that app is likely to be malware.", pos=(sip_label.GetPosition()[0] + 35, sip_label.GetPosition()[1] + 13))
         sip_configured_label = wx.StaticText(panel, label=f"Currently configured SIP: {hex(self.sip_value)}", pos=(sip_label.GetPosition()[0] + 35, sip_label.GetPosition()[1] + 20))
         sip_configured_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_BOLD))
         self.sip_configured_label = sip_configured_label
