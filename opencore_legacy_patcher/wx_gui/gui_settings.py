@@ -316,10 +316,10 @@ class SettingsFrame(wx.Frame):
                         "Note this will not allow unsupported",
                         "macOS versions to be installed on",
                         "your system.",
-                        "NOTE: if you want to spoof your SMBIOS,"
-                        "you need to go afterwards to the SMBIOS tab"
+                        "NOTE: if you want to spoof your SMBIOS,",
+                        "you need to go afterwards to the SMBIOS tab",
                         "and tick the box next to",
-                        "Allow spoofing native Macs"
+                        "Allow spoofing native Macs",
                     ],
                     "warning": "This option should only be used if your Mac natively supports the OSes you wish to run.\n\nIf you are currently running an unsupported OS, this option will break booting. Only toggle for enabling OS features on a native Mac.\n\nAre you certain you want to continue?",
                 },
