@@ -1,6 +1,6 @@
 requests
 pyobjc
-wxpython
+wxpython<4.2.5
 pyinstaller
 packaging
 py_sip_xnu
