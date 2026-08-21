@@ -77,7 +77,7 @@ class OCSettingsFrame(wx.Frame):
         save_oc_button.Bind(wx.EVT_BUTTON, self.on_save)
         save_oc_button.SetToolTip("Builds and Saves OpenCore to the filesystem")
         save_oc_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-        if gui_support.CheckProperties(self.constants).host_can_build() is False:
+        if gui_support.CheckProperties(self.constants).host_can_build() and self.constants.allow_building is False:
             save_oc_button.Disable()
         bot_sizer.Add(save_oc_button, 0, wx.ALIGN_CENTER | wx.ALL, 0)
 
@@ -89,7 +89,7 @@ class OCSettingsFrame(wx.Frame):
         install_oc_button.SetDefault()
         install_oc_button.SetToolTip("Builds and Installs OpenCore to disk")
         install_oc_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-        if gui_support.CheckProperties(self.constants).host_can_build() is False:
+        if gui_support.CheckProperties(self.constants).host_can_build() and self.constants.allow_buiding is False:
             install_oc_button.Disable()
         bot_sizer.Add(install_oc_button, 0, wx.ALIGN_CENTER | wx.ALL, 0)
 
