@@ -277,15 +277,6 @@ class SettingsFrame(wx.Frame):
                 "Validation": {
                     "type": "title",
                 },
-                "Install latest nightly build 🧪": {
-                    "type": "button",
-                    "function": self.on_nightly,
-                    "description": [
-                        "If you're already here, I assume you're ok",
-                        "bricking your system 🧱.",
-                        "Check CHANGELOG before blindly updating.",
-                    ],
-                },
                 "Trigger Exception": {
                     "type": "button",
                     "function": self.on_test_exception,
@@ -403,39 +394,6 @@ Hardware Information:
         global_settings.GlobalEnviromentSettings().write_property(variable, tmp_value)
         if global_setting is not None:
             self._update_setting(global_setting, value)
-
-
-
-    def on_nightly(self, event: wx.Event) -> None:
-        # Ask prompt for which branch
-        branches = ["main"]
-        if self.constants.commit_info[0] not in ["Running from source", "Built from source"]:
-            branches = [self.constants.commit_info[0].split("/")[-1]]
-        result = network_handler.NetworkUtilities().get("https://api.github.com/repos/dortania/OpenCore-Legacy-Patcher/branches")
-        if result is not None:
-            result = result.json()
-            for branch in result:
-                if branch["name"] == "gh-pages":
-                    continue
-                if branch["name"] not in branches:
-                    branches.append(branch["name"])
-
-            with wx.SingleChoiceDialog(self.parent, "Which branch would you like to download?", "Branch Selection", branches) as dialog:
-                if dialog.ShowModal() == wx.ID_CANCEL:
-                    return
-
-                branch = dialog.GetStringSelection()
-        else:
-            branch = "main"
-
-        gui_update.UpdateFrame(
-            parent=self.parent,
-            title=self.title,
-            global_constants=self.constants,
-            screen_location=self.parent.GetPosition(),
-            url=f"https://nightly.link/dortania/OpenCore-Legacy-Patcher/workflows/build-app-wxpython/{branch}/OpenCore-Patcher.pkg.zip",
-            version_label="(Nightly)"
-        )
 
 
     def on_export_constants(self, event: wx.Event) -> None:
