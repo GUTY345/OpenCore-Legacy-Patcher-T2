@@ -992,14 +992,31 @@ class OCSettingsFrame(wx.Frame):
             self.sip_value = 0x00
         else:
             self.sip_value = 0x803
-        sip_configured_label = wx.StaticText(panel, label="SIP, in short for System Integrity Protection is a function that prevents attackers from tampering with core system files.", pos=(sip_label.GetPosition()[0] + 35, sip_label.GetPosition()[1] + 3))
-        sip_configured_label = wx.StaticText(panel, label="WARNING: If a random person on the internet asks you to set SIP to 0xFFF just to run an app without explaining why, then that app is likely to be malware.", pos=(sip_label.GetPosition()[0] + 35, sip_label.GetPosition()[1] + 13))
-        sip_configured_label = wx.StaticText(panel, label=f"Currently configured SIP: {hex(self.sip_value)}", pos=(sip_label.GetPosition()[0] + 35, sip_label.GetPosition()[1] + 20))
+
+        # Bug fix: these three lines used to all be assigned to the same
+        # 'sip_configured_label' variable and were only offset by 3-20px
+        # vertically, so they were drawn on top of each other (and of the
+        # 'sip_label'/hyperlink line above). They also had no Wrap(), so the
+        # long sentences ran past the dialog edge and got clipped. Each label
+        # now gets its own variable and is stacked below the previous one
+        # using its actual rendered height, and the long sentences wrap
+        # within the panel instead of overflowing it.
+        wrap_width = 480
+
+        sip_description_label = wx.StaticText(panel, label="SIP, in short for System Integrity Protection, is a function that prevents attackers from tampering with core system files.", pos=(sip_label.GetPosition()[0], sip_label.GetPosition()[1] + sip_label.GetSize()[1] + 8))
+        sip_description_label.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_NORMAL))
+        sip_description_label.Wrap(wrap_width)
+
+        sip_warning_label = wx.StaticText(panel, label="WARNING: If a random person on the internet asks you to set SIP to 0xFFF just to run an app without explaining why, then that app is likely to be malware.", pos=(sip_description_label.GetPosition()[0], sip_description_label.GetPosition()[1] + sip_description_label.GetSize()[1] + 6))
+        sip_warning_label.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_NORMAL))
+        sip_warning_label.Wrap(wrap_width)
+
+        sip_configured_label = wx.StaticText(panel, label=f"Currently configured SIP: {hex(self.sip_value)}", pos=(sip_warning_label.GetPosition()[0], sip_warning_label.GetPosition()[1] + sip_warning_label.GetSize()[1] + 10))
         sip_configured_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_BOLD))
         self.sip_configured_label = sip_configured_label
 
         # Label: SIP Status
-        sip_booted_label = wx.StaticText(panel, label=f"Currently booted SIP: {hex(py_sip_xnu.SipXnu().get_sip_status().value)}", pos=(sip_configured_label.GetPosition()[0], sip_configured_label.GetPosition()[1] + 20))
+        sip_booted_label = wx.StaticText(panel, label=f"Currently booted SIP: {hex(py_sip_xnu.SipXnu().get_sip_status().value)}", pos=(sip_configured_label.GetPosition()[0], sip_configured_label.GetPosition()[1] + sip_configured_label.GetSize()[1] + 4))
         sip_booted_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
 
 
