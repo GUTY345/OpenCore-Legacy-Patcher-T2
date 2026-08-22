@@ -6,10 +6,6 @@ import time
 import subprocess
 from pathlib import Path
 
-from PyInstaller.building.api import PYZ, EXE, COLLECT
-from PyInstaller.building.osx import BUNDLE
-from PyInstaller.building.build_main import Analysis
-
 # Fix: Use PyInstaller's built-in global 'SPECPATH' instead of '__file__'
 try:
     SPEC_DIR = Path(SPECPATH).resolve()
@@ -26,7 +22,7 @@ block_cipher = None
 datas = [
    (str(SPEC_DIR / 'payloads.dmg'), '.'),
    (str(SPEC_DIR / 'Universal-Binaries.dmg'), '.'),
-   (str(SPEC_DIR / 'payloads' / 'Icon'), 'Resources'),
+   (str(SPEC_DIR / 'payloads' / 'Resources'), 'Resources'),
 ]
 
 # Fix: Use the corrected SPEC_DIR absolute variable
@@ -78,7 +74,7 @@ coll = COLLECT(exe,
 
 app = BUNDLE(coll,
              name='OpenCore-Patcher.app',
-             icon=str(SPEC_DIR / "payloads/Icon/AppIcons/OC-Patcher.icns"), # Fix: Use the corrected SPEC_DIR variable
+             icon=str(SPEC_DIR / "payloads/Resources/AppIcons/OC-Patcher.icns"), # Fix: Use the corrected SPEC_DIR variable and Resources path
              bundle_identifier="com.dortania.opencore-legacy-patcher",
              info_plist={
                 "CFBundleName": "OpenCore Legacy Patcher",
