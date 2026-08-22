@@ -96,10 +96,15 @@ To run the project from source, see here: [Build and run from source](./SOURCE.m
   * iMacs Metal GPUs Upgrade Patch set and documentation
 * [nxvid](https://github.com/nxvid/OpenCore-Legacy-Patcher-T2/)
   * for documenting and fixing an issue where sbvmm might not have been injected on T2 Macs
+* [gandolf243](https://github.com/gandolf243)
+  * UI redesign
+  * fixing some bugs, testing and documenting issues
 * [DrDonk](https://github.com/DrDonk)
   * for helping me write a valid patch for AppleKeyStore
+  * testing and troubleshooting
 * [TheRaddish1313](https://github.com/TheRaddish1313)
     * for fixing framebuffer issues and boot args
+    * testing and troubleshooting
 * [vit9696](https://github.com/vit9696)
 * [Albert Müller](https://github.com/albert-mueller/)
   * Adding support for unsupported T2 Macs and the main author of this fork
