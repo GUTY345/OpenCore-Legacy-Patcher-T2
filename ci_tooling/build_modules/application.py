@@ -247,11 +247,6 @@ class GenerateApplication:
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
 
-        subprocess_wrapper.run_and_verify(
-            generate_copy_arguments("payloads/Icon/AppIcons/Assets.car", self._application_output / "Contents" / "Resources" / ""),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-
 
     def generate(self) -> None:
         """
