@@ -835,7 +835,7 @@ class OCSettingsFrame(wx.Frame):
                         chassis_type = "aluminum"
                         if self.constants.computer.real_model in ["MacBook5,2", "MacBook6,1", "MacBook7,1"]:
                             chassis_type = "plastic"
-                        dlg = wx.MessageDialog(self.frame_modal, f"This model, {self.constants.computer.real_model}, does not natively support macOS {os_data.os_conversion.kernel_to_os(self.constants.detected_os)}, {os_data.os_conversion.convert_kernel_to_marketing_name(self.constants.detected_os)}. The last native OS was macOS {os_data.os_conversion.kernel_to_os(smbios_data.smbios_dictionary[self.constants.computer.real_model]['Max OS Supported'])}, {os_data.os_conversion.convert_kernel_to_marketing_name(smbios_data.smbios_dictionary[self.constants.computer.real_model]['Max OS Supported'])}\n\nToggling this option will break booting on this OS. Are you absolutely certain this is desired?\n\nYou may end up with a nice {chassis_type} brick \U0001f9f1", "Are you certain?", wx.YES_NO | wx.ICON_WARNING | wx.NO_DEFAULT)
+                        dlg = wx.MessageDialog(self.frame_modal, f"This model, {self.constants.computer.real_model}, does not natively support macOS {os_data.os_conversion.kernel_to_os(self.constants.detected_os)}, {os_data.os_conversion.convert_kernel_to_marketing_name(self.constants.detected_os)}. The last native OS was macOS {os_data.os_conversion.kernel_to_os(smbios_data.smbios_dictionary[self.constants.computer.real_model]['Max OS Supported'])}, {os_data.os_conversion.convert_kernel_to_marketing_name(smbios_data.smbios_dictionary[self.constants.computer.real_model]['Max OS Supported'])}\n\nToggling this option will break booting on this OS. Are you absolutely certain this is desired?\n\nYou may end up with a nice {chassis_type} brick 🧱", "Are you certain?", wx.YES_NO | wx.ICON_WARNING | wx.NO_DEFAULT)
                         if dlg.ShowModal() == wx.ID_NO:
                             event.GetEventObject().SetValue(not event.GetEventObject().GetValue())
                             return
@@ -972,24 +972,12 @@ class OCSettingsFrame(wx.Frame):
                 sip_title = child
                 break
 
-        # T2 Macs always have SIP hardcoded to 0xFFF at build time (see
-        # efi_builder/misc.py) to be able to boot at all, so any value
-        # configured here would silently be overwritten and never take
-        # effect. Lock this section behind non-T2 Macs and explain why
-        # instead of showing controls that don't do anything.
-        effective_model = self.constants.custom_model or self.constants.computer.real_model
-        is_t2_mac = (
-            effective_model in model_array.T2Macs
-            or "T2_CHIP" in getattr(self.constants, "device_properties", {}).get(effective_model, {}).get("Features", [])
-        )
-
-        if is_t2_mac:
+        # SIP customization has no effect on T2 Macs: OpenCore hardcodes
+        # csr-active-config to 0xFFF there regardless of these settings.
+        if (self.constants.custom_model or self.constants.computer.real_model) in model_array.T2Macs:
             sip_unavailable_label = wx.StaticText(panel, label="Customizing SIP is not available for T2 Macs.", pos=(sip_title.GetPosition()[0] - 20, sip_title.GetPosition()[1] + 30))
-            sip_unavailable_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_BOLD))
-
-            sip_unavailable_description = wx.StaticText(panel, label="OpenCore Legacy Patcher T2 always sets SIP to 0xFFF on T2 Macs so they can boot; this value cannot be changed here.", pos=(sip_unavailable_label.GetPosition()[0], sip_unavailable_label.GetPosition()[1] + sip_unavailable_label.GetSize()[1] + 8))
-            sip_unavailable_description.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_NORMAL))
-            sip_unavailable_description.Wrap(480)
+            sip_unavailable_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+            sip_unavailable_label.Wrap(480)
             return
 
         # Label: Flip individual bits corresponding to XNU's csr.h
