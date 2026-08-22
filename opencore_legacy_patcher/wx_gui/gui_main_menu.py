@@ -16,7 +16,8 @@ from packaging import version
 from .. import constants
 
 from ..support import (
-    updates
+    updates,
+    subprocess_wrapper
 )
 from ..datasets import (
     os_data,
@@ -271,6 +272,12 @@ class MainFrame(wx.Frame):
         # behebt eine Sicherheitslücke, die erlaubt Angreifern, trotz es schon nach Updates gesucht wurden, wieder nach Updates zu suchen, um den Mac und die API fürs Updates zu überlasten.
         # behebt auch eine Sicherheitslücke, die erlaubt Angreifern, Updates zu deaktivieren, um aus bereits bekannten Sicherheitslücken auszunutzen.
         else:
+            # Runs once per app launch (gated by has_checked_updates above),
+            # ahead of the actual update check. No-op, no prompt, unless the
+            # helper genuinely needs repairing - see subprocess_wrapper for
+            # why this can't just be fixed via run_as_root()/the helper itself.
+            subprocess_wrapper.ensure_privileged_helper_permissions()
+
             logging.info("Checking for updates")
             self.constants.has_checked_updates = True
             
