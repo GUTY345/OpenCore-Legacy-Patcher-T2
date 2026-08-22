@@ -22,7 +22,6 @@ block_cipher = None
 datas = [
    (str(SPEC_DIR / 'payloads.dmg'), '.'),
    (str(SPEC_DIR / 'Universal-Binaries.dmg'), '.'),
-   (str(SPEC_DIR / 'payloads' / 'Resources'), 'Resources'),
 ]
 
 # Fix: Use the corrected SPEC_DIR absolute variable
