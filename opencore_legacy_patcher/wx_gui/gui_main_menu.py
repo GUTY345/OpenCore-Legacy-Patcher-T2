@@ -79,16 +79,21 @@ class MainFrame(wx.Frame):
         version_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         version_label.Centre(wx.HORIZONTAL)
         version_label.SetForegroundColour(wx.Colour(128, 128, 128))
-
-        if self.constants.Developer_Mode:
-            dev_label = wx.StaticText(self, label="Developer Mode is ON", pos=(-1, version_label.GetPosition()[1] + 20))
-            dev_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-            dev_label.Centre(wx.HORIZONTAL)
-            dev_label.SetForegroundColour(wx.Colour(100, 196, 102))
-
-            model_Button = wx.Button(self, label=f"Model: {self.constants.custom_model or self.constants.computer.real_model}", pos=(-1, version_label.GetPosition()[1] + 40))
-        else:
-            model_Button = wx.Button(self, label=f"Model: {self.constants.custom_model or self.constants.computer.real_model}", pos=(-1, version_label.GetPosition()[1] + 30))
+        try:
+            if self.constants.Developer_Mode:
+                dev_label = wx.StaticText(self, label="Developer Mode is ON", pos=(-1, version_label.GetPosition()[1] + 20))
+                dev_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+                dev_label.Centre(wx.HORIZONTAL)
+                dev_label.SetForegroundColour(wx.Colour(100, 196, 102))
+    
+                model_Button = wx.Button(self, label=f"Model: {self.constants.custom_model or self.constants.computer.real_model}", pos=(-1, version_label.GetPosition()[1] + 40))
+            else:
+                model_Button = wx.Button(self, label=f"Model: {self.constants.custom_model or self.constants.computer.real_model}", pos=(-1, version_label.GetPosition()[1] + 30))
+        except Exception as e:
+            logging.error("We couldn't verify whether Developer Mode is on or off due to a critical bug.")
+            logging.info("Please, report this bug.")
+            logging.exception("The error is the following:")
+            logging.info("Since we couldn't verify this, we'll assume Developer Mode is disabled.")
         model_Button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         model_Button.Centre(wx.HORIZONTAL)
         model_Button.SetToolTip("Edit the Target Model OpenCore will build for")
@@ -119,10 +124,11 @@ class MainFrame(wx.Frame):
                 "description": [
                 ],
             },
-            "MacOS Configeration": {
+            "macOS Configeration": {
                 "function": self.on_macos_config,
                 "description": [
-                    "Settings and patches for",
+                    "Settings,",
+                    "drivers and patches for",
                     "your system.",
                 ],
                 "icon": str(self.constants.patch_icon_path),
@@ -132,7 +138,7 @@ class MainFrame(wx.Frame):
                 "function": self.on_help,
                 "description": [
                     "Resources for OpenCore Legacy",
-                    "Patcher T2.",
+                    "Patcher T2, including Ask Gemini.",
                 ],
                 "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
             },
@@ -233,7 +239,9 @@ class MainFrame(wx.Frame):
                 return
 
         except Exception as e:
-            print(f"DEBUG: Preflight error: {e}")
+            logging.error(f"DEBUG: Preflight error: {e}")
+            logging.exception("Stack Trace:")
+            logging.info("Please report this bug.")
 
         self.update_thread = threading.Thread(target=self._check_for_updates)
         self.update_thread.daemon = True  
@@ -252,19 +260,26 @@ class MainFrame(wx.Frame):
             if pop_up.GetReturnCode() != wx.ID_YES:
                 logging.info("Skipping OpenCore and root volume patch update...")
                 return
-
-            logging.info("Updating OpenCore and root volume patches...")
-            self.constants.update_stage = gui_support.AutoUpdateStages.CHECKING
-            self.Hide()
-            pos = self.GetPosition()
-            gui_build.BuildFrame(
-                parent=None,
-                title=self.title,
-                global_constants=self.constants,
-                screen_location=pos,
-                install=True
-            )
-            wx.CallAfter(self.Destroy)
+            # behebt 2 Sicherheitslücken: eine erlaubt Angreifern, unkonditionell OpenCore-Aktualisierungen durchzuführen ohne Erlaubnis von Benutzer, auch wenn der Benutzer "Nein/No" geklickt hat. Die andere Sicherheitslücke erlaubt Angreifern beim fehlerhafte Aktualisierung von OpenCore, der App zum Absturz zu bringen.
+            else:
+                try:
+                    logging.info("Updating OpenCore and root volume patches...")
+                    self.constants.update_stage = gui_support.AutoUpdateStages.CHECKING
+                    self.Hide()
+                    pos = self.GetPosition()
+                    gui_build.BuildFrame(
+                        parent=None,
+                        title=self.title,
+                        global_constants=self.constants,
+                        screen_location=pos,
+                        install=True
+                    )
+                    wx.CallAfter(self.Destroy)
+                except Exception as e:
+                    logging.error("Updating OpenCore and root patches has failed due to the following error:")
+                    logging.exception("Stack Trace:")
+                    logging.info("Try rebuilding OpenCore again and ensure the root patches haven't been broken.")
+                    return
 
     def _request_admin_password_for_helper_repair(self) -> str:
         """
