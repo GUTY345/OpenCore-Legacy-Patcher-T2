@@ -31,6 +31,7 @@ class GenerateDiskImages:
             "OpenCore",
             "Tools",
             "Launch Services",
+            "Resources",  # Preserve Resources directory so PyInstaller can include icons/assets
         ]
 
         whitelist_files = []
