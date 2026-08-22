@@ -11,6 +11,7 @@ import requests
 import markdown2
 import threading
 import webbrowser
+import applescript
 from packaging import version
 
 from .. import constants
@@ -265,6 +266,48 @@ class MainFrame(wx.Frame):
             )
             wx.CallAfter(self.Destroy)
 
+    def _request_admin_password_for_helper_repair(self) -> str:
+        """
+        Prompt for the local administrator password via a plain dialog, so it
+        can be handed to sudo ourselves for repairing the Privileged Helper
+        Tool's permissions.
+
+        Deliberately not "do shell script ... with administrator privileges"
+        for the same reason as PatcherSupportPkgMount._request_admin_password:
+        that mechanism runs elevated via a separate authorization session
+        (/usr/libexec/security_authtrampoline) detached from the current
+        login/Aqua session. A plain "display dialog" only needs a
+        WindowServer session to render, so we use it purely to collect the
+        password.
+        """
+        try:
+            return applescript.AppleScript(
+                f'set theResult to display dialog "OpenCore Legacy Patcher needs administrator access to repair the Privileged Helper Tool\'s permissions." default answer "" with hidden answer with title "OpenCore Legacy Patcher" with icon file "{str(self.constants.app_icon_path).replace("/", ":")[1:]}"\nreturn the text returned of theResult'
+            ).run()
+        except Exception:
+            return ""
+
+    def _ensure_privileged_helper_permissions(self) -> None:
+        """
+        Ensure the Privileged Helper Tool still has its expected 4755
+        (setuid root, rwxr-xr-x) permissions before we reach out to check
+        for updates, repairing them first if needed.
+
+        Only prompts for a password when a repair is actually needed, so
+        this doesn't nag the user with a sudo prompt on every launch.
+        """
+        if not subprocess_wrapper.privileged_helper_needs_setuid_repair():
+            logging.info("Privileged Helper Tool permissions are already correct, no repair needed")
+            return
+
+        logging.info("Privileged Helper Tool permissions need repair, requesting administrator password")
+        admin_password = self._request_admin_password_for_helper_repair()
+        if not admin_password:
+            logging.info("Skipped Privileged Helper Tool permission repair (no password provided)")
+            return
+
+        subprocess_wrapper.repair_privileged_helper_permissions(admin_password)
+
     def _check_for_updates(self):
         if self.constants.has_checked_updates is True:
             logging.info("We have already checked for updates.")
@@ -272,15 +315,11 @@ class MainFrame(wx.Frame):
         # behebt eine Sicherheitslücke, die erlaubt Angreifern, trotz es schon nach Updates gesucht wurden, wieder nach Updates zu suchen, um den Mac und die API fürs Updates zu überlasten.
         # behebt auch eine Sicherheitslücke, die erlaubt Angreifern, Updates zu deaktivieren, um aus bereits bekannten Sicherheitslücken auszunutzen.
         else:
-            # Runs once per app launch (gated by has_checked_updates above),
-            # ahead of the actual update check. No-op, no prompt, unless the
-            # helper genuinely needs repairing - see subprocess_wrapper for
-            # why this can't just be fixed via run_as_root()/the helper itself.
-            subprocess_wrapper.ensure_privileged_helper_permissions()
-
             logging.info("Checking for updates")
             self.constants.has_checked_updates = True
-            
+
+            self._ensure_privileged_helper_permissions()
+
             update_dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
             if not update_dict:
                 return
