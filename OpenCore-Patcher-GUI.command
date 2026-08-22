@@ -50,6 +50,13 @@ def extract_and_copy_tools():
         print(f"[INFO] Found archive at: {zip_path}")
 
         dest_dir = base_dir / "payloads" / "OpenCore"
+        
+        # SECURITY FIX: Do not extract if files already exist.
+        # Modifying a signed .app bundle at runtime breaks Gatekeeper and causes the app to be killed instantly.
+        if (dest_dir / "macserial").exists() and (dest_dir / "ocvalidate").exists():
+            print("[INFO] Tools already extracted. Skipping to preserve bundle signature.")
+            return
+
         dest_dir.mkdir(parents=True, exist_ok=True)
 
         # Temporary extraction path to inspect contents

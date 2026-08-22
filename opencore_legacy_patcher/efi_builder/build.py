@@ -446,10 +446,13 @@ class BuildOpenCore:
                 # dart=0: Disables IOMMU/VT-d to prevent peripheral mapping issues
                 if "dart=0" not in current_boot_args:
                     extra_args.append("dart=0")
-                # agdpmod=ignore: Bypasses Apple Graphics Device Policy which causes
-                # black screen on AMD Polaris + Intel Kaby Lake dual-GPU laptops
+                # LEVEL-D specific: Use pikera to fix external monitor flickering
+                # Otherwise, fallback to standard ignore patch
                 if "agdpmod=" not in current_boot_args:
-                    extra_args.append("agdpmod=ignore")
+                    if self.constants.build_profile == "test_d":
+                        extra_args.append("agdpmod=pikera")
+                    else:
+                        extra_args.append("agdpmod=ignore")
                 if extra_args:
                     new_args = f"{current_boot_args} {' '.join(extra_args)}".strip()
                     self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] = new_args

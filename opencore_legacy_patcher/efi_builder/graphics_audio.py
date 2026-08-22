@@ -68,6 +68,22 @@ class BuildGraphicsAudio:
             if not support.BuildSupport(self.model, self.constants, self.config).get_kext_by_bundle_path("WhateverGreen.kext")["Enabled"] is True:
                 support.BuildSupport(self.model, self.constants, self.config).enable_kext("WhateverGreen.kext", self.constants.whatevergreen_version, self.constants.whatevergreen_path)
 
+        # MacBookPro14,3 GPU Profile Handling
+        if self.model == "MacBookPro14,3" or (self.computer and self.computer.real_model == "MacBookPro14,3"):
+            if self.constants.build_profile == "test_d":
+                logging.info("TEST-D PROFILE: Enabling WhateverGreen to fix power management")
+                if not support.BuildSupport(self.model, self.constants, self.config).get_kext_by_bundle_path("WhateverGreen.kext")["Enabled"] is True:
+                    support.BuildSupport(self.model, self.constants, self.config).enable_kext("WhateverGreen.kext", self.constants.whatevergreen_version, self.constants.whatevergreen_path)
+                
+                # We need agdpmod=pikera for test_d to avoid crashes/black screens
+                if "agdpmod=pikera" not in self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"]:
+                    self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] += " agdpmod=pikera"
+            else:
+                logging.info("Adding agdpmod=pikera to boot-args for Tahoe DisplayPolicy mitigation (Photo Booth fix)")
+                if "agdpmod=pikera" not in self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"]:
+                    self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] += " agdpmod=pikera"
+
+
         # Mac Pro handling
         if self.model in model_array.MacPro:
             if not self.constants.custom_model:

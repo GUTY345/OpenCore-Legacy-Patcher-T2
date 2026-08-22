@@ -51,7 +51,15 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
     if not Path(args[0][0]).exists():
         raise FileNotFoundError(f"File not found: {args[0][0]}")
 
-    return subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
+    if Path(OCLP_PRIVILEGED_HELPER).exists():
+        return subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
+    else:
+        logging.warning(f"Privileged Helper Tool not found at {OCLP_PRIVILEGED_HELPER}. Falling back to osascript.")
+        import shlex
+        cmd_string = shlex.join(str(arg) for arg in args[0])
+        as_safe_string = cmd_string.replace('\\', '\\\\').replace('"', '\\"')
+        apple_script = f'do shell script "{as_safe_string}" with administrator privileges'
+        return subprocess.run(["osascript", "-e", apple_script], **kwargs)
 
 
 def verify(process_result: subprocess.CompletedProcess) -> None:

@@ -115,7 +115,7 @@ class MainFrame(wx.Frame):
             },
             "🧪 [LEVEL-D] ALL-IN-ONE TAHOE": {
                 "function": self.on_build_and_install_testd,
-                "description": ["FULL: Wi-Fi Broadcom, Audio AppleHDA,", "GPU agdpmod, T1 & Tahoe boot-args."],
+                "description": ["FULL: Wi-Fi Broadcom, Audio AppleHDA,", "GPU agdpmod=pikera, T1 & Tahoe boot-args."],
                 "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
                 "info_tab": 3,
             },

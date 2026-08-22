@@ -8,7 +8,12 @@ import subprocess
 import py_sip_xnu
 import packaging.version
 
-from enum      import StrEnum
+try:
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+    class StrEnum(str, Enum):
+        pass
 from pathlib   import Path
 from functools import cache
 

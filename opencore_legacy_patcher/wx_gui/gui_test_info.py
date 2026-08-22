@@ -159,7 +159,7 @@ LIVELLI DI BUILD OPENCORE (PROFILI)
    • Wi-Fi: Attiva IOSkywalkFamily, IO80211FamilyLegacy, AirportBrcmFixup,
      blocco driver nativo Skywalk e boot-arg 'ipc_control_port_options=0 amfi=0x80'.
    • Audio: Attiva AppleALC.kext + 'alcid=13' (codec HDEF di MacBookPro14,3).
-   • GPU: Dual-GPU Kaby Lake + Polaris con 'agdpmod=ignore' e 'dart=0'.
+   • GPU: Dual-GPU Kaby Lake + Polaris con 'agdpmod=pikera' e 'dart=0'.
    • T1 Security: Login sicuro con sola password + supporto account iCloud/Apple ID.
 """
 
@@ -173,11 +173,11 @@ SPECIFIC BOOT-ARGS EXPLANATION FOR MACBOOKPRO14,3
   Fondamentale su MacBookPro14,3 e Mac 2017 per evitare crash del driver
   Wi-Fi Broadcom (14E4:43BA), Bluetooth e controller PCIe su macOS Tahoe.
 
-• agdpmod=ignore
+• agdpmod=ignore (o agdpmod=pikera in LEVEL-D)
   Bypassa i controlli di AppleGraphicsDevicePolicy (AGDP).
   Nei MacBook Pro con doppia GPU (Intel HD 630 + AMD Polaris), AGDP
   tende a disattivare le uscite video all'avvio di WindowServer,
-  causando lo schermo nero. 'agdpmod=ignore' forza il driver a mantenere
+  causando lo schermo nero. La patch forza il driver a mantenere
   attive le connessioni framebuffer.
 
 • ipc_control_port_options=0
