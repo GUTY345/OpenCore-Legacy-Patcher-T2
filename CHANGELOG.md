@@ -1,4 +1,91 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.17000 - 4.0.0 alpha 17
+This version brings the new user interface of this patcher, huge xthanks to @gandolf243. Before I start talking about what's fixed in this version, I want to explain the new UI first:
+First things first, the main menu now looks like this:
+
+<img width="712" height="598" alt="Bildschirmfoto 2026-08-22 um 22 28 37" src="https://github.com/user-attachments/assets/6562cd94-79e9-4b23-b4bc-f7c4e1d409f7" />
+
+This is the old UI:
+<img width="812" height="652" alt="Bildschirmfoto 2026-08-22 um 22 29 15" src="https://github.com/user-attachments/assets/b355e0ff-edd9-4398-8feb-1ecd55975207" />
+
+Now, you can configure OpenCore-related settings and then directly click on Install OpenCore - no need to first close settings, then click on the Build and Install OpenCore, etc. You can also now save the OpenCore configuration by just clicking Save OpenCore.
+<img width="712" height="797" alt="Bildschirmfoto 2026-08-22 um 22 30 46" src="https://github.com/user-attachments/assets/c0ec7741-2d0f-4208-bc8d-7bec2091fdb2" />
+
+On T2 Macs, since it is necessary to set SIP to 0xFFF, which means SIP needs to be completely disabled, and the value is hardcoded, the setting for System Integrity Protection for these Macs was since a long time useless. So these settings are shown only on non-T2 Macs. On T2 Macs, you'll get this:
+<img width="712" height="797" alt="Bildschirmfoto 2026-08-22 um 22 37 35" src="https://github.com/user-attachments/assets/c00ece14-5286-4e97-8622-4136a4cfdaea" />
+
+When you click Install OpenCore, you'll see which drive to select as usual:
+
+<img width="492" height="308" alt="Bildschirmfoto 2026-08-22 um 22 41 47" src="https://github.com/user-attachments/assets/174d707d-f30b-48a6-9200-b85c21ec473b" />
+
+But now, with this release, you'll be able to install OpenCore to any partition that is formatted as FAT32 via Disk Utility:
+<img width="412" height="275" alt="Bildschirmfoto 2026-08-22 um 22 42 52" src="https://github.com/user-attachments/assets/b892979c-3efc-4afe-b160-57b1494d1f28" />
+
+I strongly recommend not to put OpenCore inside your EFI partition, rather than on a secondary partition formatted as FAT32. Like this, you don't have to modify the EFI, and you reduce the attack surface by a lot if an attacker were to find a vulnerability in OpenCore. Like this, an attacker can't intercept the boot sequence of macOS. Especially if you care about cybersecurity a lot, I don't recommend placing your OpenCore config to the EFI partition. I recommend instead to create a seperate partition formatted as FAT32 via Disk Utility.
+
+NOTE: installing OpenCore to another partition rather than the EFI partition only works on Macs with UEFI, which are the Macs from 2012 onwards.
+
+The install drivers and patches button is now called root patching and is now located inside macOS Configuration. Again, when you click macOS Configuration, you can configure all root patches that you want to be included if you want to configure anything, mostly these settings are for advanced users, and then you can click Root Patching. And then the root patching process continues as normal.
+<img width="712" height="632" alt="Bildschirmfoto 2026-08-22 um 22 48 16" src="https://github.com/user-attachments/assets/bc4840bb-48a3-4af3-8219-29994b612130" />
+
+Also, the macOS Configuration icon has a dynamic icon and depending on the version of macOS that you're currently running, it shows a different icon. I'm running Tahoe, so it shows the Tahoe icon.
+
+Since most settings have been relocated, now the Settings button has only info about the version of this patcher and some other statistics, Remove unused KDKs and Report info to Dortania, which setting is greyed out and not available.
+<img width="1424" height="1594" alt="image" src="https://github.com/user-attachments/assets/1c49476e-2e3d-4fdf-938b-b2f0a49d8b2e" />
+
+And now, the Ask Gemini button is located inside Support:
+
+<img width="712" height="598" alt="Bildschirmfoto 2026-08-22 um 22 51 46" src="https://github.com/user-attachments/assets/327627ed-bc55-4ac7-9699-0ba67c414226" />
+
+The create macOS installer button works the same way as previously.
+
+Now, to change the Target model, it's as simple as clicking on Model: MacBookPro16,2 (or whatever is your SMBIOS):
+<img width="1424" height="1196" alt="Bild 22 08 26 um 22 54" src="https://github.com/user-attachments/assets/1f9b3882-e610-4f94-a369-53a480fe9388" />
+
+Then you select your target model:
+
+<img width="712" height="598" alt="Bildschirmfoto 2026-08-22 um 22 56 19" src="https://github.com/user-attachments/assets/e45acd25-7f24-4a4f-8efc-eb108073f3ff" />
+
+And you click Done. It's that simple.
+
+This version:
+- brand new UI, thanks to @gandolf243 
+- fixes a bug where upon trying to flash a macOS installer, it immediately crashes without any obvious logs like if nothing ever happened
+- fixes Priveleged Helper Tool permission issues where upon trying to flash macOS's installer, it denies to do so; and may fix also other issues along the line
+- fixes a bug where on T2 Macs may inject SMC related patches, which on T2 Macs causes a kernel panic
+- on T2 Macs, in alpha 16, there were many issues that are now fixed in alpha 17 and were fixed in the pre-alpha 17, which is now alpha 17 and no longer a pre-alpha from boot loops to battery charging issues
+- now, on T2 Macs, you no longer have to spoof the SMBIOS to be able to boot into macOS - it works now out of the box
+- on supported T2 Macs (on unsupported T2 Macs isn't tested yet), as soon as you don't spoof the SMBIOS, even via OpenCorePkg booting, the Touch ID works. However, Apple Pay is not possible to be enabled on T2 Macs as it requires SIP to be enabled, while to boot via OpenCorePkg it requires to be completely disabled.
+- removes some broken Gemini generated vulnerability fixes which increases stability by another 30-40%
+- fixes the following vulnerabilities:
+gui_main_menu.py:
+- fixes a vulnerability where an attacker could trick a user into updating OpenCore even if they haven't given a permission because of unconditional update OpenCore instructions inside the code:
+
+                   if pop_up.GetReturnCode() != wx.ID_YES:
+                        logging.info("Skipping OpenCore and root volume patch update...")
+                        return
+                   # <- here's the vulnerability - 1. an attacker could launch a DoS attack by supplying the update mechanism with invalid code to crash the application; 2. an attacker could delete the  if pop_up.GetReturnCode() != wx.ID_YES: condition to trick the user into installing OpenCore and root patches updates without their consent
+                    logging.info("Updating OpenCore and root volume patches...")
+                    self.constants.update_stage = gui_support.AutoUpdateStages.CHECKING
+                    self.Hide()
+                    pos = self.GetPosition()
+                    gui_build.BuildFrame(
+                        parent=None,
+                        title=self.title,
+                        global_constants=self.constants,
+                        screen_location=pos,
+                        install=True
+                    )
+                    wx.CallAfter(self.Destroy)
+
+Impact: an attacker could supply the _check_for_updates or any other function with invalid code to launch a denial of service attack to crash the application. Or an attacker could delete the  if pop_up.GetReturnCode() != wx.ID_YES: condition to trick the user into updating OpenCore and root patches without their consent. This is fixed by putting the update code under an else condition and also in try/except blocks for error handling.
+
+Remaining:
+- MacBookPro7,1 and other Core 2 Duo Macs are not able to boot: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues/206 - this is an OpenCorePkg bug; will fix in the next days
+- Remains root patches to be tested against Sequoia, Sonoma, Ventura, Monterey and Big Sur systems and eventually implement legacy OS fallback for mounting Universal-Binaries.dmg. At the moment, it works only with macOS 26.4 Tahoe and newer.
+- Remains to be tested on unsupported T2 Macs
+- Fix yellow screen https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues/194 , however I'm not sure how to fix that issue; waiting for contributors to fix it. If anyone can fix it, I recommend to reach me to add as a contributor or create a fork and then push a PR.
+
 ## 4.0.0.16913 - 4.0.0 pre-alpha 5.3 for alpha 17
 This release fixes a UI bug in Settings where the description for Allow native models may overlap.
 Diese Version behebt einen Fehler in der Benutzeroberfläche der Einstellungen, bei dem sich die Beschreibung für „Allow native models“ überschneiden konnte.
