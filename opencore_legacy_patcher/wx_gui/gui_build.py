@@ -179,13 +179,7 @@ class BuildFrame(wx.Frame):
         gui_support.wait_for_thread(thread)
 
         if self.build_successful is False:
-            dialog = wx.MessageDialog(
-                parent=self,
-                message="An error occurred while building OpenCore",
-                caption="Error building OpenCore",
-                style=wx.OK | wx.ICON_ERROR
-            )
-            dialog.ShowModal()
+            self.on_build_failure()
             self.return_button.Enable()
             return
         if self.save:
@@ -270,5 +264,3 @@ class BuildFrame(wx.Frame):
             screen_location=self.GetScreenPosition()
         )
         install_oc_frame.Show()
-
-
