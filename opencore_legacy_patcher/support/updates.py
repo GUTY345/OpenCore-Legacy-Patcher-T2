@@ -11,6 +11,7 @@ from typing import Optional, Union
 from packaging import version
 
 from . import network_handler
+from . import subprocess_wrapper
 
 from .. import constants
 
@@ -94,6 +95,10 @@ class CheckBinaryUpdates:
         Returns:
             dict: Dictionary with Link and Version of the latest binary update if available
         """
+
+        # Self-heal the Privileged Helper Tool's permissions before doing anything
+        # network-related below. No-op (no prompt) unless a repair is actually needed.
+        subprocess_wrapper.ensure_privileged_helper_permissions()
 
         if self.constants.special_build is True:
             # Special builds do not get updates through the updater
