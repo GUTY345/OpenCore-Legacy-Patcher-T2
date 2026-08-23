@@ -151,6 +151,7 @@ class Constants:
         self.needs_to_open_preferences: bool = False  # Determine if preferences need to be opened
         self.host_is_hackintosh:        bool = False  # Determine if host is Hackintosh
         self.host_is_vmware_vm:         bool = False  # Dev/test only: host is running under VMware (VM board-id), never true on real Mac hardware; bypasses the SIP validation gate so root-patching syntax can be exercised in a VM
+        self.allow_vmware_root_patching: bool = False  # Dev/test only, NEVER exposed as a GUI Settings checkbox - must be hand-edited to True in this file and run from source. Narrower than allow_oc_everywhere (which IS a GUI checkbox any user could flip): only takes effect when host_is_vmware_vm is also True, so it can only ever unlock the Root Patching button for a detected VMware VM, never for hackintoshes/real unsupported Macs in general. See gui_support.CheckProperties.host_can_build().
         self.should_nuke_kdks:          bool = True  #  Determine if KDKs should be nuked if unused in /L*/D*/KDKs
         self.launcher_binary:            str = None  #  Determine launch binary path (ie. Python vs PyInstaller)
         self.launcher_script:            str = None  #  Determine launch file path   (None if PyInstaller)

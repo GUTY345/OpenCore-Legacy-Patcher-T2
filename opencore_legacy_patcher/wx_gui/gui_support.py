@@ -233,6 +233,16 @@ class CheckProperties:
         # (this is what the on_model_choice() fix alone could not solve, since it
         # just re-checks this same function).
         if self.constants.host_is_hackintosh is True and self.constants.allow_oc_everywhere is False:
+            # Dev/test only, narrower escape hatch than allow_oc_everywhere above: that toggle is a
+            # GUI Settings checkbox ("Allow native models") any user of a pre-built app could flip,
+            # which is too broad for what this is meant for (exercising root-patch syntax inside a
+            # VMware VM, see host_is_vmware_vm in application_entry.py/constants.py). allow_vmware_root_patching
+            # has no GUI control at all and defaults to False - it only ever becomes True if someone
+            # hand-edits constants.py and runs from source, so it can't be abused by end users the way
+            # a GUI checkbox could. Scoped to host_is_vmware_vm specifically, so it can never unlock
+            # this button for a hackintosh or any other unsupported real Mac.
+            if self.constants.host_is_vmware_vm is True and self.constants.allow_vmware_root_patching is True:
+                return True
             return False
         if self.constants.custom_model:
             return True
