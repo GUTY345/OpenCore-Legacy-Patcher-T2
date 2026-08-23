@@ -5,6 +5,7 @@ Optimiert für Sicherheit und Stabilität.
 """
 
 import os
+import zipfile
 import sys
 import time
 import argparse
