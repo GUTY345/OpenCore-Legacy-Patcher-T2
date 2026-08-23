@@ -62,9 +62,6 @@ The main goal of generating prebuilt binaries is to strip the requirement of a l
 pip3 install pyinstaller
 # Move into project directory
 cd ~/Developer/OpenCore-Legacy-Patcher/
-# Open OpenCore Legacy Patcher T2 to extract macserial and ocvalidate from the zip file called OpenCoreTools.zip
-python3 OpenCore-Patcher-GUI.command
-# Once the app opens, close it by clicking cmd + Q
 # Create the pyinstaller based Application
 python3 Build-Project.command
 # Open build folder
