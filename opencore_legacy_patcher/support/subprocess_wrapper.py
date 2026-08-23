@@ -5,10 +5,12 @@ subprocess_wrapper.py: Wrapper for subprocess module to better handle errors and
 
 import enum
 import stat
+import shlex
 import logging
 import subprocess
 
 from pathlib import Path
+from typing import Callable, Optional
 
 
 OCLP_PRIVILEGED_HELPER = "/Library/PrivilegedHelperTools/com.dortania.opencore-legacy-patcher.privileged-helper"
@@ -104,6 +106,89 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
         raise FileNotFoundError(f"File not found: {args[0][0]}")
 
     return subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
+
+
+def mount_dmg(
+    dmg_path: Path,
+    mount_point: Path,
+    shadow_path: Path = None,
+    password: str = None,
+    admin_password_prompt: Optional[Callable[[], str]] = None,
+    retry_on_auth_error: bool = False
+) -> subprocess.CompletedProcess:
+    """
+    Attach a disk image via 'hdiutil attach', using '-stdinpass' rather than
+    the deprecated (and, on some systems, less reliable) '-passphrase' flag.
+
+    Some systems (observed starting with macOS 26.4) require elevated
+    privileges to mount disk images, a regression from prior unprivileged
+    mounts succeeding, which manifests as "Permission denied". If
+    'admin_password_prompt' is supplied and the unprivileged attempt fails
+    with "Permission denied", this clears com.apple.quarantine (which can
+    independently trip hdiutil's own Gatekeeper-style authentication gate)
+    and retries once, elevated via 'sudo'.
+
+    'retry_on_auth_error' additionally treats "Authentication error" as a
+    retry trigger. Only pass this for a fixed, known-correct 'password' (e.g.
+    PatcherSupportPkg's convention of a hardcoded passphrase): with a
+    user-supplied password, "Authentication error" more likely means a wrong
+    password than a privilege gate, and would otherwise wrongly prompt for an
+    administrator password on every incorrect attempt.
+
+    Deliberately not routed through "do shell script ... with administrator
+    privileges" (security_authtrampoline): that mechanism runs detached from
+    the current login/Aqua session, and hdiutil's own internal authentication
+    appears to depend on that session being present. 'admin_password_prompt'
+    is expected to only collect a password (e.g. via a plain AppleScript
+    "display dialog"), not to perform the elevation itself.
+    """
+    mount_point.parent.mkdir(parents=True, exist_ok=True)
+
+    cmd = ["/usr/bin/hdiutil", "attach", "-noverify", str(dmg_path), "-mountpoint", str(mount_point), "-nobrowse"]
+    if shadow_path:
+        shadow_path.parent.mkdir(parents=True, exist_ok=True)
+        cmd.extend(["-shadow", str(shadow_path)])
+    cmd.append("-stdinpass")
+
+    process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    stdout, _ = process.communicate(input=password.encode() if password else None)
+
+    if process.returncode == 0 or admin_password_prompt is None:
+        return subprocess.CompletedProcess(args=cmd, returncode=process.returncode, stdout=stdout)
+
+    _should_retry = b"Permission denied" in stdout or (retry_on_auth_error and b"Authentication error" in stdout)
+    if not _should_retry:
+        return subprocess.CompletedProcess(args=cmd, returncode=process.returncode, stdout=stdout)
+
+    logging.info("- Unprivileged hdiutil attach denied, retrying with administrator privileges")
+
+    admin_password = admin_password_prompt()
+    if not admin_password:
+        logging.info("- Elevated hdiutil attach cancelled (no administrator password provided)")
+        return subprocess.CompletedProcess(args=cmd, returncode=process.returncode, stdout=stdout)
+
+    # Clear com.apple.quarantine before attaching: a quarantined disk image (e.g. a
+    # freshly rebuilt/re-extracted payload) can trip hdiutil's authentication gate
+    # even when run as root - elevating privileges alone does not clear it. Run it
+    # in the same elevated shell as the actual attach so it always has the rights to.
+    elevated_shell = (
+        f"xattr -d com.apple.quarantine {shlex.quote(str(dmg_path))} 2>/dev/null; "
+        + " ".join(shlex.quote(str(arg)) for arg in cmd)
+    )
+    elevated_cmd = ["/usr/bin/sudo", "-S", "/bin/sh", "-c", elevated_shell]
+
+    elevated_process = subprocess.Popen(elevated_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    # sudo -S reads exactly one line from stdin for its own password, then hands the
+    # remaining, still-open stdin through to the shell (and on to hdiutil's -stdinpass)
+    stdin_payload = admin_password + "\n" + (password or "")
+    elevated_stdout, _ = elevated_process.communicate(input=stdin_payload.encode())
+
+    if elevated_process.returncode == 0:
+        logging.info("- Mounted (elevated)")
+        return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=elevated_stdout)
+
+    logging.info(f"- Elevated hdiutil attach failed: {elevated_stdout.decode(errors='replace').strip()}")
+    return subprocess.CompletedProcess(args=cmd, returncode=elevated_process.returncode, stdout=elevated_stdout)
 
 
 def verify(process_result: subprocess.CompletedProcess) -> None:

@@ -6,7 +6,6 @@ import logging
 import subprocess
 import applescript
 import sys
-import shlex
 from pathlib import Path
 from ... import constants
 from ...support import subprocess_wrapper
@@ -39,57 +38,13 @@ class PatcherSupportPkgMount:
         except Exception:
             return ""
 
-    def _run_hdiutil(self, dmg_path: Path, mount_point: Path, shadow_path: Path = None, password: str = None) -> subprocess.CompletedProcess:
-        """Helper to standardize hdiutil execution using -stdinpass"""
-        # Ensure paths exist
-        mount_point.parent.mkdir(parents=True, exist_ok=True)
-
-        cmd = ["/usr/bin/hdiutil", "attach", "-noverify", str(dmg_path), "-mountpoint", str(mount_point), "-nobrowse"]
-        if shadow_path:
-            shadow_path.parent.mkdir(parents=True, exist_ok=True)
-            cmd.extend(["-shadow", str(shadow_path)])
-
-        cmd.append("-stdinpass")
-
-        # Execute with stdin input for the password
-        process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        stdout, _ = process.communicate(input=password.encode() if password else None)
-
-        if process.returncode != 0 and b"Permission denied" in stdout:
-            # macOS 26.4+ requires root privileges to mount disk images (regression; previously unprivileged mounts worked fine)
-            logging.info("- Unprivileged hdiutil attach denied, retrying with administrator privileges")
-
-            admin_password = self._request_admin_password()
-            if not admin_password:
-                logging.info("- Elevated hdiutil attach cancelled (no administrator password provided)")
-                return subprocess.CompletedProcess(args=cmd, returncode=process.returncode, stdout=stdout)
-
-            # Clear com.apple.quarantine before attaching: a quarantined disk image (e.g. a
-            # freshly rebuilt/re-extracted PatcherSupportPkg payload) can trip hdiutil's own
-            # Gatekeeper-style authentication gate ("Authentication error") even when run as
-            # root - that is a separate check from the plain Unix permission denial above, and
-            # elevating privileges alone does not clear it. Run it in the same elevated shell as
-            # the actual attach so it always has the rights to do so.
-            elevated_shell = (
-                f"xattr -d com.apple.quarantine {shlex.quote(str(dmg_path))} 2>/dev/null; "
-                + " ".join(shlex.quote(str(arg)) for arg in cmd)
-            )
-            elevated_cmd = ["/usr/bin/sudo", "-S", "/bin/sh", "-c", elevated_shell]
-
-            elevated_process = subprocess.Popen(elevated_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            # sudo -S reads exactly one line from stdin for its own password, then hands the
-            # remaining, still-open stdin through to the shell (and on to hdiutil's -stdinpass)
-            stdin_payload = admin_password + "\n" + (password or "")
-            elevated_stdout, _ = elevated_process.communicate(input=stdin_payload.encode())
-
-            if elevated_process.returncode == 0:
-                logging.info("- Mounted (elevated)")
-                return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=elevated_stdout)
-
-            logging.info(f"- Elevated hdiutil attach failed: {elevated_stdout.decode(errors='replace').strip()}")
-            return subprocess.CompletedProcess(args=cmd, returncode=elevated_process.returncode, stdout=elevated_stdout)
-
-        return subprocess.CompletedProcess(args=cmd, returncode=process.returncode, stdout=stdout)
+    def _run_hdiutil(self, dmg_path: Path, mount_point: Path, shadow_path: Path = None, password: str = None, retry_on_auth_error: bool = False) -> subprocess.CompletedProcess:
+        """Helper to standardize hdiutil execution using -stdinpass, with elevation on failure"""
+        return subprocess_wrapper.mount_dmg(
+            dmg_path, mount_point, shadow_path=shadow_path, password=password,
+            admin_password_prompt=self._request_admin_password,
+            retry_on_auth_error=retry_on_auth_error
+        )
 
     def _mount_universal_binaries_dmg(self) -> bool:
         """Mount PatcherSupportPkg's Universal-Binaries.dmg"""
@@ -103,7 +58,10 @@ class PatcherSupportPkgMount:
             dmg_path,
             Path(self.constants.payload_path / "Universal-Binaries"),
             shadow_path=Path(self.constants.payload_path / "Universal-Binaries_overlay"),
-            password="password"
+            password="password",
+            # Fixed, known-correct password: "Authentication error" here can only mean
+            # the privilege gate/quarantine issue, never a wrong password (see mount_dmg)
+            retry_on_auth_error=True
         )
 
         if output.returncode != 0:
