@@ -535,3 +535,7 @@ class MainFrame(wx.Frame):
             logging.error(f"We failed to open up Help: {e}")
             logging.exception("Stack Trace:")
             return
+
+    def on_close_window(self, event: wx.Event):
+        """ Sauberes Entladen aller Cocoa-Ressourcen beim Schließen """
+        event.Skip()

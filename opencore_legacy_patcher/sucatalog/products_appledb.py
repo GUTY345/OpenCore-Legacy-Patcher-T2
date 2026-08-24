@@ -122,7 +122,9 @@ class AppleDBProducts:
             if firmware.get("internal") or firmware.get("sdk") or firmware.get("rsr"):
                 continue
 
-            if "deviceMap" not in firmware or "MacPro7,1" not in firmware["deviceMap"]:
+            if "deviceMap" not in firmware:
+                continue
+            if not any(model in firmware["deviceMap"] for model in ["MacBookPro15,1", "MacBookPro16,1", "MacBookPro16,4"]):
                 continue
 
             # VULNERABILITY FIX: Strict schema verification before unpacking downstream structural variables
@@ -168,7 +170,9 @@ class AppleDBProducts:
                 if not isinstance(source, dict) or source.get("type") != "installassistant":
                     continue
 
-                if "deviceMap" not in source or "MacPro7,1" not in source["deviceMap"]:
+                if "deviceMap" not in source:
+                    continue
+                if "MacBookPro15,1" not in source["deviceMap"]:
                     continue
 
                 for link in source.get("links", []):

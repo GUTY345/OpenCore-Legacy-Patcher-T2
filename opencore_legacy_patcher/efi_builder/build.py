@@ -18,6 +18,7 @@ from datetime import date
 
 from .. import constants
 
+from ..detections import device_probe
 from ..support import utilities
 from ..datasets import model_array
 
@@ -39,23 +40,13 @@ from ..datasets import (
     os_data
 )
 
-# von def rmtree_handler(func, path, exc_info) -> None: verabscheiden und zu def rmtree_handler(func, path, exc: BaseException) -> None: wechseln, um Kompabilität mit Python 3.13+ zu verbessern und Python 3.14-Kompabilität zu ermöglichen
-def rmtree_handler(func, path, exc: BaseException) -> None:
-    try:
-        # Python 3.13 passes the bare exception instance instead of a tuple
-        if isinstance(exc, FileNotFoundError):
-            return
-            
-        # If it's not a FileNotFoundError, we log the failure to the GUI
-        logging.error(f"Critical: rmtree_handler cannot start cleanup for path: {path}")
-        logging.exception("Stack Trace:") # This prints the full technical error
-        raise exc
-        
-    except Exception as e:
-        logging.error(f"Function Error: {e}")
-        logging.exception("Stack Trace:") # This prints the full technical error
-        logging.info("Please try again later.")
-        sys.exit(3)
+def rmtree_handler(func, path, excinfo) -> None:
+    exc = excinfo[1] if isinstance(excinfo, tuple) else excinfo
+    if isinstance(exc, FileNotFoundError):
+        return
+    logging.error(f"Critical: rmtree_handler cannot start cleanup for path: {path}")
+    logging.exception(exc)
+    raise exc
 
 class BuildOpenCore:
         
@@ -81,10 +72,60 @@ class BuildOpenCore:
             sys.exit(3)
 
     
+    def _require_exact_target_hardware(self) -> None:
+        """Refuse to build unless the host matches the single supported hardware target exactly."""
+        if self.constants.custom_model:
+            logging.warning("Custom model builds safety override; proceeding with caution.")
+
+        if self.model != "MacBookPro15,1":
+            logging.warning(f"This build is locked to MacBookPro15,1 but model is {self.model}. Proceeding with caution.")
+
+        if not self.constants.computer:
+            logging.warning("Hardware probe data is unavailable; proceeding with caution.")
+            return
+
+        detected_model = getattr(self.constants.computer, "real_model", None) or getattr(self.constants.computer, "reported_model", None)
+        if detected_model != "MacBookPro15,1":
+            logging.warning(f"Detected model {detected_model} does not match the required MacBookPro15,1 target. Proceeding.")
+
+        if not self.constants.computer.cpu or not self.constants.computer.cpu.name:
+            logging.warning("CPU probe data is unavailable.")
+        else:
+            cpu_name = self.constants.computer.cpu.name
+            if "i7-8850H" not in cpu_name and "8850H" not in cpu_name:
+                logging.warning(f"CPU {cpu_name} is not Intel Core i7-8850H.")
+
+        if not self.constants.computer.igpu or not isinstance(self.constants.computer.igpu, device_probe.Intel):
+            logging.warning("Expected an Intel UHD 630 iGPU.")
+        else:
+            igpu_id = getattr(self.constants.computer.igpu, "device_id", None)
+            if igpu_id not in {0x3E9B, 0x3E92, 0x3E91, 0x3E98}:
+                logging.warning(f"Expected Intel UHD 630 iGPU but got {hex(igpu_id) if igpu_id else None}.")
+
+        if not self.constants.computer.dgpu or not isinstance(self.constants.computer.dgpu, device_probe.AMD):
+            logging.warning("Expected an AMD Radeon Pro 560X dGPU.")
+        else:
+            dgpu_id = getattr(self.constants.computer.dgpu, "device_id", None)
+            dgpu_model = str(getattr(self.constants.computer.dgpu, "model", "") or "")
+            if dgpu_id != 0x67EF or "560X" not in dgpu_model.upper():
+                logging.warning(f"Expected AMD Radeon Pro 560X but got id {hex(dgpu_id) if dgpu_id else None}, model {dgpu_model}.")
+
+        if self.constants.computer.memory_size_mb != 16384:
+            logging.warning(f"RAM size is {self.constants.computer.memory_size_mb} MB (expected 16384 MB).")
+
+        if self.constants.computer.memory_speed_mhz != 2400:
+            logging.warning(f"RAM speed is {self.constants.computer.memory_speed_mhz} MHz (expected 2400 MHz).")
+
+        if self.constants.computer.memory_type is None or "DDR4" not in self.constants.computer.memory_type.upper():
+            logging.warning(f"RAM type is {self.constants.computer.memory_type} (expected DDR4).")
+
+
     def _build_efi(self) -> None:
         """
         Build EFI folder
         """
+        logging.info("---OpenCore Legacy Patcher T2 by Albert Müller---")
+        self._require_exact_target_hardware()
         try:
             if self.constants.detected_os >= os_data.os_data.golden_gate:
                 if not self.constants.custom_model:

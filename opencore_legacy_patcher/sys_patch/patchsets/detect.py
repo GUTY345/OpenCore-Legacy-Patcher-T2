@@ -8,7 +8,7 @@ import subprocess
 import py_sip_xnu
 import packaging.version
 
-from enum      import StrEnum
+from opencore_legacy_patcher.support.compat import StrEnum
 from pathlib   import Path
 from functools import cache
 

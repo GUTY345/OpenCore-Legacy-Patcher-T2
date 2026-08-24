@@ -14,6 +14,16 @@ from pathlib import Path
 if "" in sys.path:
     sys.path.remove("")
 
+# Auto-redirect to local virtual environment if available and not inside it
+if not getattr(sys, 'frozen', False):
+    script_dir = Path(__file__).resolve().parent
+    venv_dir = script_dir / ".venv"
+    if venv_dir.exists() and Path(sys.prefix).resolve() != venv_dir.resolve():
+        venv_python = venv_dir / "bin" / "python3"
+        if venv_python.exists():
+            os.execv(str(venv_python), [str(venv_python)] + sys.argv)
+
+
 # We configure logging to write to sys.stdout (the Terminal window)
 logging.basicConfig(
     level=logging.ERROR,

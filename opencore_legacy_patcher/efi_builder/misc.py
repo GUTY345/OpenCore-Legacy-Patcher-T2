@@ -424,23 +424,32 @@ class BuildMiscellaneous:
                 sys.exit(3)
 
     def _validate_patch(self, patch_dict):
-        try:
-            find_bytes = patch_dict.get("Find")
-            replace_bytes = patch_dict.get("Replace")
-            
-            # Längenvergleich
-            if len(find_bytes) != len(replace_bytes):
-                logging.error(f"LÄNGENFEHLER in '{patch_dict.get('Comment')}': "
-                              f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
-                logging.error(f"LENGTH ISSUE in '{patch_dict.get('Comment')}': "
-                              f"Find={len(find_bytes)} Bytes, Replace={len(replace_bytes)} Bytes.")
-                return False
-                sys.exit(3)
-            return True
-        except Exception as e:
-            logging.error("Wir haben einen Problem, die Bytes-Länge zu vergleichen")
-            logging.error("We have an issue to compare the bytes length.")
-            sys.exit(3)
+        """Validate kernel patch byte blocks before injection to avoid malformed or speculative patches."""
+        find_bytes = patch_dict.get("Find")
+        replace_bytes = patch_dict.get("Replace")
+
+        if not isinstance(find_bytes, (bytes, bytearray)) or not isinstance(replace_bytes, (bytes, bytearray)):
+            msg = f"Patch validation failed: 'Find' and 'Replace' must be byte arrays for '{patch_dict.get('Comment')}'."
+            logging.error(msg)
+            raise ValueError(msg)
+
+        if len(find_bytes) != len(replace_bytes):
+            msg = f"Patch validation failed: 'Find' and 'Replace' byte lengths differ for '{patch_dict.get('Comment')}'."
+            logging.error(msg)
+            logging.error(f"Patch failure: Find length {len(find_bytes)} does not match Replace length {len(replace_bytes)} for '{patch_dict.get('Comment')}'.")
+            raise ValueError(msg)
+
+        if not find_bytes or not replace_bytes:
+            msg = f"Patch validation failed: 'Find' or 'Replace' is empty for '{patch_dict.get('Comment')}'."
+            logging.error(msg)
+            raise ValueError(msg)
+
+        return True
+
+    def _is_exact_supported_target(self) -> bool:
+        """Return True only for the exact MacBook Pro 15-inch 2018 target requested for this branch."""
+        return self.model == "MacBookPro15,1"
+
     
     def _t2_handling(self) -> None:
         """T2 Security Chip Handler."""
@@ -484,134 +493,213 @@ class BuildMiscellaneous:
                 logging.exception("Stack Trace:")
                 logging.info("Please try again later.")
                 sys.exit(3)
-    
+
+        try:
+            logging.info("- Skipping Language and Region selection (all T2 models)")
+            
+            # Format 'en-US:0' as a raw byte sequence terminated by a null byte or written as exact hex data
+            prev_lang_bytes = b"en-US:0"
+            
+            self._set_nvram_value(APPLE_NVRAM_UUID, "prev-lang:kbd", prev_lang_bytes, overwrite=True)
+            
+            # Force the global language/locale environment variables to anchor the region
+            self._set_nvram_value(APPLE_NVRAM_UUID, "AppleLanguages", ["en-US"], overwrite=True)
+            self._set_nvram_value(APPLE_NVRAM_UUID, "AppleLocale", "en_US", overwrite=True)
+        except Exception as e:
+            logging.error("We failed to skip language and region selection. It failed to do so because of the following error:")
+            logging.exception("Stack Trace:")
+            logging.info("Please try again later.")
+            sys.exit(3)
+
+        try:
+            logging.info("- Adding T2-specific boot arguments for macOS 15/26")
+            self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-v rddelay=5 igfxfw=2 igfxonln=1 -disable_ext_panics -no_compat_check")
+        except Exception as e:
+            logging.error("Injecting T2 specific boot arguments failed due to the following error:")
+            logging.exception("Stack Trace:")
+            logging.info("Please try again later.")
+            sys.exit(3)
+
+        if self.model == "MacBookPro15,1":
+            logging.info("- MacBookPro15,1: Adding -wegnoegpu boot argument to disable dGPU for macOS 15/26")
+            self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-wegnoegpu")
+        
+        if self.model in ["MacBookAir8,1", "MacBookAir8,2"]:
             try:
-                logging.info("- Adding T2-specific boot arguments for macOS 15/26")
-                self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-v rddelay=5 igfxfw=2 igfxonln=1 -disable_ext_panics -no_compat_check")
+                logging.info("Applying patches for MacBookAir8,1 or 8,2 to fix CPU topology / thread pooling panic layouts")
+                self.config["Kernel"]["Quirks"]["ProvideCurrentCpuInfo"] = True
             except Exception as e:
-                logging.error("Injecting T2 specific boot arguments failed due to the following error:")
+                logging.error("Applying patches to fix this specific kernel panic failed due to the following error:")
                 logging.exception("Stack Trace:")
                 logging.info("Please try again later.")
                 sys.exit(3)
             
-            if self.model in ["MacBookAir8,1", "MacBookAir8,2"]:
-                try:
-                    logging.info("Applying patches for MacBookAir8,1 or 8,2 to fix CPU topology / thread pooling panic layouts")
-                    self.config["Kernel"]["Quirks"]["ProvideCurrentCpuInfo"] = True
-                except Exception as e:
-                    logging.error("Applying patches to fix this specific kernel panic failed due to the following error:")
-                    logging.exception("Stack Trace:")
-                    logging.info("Please try again later.")
-                    sys.exit(3)
-                
-            # Structure guarding for OpenCore NVRAM delete layout
-            self.config.setdefault("NVRAM", {}).setdefault("Delete", {})
-            if APPLE_NVRAM_UUID not in self.config["NVRAM"]["Delete"]:
-                self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID] = []
-            if "boot-args" not in self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID]:
-                self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID].append("boot-args")
-    
-            # Injizieren von bypass für library validation enforcement auf T2 hardware übersprungen, um frühe Kernel Panics zu vermeiden, bevor die Betriebssystem überhaupt startet
-    
+        # Structure guarding for OpenCore NVRAM delete layout
+        self.config.setdefault("NVRAM", {}).setdefault("Delete", {})
+        if APPLE_NVRAM_UUID not in self.config["NVRAM"]["Delete"]:
+            self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID] = []
+        if "boot-args" not in self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID]:
+            self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID].append("boot-args")
+
+        # Bypass library validation enforcement on T2 hardware to prevent early kernel panics
+        logging.info("- Bypassing Library Validation Enforcement hook patches for T2 core integrity protection.")
+
+        try:
+            logging.info("- Set SIP to 0x803")
+            self._set_nvram_value(APPLE_NVRAM_UUID, "csr-active-config", binascii.unhexlify("03080000"), overwrite=True)
+        except Exception as e:
+            logging.error("Setting SIP to 0x803 failed due to the following error:")
+            logging.exception("Stack Trace:")
+            logging.info("Please try again later.")
+            sys.exit(3)
+        
+        # Allows booting macOS 26 Tahoe's installer via OpenCore on T2 Macs
+        self.config.setdefault('Kernel', {}).setdefault('Patch', [])
+        kernel_patches = self.config['Kernel']['Patch']
+
+        if not self._is_exact_supported_target():
+            logging.info("- Skipping speculative T2 kernel patch injection; this branch is restricted to the exact MacBook Pro 15-inch 2018 target only.")
+        else:
             try:
-                logging.info("- Set SIP to 0xfff - crucial to be able to boot properly on T2 Macs")
-                self._set_nvram_value(APPLE_NVRAM_UUID, "csr-active-config", binascii.unhexlify("FF0F0000"), overwrite=True)
+                # 1. Disable xART validation capacity loop checks safely (Symbolic Base Path)
+                if not any(p.get("Comment") == "Bypass XARTDisableLog limits (Tahoe Cache Fix)" for p in kernel_patches):
+                    new_patch = {
+                        "Arch": "x86_64",
+                        "Identifier": "com.apple.driver.AppleSEPManager",
+                        "Base": "__ZN14XARTDisableLog16register_disableEj",
+                        "Comment": "Bypass XARTDisableLog limits (Tahoe Cache Fix)",
+                        "Count": 1,
+                        "Enabled": True,
+                        "MinKernel": "24.0.0",
+                        "Find": binascii.unhexlify("554889E5"),        # push rbp; mov rbp, rsp [3]
+                        "Replace": binascii.unhexlify("31C0C390"),     # xor eax, eax; ret; nop
+                        "Mask": b"",
+                        "ReplaceMask": b"",
+                        "Limit": 0,
+                        "Skip": 0
+                    }
+                    if self._validate_patch(new_patch):
+                        logging.info("- Injecting Bypass XARTDisableLog limits patch")
+                        kernel_patches.append(new_patch)
+
+                # 2. Force AppleSEPDeviceService OOL constraints (Tahoe Fix)
+                if not any(p.get("Comment") == "Hardcode SEP OOL Max Send Pages Limit" for p in kernel_patches):
+                    new_patch = {
+                        "Arch": "x86_64",
+                        "Identifier": "com.apple.driver.AppleSEPManager",
+                        "Base": "__ZN21AppleSEPDeviceService18getSendOolMaxPagesEv",
+                        "Comment": "Hardcode SEP OOL Max Send Pages Limit",
+                        "Count": 1,
+                        "Enabled": True,
+                        "MinKernel": "24.0.0",
+                        "Find": binascii.unhexlify("554889E5"),
+                        "Replace": binascii.unhexlify("6A4058C3"),
+
+                        "Mask": b"",
+                        "ReplaceMask": b"",
+                        "Limit": 0,
+                        "Skip": 0
+                    }
+                    if self._validate_patch(new_patch):
+                        logging.info("- Injecting Hardcode SEP OOL Max Send Pages Limit patch")
+                        kernel_patches.append(new_patch)
+
+                # 3. AppleKeyStoreUserClient deadline check bypass
+                if not any(p.get("Comment") == "Bypass AppleKeyStore Deadline Mismatch (Tahoe Fix)" for p in kernel_patches):
+                    new_patch = {
+                        "Arch": "x86_64",
+                        "Base": "",
+                        "Comment": "Bypass AppleKeyStore Deadline Mismatch (Tahoe Fix)",
+                        "Count": 1,
+                        "Enabled": True,
+                        "Identifier": "com.apple.driver.AppleKeyStore",
+                        "Find": binascii.unhexlify("554889E5415741565350"),
+                        "Mask": b"",
+                        "Replace": binascii.unhexlify("31C0C390909090909090"),
+                        "ReplaceMask": b"",
+                        "MinKernel": "24.0.0",
+                        "MaxKernel": "",
+                        "Limit": 0,
+                        "Skip": 0
+                    }
+                    if self._validate_patch(new_patch):
+                        logging.info("  > Injecting AppleKeyStore Tahoe deadline check bypass")
+                        kernel_patches.append(new_patch)
+
+                # 4. Bypass AppleIntelUSBXHCI T2 handshake (Modernized for Tahoe vtable shifts)
+                if not any(p.get("Comment") == "Bypass T2 USB handshake (Tahoe fix)" for p in kernel_patches):
+                    new_patch = {
+                        "Arch": "x86_64",
+                        "Base": "",
+                        "Comment": "Bypass T2 USB handshake (Tahoe fix)",
+                        "Count": 1,
+                        "Enabled": True,
+                        "Identifier": "com.apple.driver.usb.AppleUSBXHCI",
+                        "MinKernel": "24.0.0",
+                        "MaxKernel": "",
+                        "Limit": 0,
+                        "Skip": 0,
+                        "Mask": b"",
+                        "ReplaceMask": b"",
+                        "Find": binascii.unhexlify("554889E54156534883EC10488B05"),
+                        "Replace": binascii.unhexlify("31C0C39090909090909090909090")
+                    }
+                    if self._validate_patch(new_patch):
+                        logging.info("- Injecting modernized AppleUSBXHCI T2 handshake bypass")
+                        kernel_patches.append(new_patch)
+
+                # 5. Bypass AppleBCMWLANCore long start timeout
+                if not any(p.get("Comment") == "Bypass AppleBCMWLANCore long start timeout" for p in kernel_patches):
+                    new_patch = {
+                        "Arch": "x86_64",
+                        "Comment": "Bypass AppleBCMWLANCore long start timeout",
+                        "Enabled": True,
+                        "Identifier": "com.apple.iokit.AppleBCMWLANCore",
+                        "MaxKernel": "",
+                        "MinKernel": "24.0.0",
+                        "Find": binascii.unhexlify("554889E54157415641554154"),
+                        "Replace": binascii.unhexlify("C39090909090909090909090"),
+                        "Limit": 0,
+                        "Skip": 0,
+                        "Count": 1
+                    }
+                    if self._validate_patch(new_patch):
+                        logging.info("- Injecting Bypass AppleBCMWLANCore long start timeout")
+                        kernel_patches.append(new_patch)
+
+                # Experimental Patches
+                enable_experimental_patches = getattr(self.constants, "enable_experimental_patches", False)
+                if enable_experimental_patches is True:
+                    if not any(p.get("Comment") == "Bypass AppleUSBVHCI::processInterrupts to prevent protocol-driven panics" for p in kernel_patches):
+                        new_patch = {
+                            "Arch": "x86_64",
+                            "Comment": "Bypass AppleUSBVHCI::processInterrupts to prevent protocol-driven panics",
+                            "Enabled": True,
+                            "Identifier": "com.apple.driver.usb.AppleUSBVHCI",
+                            "Base": "", "Count": 1, "MinKernel": "24.0.0", "MaxKernel": "", "Mask": b"", "ReplaceMask": b"", "Limit": 0, "Skip": 0,
+                            "Find": binascii.unhexlify("554889E54157415641554154534883EC28"),
+                            "Replace": binascii.unhexlify("C39090909090909090909090909090")
+                        }
+                        if self._validate_patch(new_patch):
+                            kernel_patches.append(new_patch)
+
+                    if not any(p.get("Comment") == "Bypass AppleUSBVHCI::hardwareException (Suppress firmware exceptions)" for p in kernel_patches):
+                        new_patch = {
+                            "Arch": "x86_64",
+                            "Comment": "Bypass AppleUSBVHCI::hardwareException (Suppress firmware exceptions)",
+                            "Enabled": True,
+                            "Identifier": "com.apple.driver.usb.AppleUSBVHCI",
+                            "Base": "", "Count": 1, "MinKernel": "24.0.0", "MaxKernel": "", "Mask": b"", "ReplaceMask": b"", "Limit": 0, "Skip": 0,
+                            "Find": binascii.unhexlify("554889E5488B87A80300000FB6B7D0000000"),
+                            "Replace": binascii.unhexlify("C3909090909090909090909090909090")
+                        }
+                        if self._validate_patch(new_patch):
+                            kernel_patches.append(new_patch)
             except Exception as e:
-                logging.error("Setting SIP to 0xfff failed due to the following error:")
+                logging.error("Failed to inject critical patches for your T2 Mac due to the following error:")
                 logging.exception("Stack Trace:")
                 logging.info("Please try again later.")
                 sys.exit(3)
-            
-            # Allows booting macOS 26 Tahoe's installer via OpenCore on T2 Macs
-            self.config.setdefault('Kernel', {}).setdefault('Patch', [])
-            kernel_patches = self.config['Kernel']['Patch']
-    
-            if not any(p.get("Comment") == "Patch AppleKeyStore SEP retry limit" for p in kernel_patches):
-                new_patch = {
-                    "Arch": "x86_64",
-                    "Identifier": "com.apple.driver.AppleKeyStore",
-                    "Base": "",
-                    "Comment": "Patch AppleKeyStore SEP retry limit",
-                    "Count": 1,
-                    "Enabled": True,
-                    "MinKernel": "25.0.0",
-                    "MaxKernel": "25.99.99",
-                    "Find": binascii.unhexlify("FF90F00100004183FF140F8D06050000"),
-                    "Replace": binascii.unhexlify("FF90F00100004183FFC80F8D06050000"),
-                    "Mask": b"",
-                    "ReplaceMask": b"",
-                    "Limit": 0,
-                    "Skip": 0
-                }
-                if self._validate_patch(new_patch):
-                    logging.info("- Injecting AppleKeyStore SEP retry-limit patch")
-                    kernel_patches.append(new_patch)
-             
-            # --- Patch 2: Force FileVault on Broken Seal ---
-            if not any(p.get("Comment") == "Force FileVault on Broken Seal" for p in kernel_patches):
-                new_patch = {
-                    "Arch": "x86_64",
-                    "Identifier": "com.apple.filesystems.apfs",
-                    "Base": "_apfs_filevault_allowed",
-                    "Comment": "Force FileVault on Broken Seal",
-                    "Count": 0,
-                    "Enabled": True,
-                    "MinKernel": "20.4.0",
-                    "MaxKernel": "",
-                    "Find": b"",
-                    "Replace": binascii.unhexlify("B801000000C3"),
-                    "Mask": b"",
-                    "ReplaceMask": b"",
-                    "Limit": 0,
-                    "Skip": 0
-                }
-                if self._validate_patch(new_patch):
-                    logging.info("- Injecting Force FileVault on Broken Seal patch")
-                    kernel_patches.append(new_patch)
-             
-            # --- Patch 3: Disable Library Validation Enforcement ---
-            if not any(p.get("Comment") == "Disable Library Validation Enforcement" for p in kernel_patches):
-                new_patch = {
-                    "Arch": "x86_64",
-                    "Identifier": "kernel",
-                    "Base": "_cs_require_lv",
-                    "Comment": "Disable Library Validation Enforcement",
-                    "Count": 0,
-                    "Enabled": True,
-                    "MinKernel": "20.0.0",
-                    "MaxKernel": "",
-                    "Find": b"",
-                    "Replace": binascii.unhexlify("B800000000C3"),
-                    "Mask": b"",
-                    "ReplaceMask": b"",
-                    "Limit": 0,
-                    "Skip": 0
-                }
-                if self._validate_patch(new_patch):
-                    logging.info("- Injecting Disable Library Validation Enforcement patch")
-                    kernel_patches.append(new_patch)
-             
-            # --- Patch 4: Disable _csr_check() in _vnode_check_signature ---
-            if not any(p.get("Comment") == "Disable _csr_check() in _vnode_check_signature" for p in kernel_patches):
-                new_patch = {
-                    "Arch": "x86_64",
-                    "Identifier": "com.apple.driver.AppleMobileFileIntegrity",
-                    "Base": "__ZL22_vnode_check_signatureP5vnodeP5labeliP7cs_blobPjS5_ijPPcPm",
-                    "Comment": "Disable _csr_check() in _vnode_check_signature",
-                    "Count": 1,
-                    "Enabled": True,
-                    "MinKernel": "22.0.0",
-                    "MaxKernel": "",
-                    "Find": binascii.unhexlify("01000000E80000000085C075"),
-                    "Replace": binascii.unhexlify("01000000B80100000085C075"),
-                    "Mask": binascii.unhexlify("FFFFFFFFFF00000000FFFFFF"),
-                    "ReplaceMask": b"",
-                    "Limit": 0,
-                    "Skip": 0
-                }
-                if self._validate_patch(new_patch):
-                    logging.info("- Injecting Disable _csr_check() in _vnode_check_signature patch")
-                    kernel_patches.append(new_patch)
             
             # Bypass osinstallersetupd bridge device validation checks (Fixes Attestation Error -10000)
             try:

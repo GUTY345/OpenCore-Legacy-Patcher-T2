@@ -16,6 +16,15 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 os.chdir(SCRIPT_DIR)
 
+# Auto-redirect to local virtual environment if available and not inside it
+if not getattr(sys, 'frozen', False):
+    venv_dir = SCRIPT_DIR / ".venv"
+    if venv_dir.exists() and Path(sys.prefix).resolve() != venv_dir.resolve():
+        venv_python = venv_dir / "bin" / "python3"
+        if venv_python.exists():
+            os.execv(str(venv_python), [str(venv_python)] + sys.argv)
+
+
 # Import der internen Module
 from ci_tooling.build_modules import (
     application,

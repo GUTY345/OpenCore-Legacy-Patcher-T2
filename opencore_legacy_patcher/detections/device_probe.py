@@ -581,6 +581,9 @@ class Computer:
     ethernet: list[EthernetController] = field(default_factory=list)
     wifi: Optional[WirelessCard] = None
     cpu: Optional[CPU] = None
+    memory_size_mb: Optional[int] = None
+    memory_speed_mhz: Optional[int] = None
+    memory_type: Optional[str] = None
     usb_devices: list[USBDevice] = field(default_factory=list)
     oclp_version: Optional[str] = None
     opencore_version: Optional[str] = None
@@ -615,6 +618,7 @@ class Computer:
         computer.ethernet_probe()
         computer.smbios_probe()
         computer.usb_device_probe()
+        computer.memory_probe()
         computer.cpu_probe()
         computer.bluetooth_probe()
         computer.topcase_probe()
@@ -864,6 +868,58 @@ class Computer:
         if isinstance(firmware_vendor, bytes):
             firmware_vendor = str(firmware_vendor.replace(b"\x00", b"").decode("utf-8"))
         self.firmware_vendor = firmware_vendor
+
+    def memory_probe(self):
+        self.memory_size_mb = None
+        self.memory_speed_mhz = None
+        self.memory_type = None
+
+        try:
+            result = subprocess.run(["/usr/sbin/sysctl", "-n", "hw.memsize"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            if result.returncode == 0:
+                self.memory_size_mb = int(int(result.stdout.decode().strip()) / (1024 * 1024))
+        except (ValueError, FileNotFoundError):
+            self.memory_size_mb = None
+
+        try:
+            result = subprocess.run(["/usr/sbin/system_profiler", "SPMemoryDataType", "-xml"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            if result.returncode == 0:
+                plist_data = plistlib.loads(result.stdout)
+                if isinstance(plist_data, list) and plist_data:
+                    top_level_items = plist_data[0].get("_items", []) if isinstance(plist_data[0], dict) else []
+                    for container in top_level_items:
+                        if not isinstance(container, dict):
+                            continue
+                        dimm_items = container.get("_items", [])
+                        if not isinstance(dimm_items, list):
+                            continue
+                        for dimm in dimm_items:
+                            if not isinstance(dimm, dict):
+                                continue
+
+                            item_type = dimm.get("dimm_type") or dimm.get("type") or dimm.get("memory_type") or ""
+                            if isinstance(item_type, bytes):
+                                item_type = item_type.decode("utf-8", "ignore")
+                            if item_type and self.memory_type is None:
+                                self.memory_type = str(item_type)
+
+                            speed_value = dimm.get("dimm_speed") or dimm.get("speed") or dimm.get("memory_speed") or ""
+                            if isinstance(speed_value, bytes):
+                                speed_value = speed_value.decode("utf-8", "ignore")
+                            if isinstance(speed_value, str):
+                                digits = "".join(ch for ch in speed_value if ch.isdigit())
+                                if digits and self.memory_speed_mhz is None:
+                                    self.memory_speed_mhz = int(digits)
+                            elif isinstance(speed_value, (int, float)) and self.memory_speed_mhz is None:
+                                self.memory_speed_mhz = int(speed_value)
+
+                            if self.memory_type is not None and self.memory_speed_mhz is not None:
+                                break
+                        if self.memory_type is not None and self.memory_speed_mhz is not None:
+                            break
+        except (plistlib.InvalidFileException, TypeError, ValueError, IndexError, FileNotFoundError):
+            self.memory_speed_mhz = None
+            self.memory_type = None
 
     def cpu_probe(self):
         self.cpu = CPU(

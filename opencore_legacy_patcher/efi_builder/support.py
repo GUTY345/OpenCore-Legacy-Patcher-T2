@@ -11,6 +11,7 @@ import subprocess
 import sys
 
 from pathlib import Path
+from typing import Union
 
 from .. import constants
 
@@ -216,7 +217,7 @@ class BuildSupport:
         self._validate_malformed_kexts(self.constants.opencore_release_folder / Path("EFI/OC/Kexts"))
 
 
-    def _validate_malformed_kexts(self, directory: str | Path) -> None:
+    def _validate_malformed_kexts(self, directory: Union[str, Path]) -> None:
         """
         Validate Info.plist and executable pathing for kexts
         """
