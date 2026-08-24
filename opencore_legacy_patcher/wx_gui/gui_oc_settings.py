@@ -66,7 +66,15 @@ class OCSettingsFrame(wx.Frame):
 
         tabs = list(self.settings.keys())
         for tab in tabs:
-            panel = wx.Panel(notebook)
+            if tab == "Security":
+                # The Security tab's SIP checkbox matrix (_populate_sip_settings)
+                # is sized dynamically and can exceed the fixed dialog height,
+                # clipping the bottom rows off screen. Make this page scrollable
+                # so the extra content stays reachable instead of being cut off.
+                panel = wx.ScrolledWindow(notebook)
+                panel.SetScrollRate(0, 20)
+            else:
+                panel = wx.Panel(notebook)
             notebook.AddPage(panel, tab)
 
         sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 10)
@@ -106,6 +114,14 @@ class OCSettingsFrame(wx.Frame):
         sizer.Add(bot_sizer, 0, wx.ALIGN_CENTER | wx.ALL, 10)
 
         frame.SetSizer(sizer)
+        frame.Layout()
+
+        # wx.Notebook only lays out its currently active page, so a hidden
+        # page's scrolled window can end up with stale scrollbar metrics
+        # from before it had its final size. Re-adjust on every tab switch
+        # to keep the Security tab's scrollbar correct.
+        notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_oc_settings_tab_changed)
+        self._oc_settings_notebook = notebook
 
         horizontal_center = frame.GetSize()[0] / 2
         for tab in tabs:
@@ -130,6 +146,15 @@ class OCSettingsFrame(wx.Frame):
                         setting_info["function"](panel)
                     else:
                         raise Exception("Invalid populate function")
+                    # Populate functions (e.g. _populate_sip_settings) add their
+                    # own widgets directly and don't report a height back, so
+                    # 'lowest_height_reached' never learns about them. Scan the
+                    # panel's children so the scrollable Security tab below gets
+                    # an accurate virtual size instead of clipping this content.
+                    for child in panel.GetChildren():
+                        child_bottom = child.GetPosition()[1] + child.GetSize()[1]
+                        if child_bottom > lowest_height_reached:
+                            lowest_height_reached = child_bottom
                     continue
 
                 if setting_info["type"] == "title":
@@ -236,6 +261,14 @@ class OCSettingsFrame(wx.Frame):
                 if height > lowest_height_reached:
                     lowest_height_reached = height
 
+            if isinstance(panel, wx.ScrolledWindow):
+                # Finalise the scrollable Security tab now that its full content
+                # height (including populate-function widgets) is known, so the
+                # SIP checkbox matrix and everything above it stay reachable
+                # instead of being clipped by the fixed dialog height.
+                panel.SetVirtualSize((int(horizontal_center * 2), lowest_height_reached + 50))
+                panel.AdjustScrollbars()
+
     # MARK: Settings dict
     def _settings(self) -> dict:
         """
@@ -257,6 +290,14 @@ class OCSettingsFrame(wx.Frame):
         models = [model for model in smbios_data.smbios_dictionary if "_" not in model and " " not in model and smbios_data.smbios_dictionary[model]["Board ID"] is not None]
         socketed_imac_models = ["iMac9,1", "iMac10,1", "iMac11,1", "iMac11,2", "iMac11,3", "iMac12,1", "iMac12,2"]
         socketed_gpu_models = socketed_imac_models + ["MacPro3,1", "MacPro4,1", "MacPro5,1", "Xserve2,1", "Xserve3,1"]
+
+        # Whether the machine actually being *built for* has a T2 chip. This
+        # intentionally prefers custom_model (the selected build target) over
+        # the host's own real_model, matching the check already used in
+        # _populate_sip_settings: a T2 Mac used as a host to flash a build for
+        # a different, non-T2 target should see full Security customization,
+        # not the host's own T2 restrictions.
+        target_is_t2_mac = (self.constants.custom_model or self.constants.computer.real_model) in model_array.T2Macs
 
         settings = {
             "General": {
@@ -628,7 +669,10 @@ class OCSettingsFrame(wx.Frame):
                     "description": [
                         "Required for loading modified",
                         "system files from root patching.",
+                        "Not used on T2 Macs, which handle",
+                        "this differently.",
                     ],
+                    "condition": not target_is_t2_mac,
                 },
                 "Disable AMFI": {
                     "type": "checkbox",
@@ -638,8 +682,9 @@ class OCSettingsFrame(wx.Frame):
                         "Extended version of 'Disable",
                         "Library Validation', required",
                         "for systems with deeper",
-                        "root patches.",
+                        "root patches. Not used on T2 Macs.",
                     ],
+                    "condition": not target_is_t2_mac,
                 },
                 "wrap_around 1": {
                     "type": "wrap_around",
@@ -652,7 +697,9 @@ class OCSettingsFrame(wx.Frame):
                         "Set Apple Secure Boot Model Identifier",
                         "to matching T2 model if spoofing.",
                         "Note: Incompatible with Root Patching.",
+                        "Always disabled on T2 targets.",
                     ],
+                    "condition": not target_is_t2_mac,
                 },
                 "System Integrity Protection": {
                     "type": "title",
@@ -835,7 +882,7 @@ class OCSettingsFrame(wx.Frame):
                         chassis_type = "aluminum"
                         if self.constants.computer.real_model in ["MacBook5,2", "MacBook6,1", "MacBook7,1"]:
                             chassis_type = "plastic"
-                        dlg = wx.MessageDialog(self.frame_modal, f"This model, {self.constants.computer.real_model}, does not natively support macOS {os_data.os_conversion.kernel_to_os(self.constants.detected_os)}, {os_data.os_conversion.convert_kernel_to_marketing_name(self.constants.detected_os)}. The last native OS was macOS {os_data.os_conversion.kernel_to_os(smbios_data.smbios_dictionary[self.constants.computer.real_model]['Max OS Supported'])}, {os_data.os_conversion.convert_kernel_to_marketing_name(smbios_data.smbios_dictionary[self.constants.computer.real_model]['Max OS Supported'])}\n\nToggling this option will break booting on this OS. Are you absolutely certain this is desired?\n\nYou may end up with a nice {chassis_type} brick 🧱", "Are you certain?", wx.YES_NO | wx.ICON_WARNING | wx.NO_DEFAULT)
+                        dlg = wx.MessageDialog(self.frame_modal, f"This model, {self.constants.computer.real_model}, does not natively support macOS {os_data.os_conversion.kernel_to_os(self.constants.detected_os)}, {os_data.os_conversion.convert_kernel_to_marketing_name(self.constants.detected_os)}. The last native OS was macOS {os_data.os_conversion.kernel_to_os(smbios_data.smbios_dictionary[self.constants.computer.real_model]['Max OS Supported'])}, {os_data.os_conversion.convert_kernel_to_marketing_name(smbios_data.smbios_dictionary[self.constants.computer.real_model]['Max OS Supported'])}\n\nToggling this option will break booting on this OS. Are you absolutely certain this is desired?\n\nYou may end up with a nice {chassis_type} brick \ud83e\uddf1", "Are you certain?", wx.YES_NO | wx.ICON_WARNING | wx.NO_DEFAULT)
                         if dlg.ShowModal() == wx.ID_NO:
                             event.GetEventObject().SetValue(not event.GetEventObject().GetValue())
                             return
@@ -960,6 +1007,18 @@ class OCSettingsFrame(wx.Frame):
         """
         value = event.GetString()
         self._update_setting(self.settings[self._find_parent_for_key(label)][label]["variable"], value)
+
+    def on_oc_settings_tab_changed(self, event: wx.Event) -> None:
+        """
+        wx.Notebook only lays out its currently active page, so a scrolled
+        page's virtual size/scrollbars can be stale until it's actually
+        shown. Re-adjust the Security tab's scrollbars each time it's
+        selected to avoid this.
+        """
+        page = self._oc_settings_notebook.GetPage(event.GetSelection())
+        if isinstance(page, wx.ScrolledWindow):
+            page.AdjustScrollbars()
+        event.Skip()
 
     def _populate_sip_settings(self, panel: wx.Frame) -> None:
 
