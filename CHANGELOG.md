@@ -1,4 +1,38 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.17000.1 - 4.0.0 alpha 17.0.1
+This release:
+
+fixes a bug where upon trying to root patch, often it doesn't escalate properly to mount Universal-Binaries.dmg, especially if not running macOS 26 Tahoe
+
+fixes a vulnerability in storage.py:
+
+  if not self.model in smbios_data.smbios_dictionary:
+              return
+          if not "Stock Storage" in smbios_data.smbios_dictionary[self.model]:
+              return
+          if not "PATA" in smbios_data.smbios_dictionary[self.model]["Stock Storage"]:
+              return
+  
+          support.BuildSupport(self.model, self.constants, self.config).enable_kext("AppleIntelPIIXATA.kext", self.constants.piixata_version, self.constants.piixata_path) # <- here's the vulnerability - it injects AppleIntelIXATA unconditionally
+Impact: an attacker could remove the rest of the conditions to force in certain circumstances to inject AppleIntelXATA unconditionally to slow down Macs or cause unexpected behavior on Macs with SATA interface.
+
+Diese Version:
+
+Behebt einen Fehler, der dazu führt, dass beim Versuch, einen Root-Patch zu installieren, die Universal-Binaries.dmg-Datei oft nicht korrekt eingebunden wird, insbesondere wenn nicht macOS 26 Tahoe verwendet wird.
+
+Behebt eine Sicherheitslücke in storage.py:
+
+if not self.model in smbios_data.smbios_dictionary:
+return
+if not "Stock Storage" in smbios_data.smbios_dictionary[self.model]:
+return
+if not "PATA" in smbios_data.smbios_dictionary[self.model]["Stock Storage"]:
+return
+
+support.BuildSupport(self.model, self.constants, self.config).enable_kext("AppleIntelPIIXATA.kext", self.constants.piixata_version, self.constants.piixata_path) # <- Hier liegt die Sicherheitslücke – AppleIntelIXATA wird bedingungslos injiziert.
+
+Auswirkung: Einen Angreifer kann die if-Bedingungen zu entfernen, um bedingungslos AppleIntellXATA zu injizieren, um Macs verlangsamen oder unerwartetes Verhalten zu verursachen.
+
 ## 4.0.0.17000 - 4.0.0 alpha 17
 This version brings the new user interface of this patcher, huge xthanks to @gandolf243. Before I start talking about what's fixed in this version, I want to explain the new UI first:
 First things first, the main menu now looks like this:
