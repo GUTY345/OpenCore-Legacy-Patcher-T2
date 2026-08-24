@@ -1502,7 +1502,7 @@ Diese Version behebt kritische Sicherheitslücken:
                         function(self.model, self.constants, self.config) # <- Hier liegt die Sicherheitslücke – die try/except-Schleife, die eine Ausnahme auslöst, falls ein Fehler auftritt, fehlt vollständig.
 Auswirkung: Wenn eine Funktion nicht ordnungsgemäß aufgerufen wird, sich fehlerhaft verhält oder ein Angreifer einfach auf eine beliebige Funktion verweist, kann ein Angreifer DoS-Angriffe starten, um die Anwendung zum Absturz zu bringen oder beliebigen Code auszuführen.
 
-## 4.0.0.12030 - 4.0.0 alpha 15.6 (outside the development branch)
+## 4.0.0.12030 - 4.0.0 alpha 15.6
 This release improves user experience and transparency inside the installer. For example, prior to this release, it said it will install OpenCore Legacy Patcher instead of OpenCore Legacy Patcher T2.
 And also fixes critical vulnerabilities:
 - it installed a Priveleged Helper tool that is no longer in use since 3.0.0 alpha 4.3 that is executing as root. This gives the ability for attackers to execute arbitary code with root privileges, which would allow attackers to modify critical system files.
@@ -1585,7 +1585,7 @@ Auswirkungen: Angreifer können diese Sicherheitslücke ausnutzen, um einen Kern
 Außerdem, es gibt keinen Sinn, nach sys.exit(3), return False auszuführen - und doch, es ist eine gefährliche Sicherheitslücke.
 Furthermore, there is no point in executing `return False` after `sys.exit(3)` - and it is a dangerous vulnerability.
 
-## 4.0.0.12023 - alpha 15.5.3: (outside the development branch)
+## 4.0.0.12023 - alpha 15.5.3
 This release fixes a bug where on T2 Macs it skips injecting critical patches that have different Find and Replace byte lenghts by simply stopping the process in case this happens.
 Diese Version behebt einen Fehler, der dazu führt, dass auf T2 Macs das Einfügen kritischer Patches mit unterschiedlichen Find- und Replace-Bytelängen übersprungen wird, indem der Prozess in diesem Fall einfach gestoppt wird.
 
@@ -1615,7 +1615,7 @@ Before: When calling /bin/mv or /bin/rm, the system had to pass the path to the 
 After: Since pathlib processes paths more atomically, or directly at the operating system level, the window of opportunity for such manipulation is significantly reduced. Furthermore, `unlink(missing_ok=True)` prevents errors with non-existent files without the need for shell error messages.
 
 
-``` 3. Improved Error Handling and Stability
+3. Improved Error Handling and Stability
 
 Before: While the return value of the subprocess call was checked, failures of the shell itself (e.g., permission errors or blocked paths) were often only logged in a rudimentary way.
 
@@ -1654,7 +1654,7 @@ Verbesserung: Da pathlib den Pfad explizit als Objekt verwaltet, ist das Skript 
 updates BlueToolFixup, NVMeFix, CPUFriend and AirportBrcmFixup to their latest versions to ensure stability, security and macOS 26 Tahoe compatability. This includes fixes that affect non-T2 Macs primarily, but also, T2 Macs.
 BlueToolFixup, NVMeFix, CPUFriend und AirportBrcmFixup werden auf die neuesten Versionen aktualisiert, um Stabilität, Sicherheit und Kompatibilität mit macOS 26 Tahoe zu gewährleisten. Dies umfasst Fehlerbehebungen, die sich hauptsächlich auf Nicht-T2-Macs, aber auch auf T2-Macs auswirken.
 
-## 4.0.0.12021 - alpha 15.5.1 (outside the development branch)
+## 4.0.0.12021 - alpha 15.5.1
 This release fixes update reliability issues.
 Diese Version behebt Probleme mit der Zuverlässigkeit von Updates.
 If you are using alpha 15.5.0 or earlier, you should download it manually.
@@ -1662,7 +1662,7 @@ Falls Sie Alpha 15.5.0 oder älter verwenden, Sie sollen manuell herunterladen.
 Those who are using pre-alphas, they only get alpha updates, or in very certain cases, RCs or late pre-alpha versions.
 Wer Vorab-Alphas nutzt, erhält nur Alpha-Updates oder in sehr bestimmten Fällen RCs oder späte Vorab-Alpha-Versionen.
 
-## 4.0.0.12020 - alpha 15.5: (outside the development branch)
+## 4.0.0.12020 - alpha 15.5
 This version:
 
 swtiches away from a/prea builds as the updater treats those as special versions and that's a huge vulnerability that makes people leave with vulnerable versions on their machines.
