@@ -20,6 +20,8 @@ parts/
 sdist/
 var/
 wheels/
+payloads/OpenCore/macserial
+payloads/OpenCore/ocvalidate
 share/python-wheels/
 *.egg-info/
 .installed.cfg
