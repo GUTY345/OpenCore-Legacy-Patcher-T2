@@ -16,6 +16,10 @@ Sicherheitsforscher können Schwachstellen in der App im Bereich „Security and
 - 2009 MacBook
 - Mac mini 2009
 - Mac Pro 2008
+- MacBook Air 2008
+- MacBook Pro 2008
+- MacBook 2008
+
 are unable to boot into macOS 26 Tahoe at all at this moment due to a known limitation of AAAMouSSE and telemetrap causing kernel panics. You can try macOS 26 Tahoe on these models only at your own risk and if you're ready to troubleshoot, reverse engineer and fix this panic. https://forums.macrumors.com/threads/mp3-1-others-sse-4-2-emulation-to-enable-amd-metal-driver.2206682/page-9
 > **⚠️ On T2 Macs only, this patcher disables SIP completely to be able to boot macOS properly** What is SIP? SIP, in short for System Integrity Protection, protects against attackers from tampering with core system files. However, on T2 Macs, SIP also causes thermal throttling and other issues when booting via OpenCorePkg, so it needs to be disabled, so setting SIP to 0xFFF is hardcoded into misc.py. As such, the SIP settings inside OpenCore Legacy Patcher T2 > Settings (or very soon, instead in the patcher > OpenCore) are mostly rendered useless on T2 Macs. This doesn’t apply to non-T2 Macs, such as T1 or non-T Macs
 
