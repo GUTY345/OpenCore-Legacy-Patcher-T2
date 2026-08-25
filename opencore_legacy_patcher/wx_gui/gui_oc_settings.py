@@ -758,13 +758,13 @@ class OCSettingsFrame(wx.Frame):
                 "Allow spoofing native Macs": {
                     "type": "checkbox",
                     "value": self.constants.allow_native_spoofs,
-                    "variable": "allow_native_spoofs",
                     "description": [
                         "Allow OpenCore to spoof natively",
                         "supported Macs.",
                         "Primarily used for enabling",
                         "Universal Control on unsupported Macs",
                     ],
+                    "variable": "allow_native_spoofs",
                 },
                 "Serial Spoofing": {
                     "type": "title",
@@ -1040,12 +1040,21 @@ class OCSettingsFrame(wx.Frame):
                 sip_title = child
                 break
 
+        # These paragraphs used to wrap at a flat 480px, which left them sitting
+        # right at the edge of the (then-unscrolled) 600px dialog. Now that this
+        # tab is a wx.ScrolledWindow (see _generate_elements), its vertical
+        # scrollbar permanently claims some of that width for itself, so the
+        # same 480px was clipping the tail end of wrapped lines (eg. part of
+        # the SIP warning text) behind/under the scrollbar. Size the wrap width
+        # off the actual scrollbar width instead of another guessed constant.
+        safe_wrap_width = 480 - wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X) - 20
+
         # SIP customization has no effect on T2 Macs: OpenCore hardcodes
         # csr-active-config to 0xFFF there regardless of these settings.
         if (self.constants.custom_model or self.constants.computer.real_model) in model_array.T2Macs:
             sip_unavailable_label = wx.StaticText(panel, label="Customizing SIP is not available for T2 Macs.", pos=(sip_title.GetPosition()[0] - 20, sip_title.GetPosition()[1] + 30))
             sip_unavailable_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-            sip_unavailable_label.Wrap(480)
+            sip_unavailable_label.Wrap(safe_wrap_width)
             return
 
         # Label: Flip individual bits corresponding to XNU's csr.h
@@ -1077,7 +1086,7 @@ class OCSettingsFrame(wx.Frame):
         # now gets its own variable and is stacked below the previous one
         # using its actual rendered height, and the long sentences wrap
         # within the panel instead of overflowing it.
-        wrap_width = 480
+        wrap_width = safe_wrap_width
 
         sip_description_label = wx.StaticText(panel, label="SIP, in short for System Integrity Protection, is a function that prevents attackers from tampering with core system files.", pos=(sip_label.GetPosition()[0], sip_label.GetPosition()[1] + sip_label.GetSize()[1] + 8))
         sip_description_label.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_NORMAL))
