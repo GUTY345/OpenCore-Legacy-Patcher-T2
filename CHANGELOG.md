@@ -1,4 +1,18 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.17001 - 4.0.0 alpha 17.1
+This release:
+- removes Gemini generated vulnerability fixes that cause issues: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/commit/f326e311e1fa0fe0f54c04322dbac33a0af1f5ae
+- since unsupported T2 Macs to even boot into Tahoe's installer via OpenCorePkg it needs SMBIOS spoofing at the moment; thus when building OpenCore with SMBIOS spoofing set to None it will throw an error that guides you how to spoof the SMBIOS instead to avoid kernel panics or WindowServer failing to process when choosing the language at this time. 
+- Adds a scroll bar inside Security to fix not being able to see all SIP settings that are available
+<img width="712" height="797" alt="Bildschirmfoto 2026-08-26 um 02 17 06" src="https://github.com/user-attachments/assets/bd09ae43-2a6c-4413-ac99-69a73673dd32" />
+- fixes an issue where part of the text inside Security was unvisible
+- Disable Library Validation and Disable AMFI settings are also now disabled for T2 targets as they're useless since a long time since T2 Macs handle this differently
+- Secure Boot Model is also disabled, since on T2 Macs SecureBootModel settings are handled differently since a long time
+- fixes a bug in CI/CD pipelines where when running OpenCore Legacy Patcher T2 from source or building it since alpha 17 it was overriding the existing ocvalidate and macserial that were already readily available, which also could cause issues later on during building the patcher
+- fixes a bug where 2019 Mac Pro was treated like a non-T2 Mac when building OpenCore with Allow native models option enabled by adding MacPro9,1 to the T2 Macs dictionary
+- updates OpenCore to 2.0.1.1
+- fixes a bug where when building OpenCore for real Macs from a Hackintosh or virtual machine, even if the target model was an SMBIOS for real Macs, after a vulnerability was patched where an attacker could trick a Hackintosh user into performing denial of service attacks by replacing a working EFI that they configured for their Hackintosh with one that works only on real Macs to cause a kernel panic - which later on became a widely abused vulnerability after it got patched, the result was that Hackintosh users and users who run macOS in virtual machines were locked out of building OpenCore for real Macs when the target wasn't their Hackintosh.
+
 ## 4.0.0.17000.1 - 4.0.0 alpha 17.0.1
 This release:
 
