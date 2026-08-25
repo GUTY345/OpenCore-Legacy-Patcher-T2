@@ -462,7 +462,7 @@ class BuildMiscellaneous:
                 "iMacPro1,1",
             ]
             logging.info(f"{self.model} is a T2 Mac.")
-            if self.constants.serial_settings in ["None"]) and self.model in UnsupportedT2Macs:
+            if self.constants.serial_settings in ["None"] and self.model in UnsupportedT2Macs:
                 logging.error("There are instability issues when trying to boot macOS 26 Tahoe on unsupported T2 Macs when not spoofing the SMBIOS. Some Macs barely reach the Language selection screen and when clicking ->, WindowServer fails to render the request properly.")
                 logging.info("To avoid any issues, we'll abort the build OpenCore process.")
                 logging.info("To fix this error, go back, then click on OpenCore and don't click on Install OpenCore or Save OpenCore yet - go to SMBIOS and change SMBIOS Spoof Level from None to anything else, like Minimal, Moderate or Advanced.")
