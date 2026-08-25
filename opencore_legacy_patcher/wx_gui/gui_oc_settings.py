@@ -185,7 +185,18 @@ class OCSettingsFrame(wx.Frame):
 
                 if setting_info["type"] == "wrap_around":
                     height = highest_height_reached
-                    width = 300 if width is stock_width else stock_width
+                    # On a scrollable page (currently only Security), a vertical
+                    # scrollbar eats into the panel's own width from the right
+                    # edge. The right column is otherwise positioned as if the
+                    # full frame width were available, which ran right-column
+                    # text (e.g. "Secure Boot Model") underneath/behind the
+                    # scrollbar. Same fix as the wrap width in
+                    # _populate_sip_settings: size off the actual scrollbar
+                    # metric instead of a guessed constant.
+                    right_column_offset = 300
+                    if isinstance(panel, wx.ScrolledWindow):
+                        right_column_offset -= wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
+                    width = right_column_offset if width is stock_width else stock_width
                     continue
 
                 if setting_info["type"] == "checkbox":
@@ -758,13 +769,13 @@ class OCSettingsFrame(wx.Frame):
                 "Allow spoofing native Macs": {
                     "type": "checkbox",
                     "value": self.constants.allow_native_spoofs,
+                    "variable": "allow_native_spoofs",
                     "description": [
                         "Allow OpenCore to spoof natively",
                         "supported Macs.",
                         "Primarily used for enabling",
                         "Universal Control on unsupported Macs",
                     ],
-                    "variable": "allow_native_spoofs",
                 },
                 "Serial Spoofing": {
                     "type": "title",
