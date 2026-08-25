@@ -5,6 +5,18 @@
 A Python-based project revolving around [Acidanthera's OpenCorePkg](https://github.com/acidanthera/OpenCorePkg) and [Lilu](https://github.com/acidanthera/Lilu) for both running and unlocking features in macOS on supported and unsupported Macs.
 Security researchers can report vulnerabilities in the app inside Security and quality, provided that they read the security policy here: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/security/policy and the vulnerability isn't by design.
 Sicherheitsforscher können Schwachstellen in der App im Bereich „Security and quality“ melden, vorausgesetzt, sie haben die Sicherheitsrichtlinie hier gelesen: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/security/policy und die Schwachstelle ist nicht beabsichtigt.
+
+⚠️ Attention! Macs with Intel Core 2 Duos:
+- 2010 11 inch and 13 inch MacBook Air
+- 2010 MacBook Pro
+- 2010 Mac mini
+- 2010 MacBook
+- 2009 MacBook Pro
+- 2009 MacBook Air
+- 2009 MacBook
+- Mac mini 2009
+- Mac Pro 2008
+are unable to boot into macOS 26 Tahoe at all at this moment due to a known limitation of AAAMouSSE and telemetrap causing kernel panics. You can try macOS 26 Tahoe on these models only at your own risk and if you're ready to troubleshoot, reverse engineer and fix this panic. https://forums.macrumors.com/threads/mp3-1-others-sse-4-2-emulation-to-enable-amd-metal-driver.2206682/page-9
 > **⚠️ On T2 Macs only, this patcher disables SIP completely to be able to boot macOS properly** What is SIP? SIP, in short for System Integrity Protection, protects against attackers from tampering with core system files. However, on T2 Macs, SIP also causes thermal throttling and other issues when booting via OpenCorePkg, so it needs to be disabled, so setting SIP to 0xFFF is hardcoded into misc.py. As such, the SIP settings inside OpenCore Legacy Patcher T2 > Settings (or very soon, instead in the patcher > OpenCore) are mostly rendered useless on T2 Macs. This doesn’t apply to non-T2 Macs, such as T1 or non-T Macs
 
 
