@@ -243,6 +243,15 @@ class CheckProperties:
             # this button for a hackintosh or any other unsupported real Mac.
             if self.constants.host_is_vmware_vm is True and self.constants.allow_vmware_root_patching is True:
                 return True
+            # A Hackintosh/VM can still be a *build station* for a different, real Mac: if the
+            # user explicitly picked a target (custom_model) and that target is itself a genuine,
+            # supported Mac model, the resulting OpenCore build isn't destined for this Hackintosh/VM
+            # at all, so the allow_oc_everywhere gate above - which exists to stop a Hackintosh from
+            # installing OpenCore onto ITSELF - doesn't apply. Bare `custom_model` truthiness isn't
+            # enough here (that's what let ANY custom SMBIOS choice re-enable the button before, see
+            # note above), so this specifically requires the target to be a real, supported Mac.
+            if self.constants.custom_model and self.constants.custom_model in model_array.SupportedSMBIOS:
+                return True
             return False
         if self.constants.custom_model:
             return True
@@ -434,7 +443,7 @@ class RestartHost:
             self.frame.Hide()
             wx.Yield()
             try:
-                applescript.AppleScript('tell app "loginwindow" to «event aevtrrst»').run()
+                applescript.AppleScript('tell app "loginwindow" to \u00abevent aevtrrst\u00bb').run()
             except applescript.ScriptError as e:
                 logging.error(f"Error while trying to reboot: {e}")
                 logging.exception("Stack Trace:")

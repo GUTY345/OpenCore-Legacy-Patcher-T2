@@ -208,6 +208,12 @@ class OCSettingsFrame(wx.Frame):
                         checkbox.Enable(setting_info["condition"])
                         if setting_info["condition"] is False:
                             checkbox.SetValue(False)
+                            # Best-effort: native macOS controls mostly ignore an
+                            # explicit foreground colour once disabled and fall
+                            # back to the OS's own (quite light) "disabled" look,
+                            # but this costs nothing and helps on backends that
+                            # do respect it.
+                            checkbox.SetForegroundColour((90, 90, 90))
 
                 elif setting_info["type"] == "spinctrl":
                     # Add spinctrl, and description underneath
@@ -247,7 +253,10 @@ class OCSettingsFrame(wx.Frame):
                 height += 40
                 if "condition" in setting_info:
                     if setting_info["condition"] is False:
-                        description.SetForegroundColour((128, 128, 128))
+                        # Was (128, 128, 128): too low-contrast against the panel
+                        # background to read comfortably, especially at 11pt
+                        # (e.g. the Security tab's "Not used on T2 Macs" notes).
+                        description.SetForegroundColour((90, 90, 90))
 
                 # Check number of lines in description, and adjust spacer accordingly
                 for i, line in enumerate(lines.split('\n')):
