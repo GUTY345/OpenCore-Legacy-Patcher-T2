@@ -24,20 +24,20 @@ from ci_tooling.build_modules import (
     sign_notarize
 )
 
-        # Clean up temporary files
-        shutil.rmtree(temp_dir)
+    # Clean up temporary files
+    shutil.rmtree(temp_dir)
 
-        if found_files < 2:
-            print(f"[WARN] Only found {found_files} of 2 required tools (ocvalidate/macserial).")
+    if found_files < 2:
+        print(f"[WARN] Only found {found_files} of 2 required tools (ocvalidate/macserial).")
 
-        # Clear the quarantine attribute to allow execution on modern macOS
-        try:
-            subprocess.run(
-                ["xattr", "-rd", "com.apple.quarantine", str(base_dir)], 
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
-        except Exception:
-            pass
+    # Clear the quarantine attribute to allow execution on modern macOS
+    try:
+        subprocess.run(
+            ["xattr", "-rd", "com.apple.quarantine", str(base_dir)], 
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+    except Exception:
+        pass
 
         print("[INFO] Tools successfully extracted and validated.\n")
 
