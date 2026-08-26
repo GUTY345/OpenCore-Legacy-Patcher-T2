@@ -223,3 +223,4 @@ class tui_disk_installation:
             logging.error("Configuring OpenCore failed due to the following error:")
             logging.exception("Stack Trace:")
             logging.info("Please report this issue.")
+            sys.exit(3)
