@@ -391,6 +391,10 @@ class OCSettingsFrame(wx.Frame):
                     "description": [
                         "When disabled, users can hold ESC to",
                         "show picker in the firmware.",
+                        "Disable this to not show the",
+                        "boot picker every time you",
+                        "boot into OpenCore"
+                        
                     ],
                 },
                 "Boot Picker Timeout": {
