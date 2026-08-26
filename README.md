@@ -22,7 +22,7 @@ Sicherheitsforscher können Schwachstellen in der App im Bereich „Security and
 
 are unable to boot into macOS 26 Tahoe at all at this moment due to a known limitation of AAAMouSSE and telemetrap causing kernel panics. You can try macOS 26 Tahoe on these models only at your own risk and if you're ready to troubleshoot, reverse engineer and fix this panic. https://forums.macrumors.com/threads/mp3-1-others-sse-4-2-emulation-to-enable-amd-metal-driver.2206682/page-9
 At the end, for a functional versions of AAAMouSSE and telemetrap on macOS 26 Tahoe requires reverse engineering and writing similar but completely new kext from scratch. They haven't received updates since 2021, and these 2 kexts are closed source, it adds complexity. 
-@gandolf243 is working on it, but don’t expect to be done anytime soon.
+@gandolf243 is working on it.
 
 **⚠️ Attention! Graphics patches are currently missing on the following models and are causing kernel panics at the moment on macOS 26:**
 - Metal 8302 - all Mac models between 2012 and 2014
