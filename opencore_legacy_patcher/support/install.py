@@ -6,7 +6,7 @@ import logging
 import plistlib
 import subprocess
 import re
-import sys  # FIX: Wichtig für sys.exit() bei kritischen Fehlern
+import sys
 from pathlib import Path
 
 from . import utilities, subprocess_wrapper
