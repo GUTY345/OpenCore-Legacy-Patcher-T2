@@ -1,4 +1,14 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.17001.1 - 4.0.0 alpha 17.1.1
+This release:
+
+Metal 3802 and non-Metal patches are not working and known very well to cause yellow screen and kernel panics on macOS 26. To prevent this, I'll put safety guards to prevent these patches from getting injected into macOS 26 while @gandolf243 is working on it to ifx these patches on Tahoe, while the already known to be working patches or ones that are going to be tested yet, only those are going to be injected.
+For unsupported T2 Macs, I found this bug: acidanthera/OpenCorePkg#620 . I'm working closely with Accidanthera to get this OpenCorePkg bug fixed.
+Diese Version:
+
+Metal 3802 und Nicht-Metal-Patches funktionieren nicht und sind dafür bekannt, unter macOS 26 zu Yellow Screens und Kernel-Panics zu führen. Um dies zu verhindern, werden Sicherheitsvorkehrungen getroffen, damit diese Patches nicht in macOS 26 eingespielt werden, während @gandolf243 daran arbeitet, sie per ifx auf Tahoe zu integrieren. Nur bereits bekannte, funktionierende oder noch zu testende Patches werden eingespielt.
+Für nicht unterstützte T2-Macs habe ich diesen Bug gefunden: acidanthera/OpenCorePkg#620. Ich arbeite eng mit Accidanthera zusammen, um diesen OpenCorePkg-Bug zu beheben.
+
 ## 4.0.0.17001 - 4.0.0 alpha 17.1
 This release:
 - removes Gemini generated vulnerability fixes that cause issues: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/commit/f326e311e1fa0fe0f54c04322dbac33a0af1f5ae
