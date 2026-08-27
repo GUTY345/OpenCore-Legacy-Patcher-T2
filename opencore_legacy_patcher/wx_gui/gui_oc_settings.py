@@ -278,8 +278,8 @@ class OCSettingsFrame(wx.Frame):
                     else:
                         height += 13
 
-                if height > lowest_height_reached:
-                    lowest_height_reached = height
+            if height > lowest_height_reached:
+                lowest_height_reached = height
 
             if isinstance(panel, wx.ScrolledWindow):
                 # Finalise the scrollable Security tab now that its full content
@@ -990,7 +990,7 @@ class OCSettingsFrame(wx.Frame):
 
     def on_install(self, event):
         self.frame_modal.Destroy()
-        self.parent.Enable()
+        self.parent.Hide()
         gui_build.BuildFrame(
         parent=None,
         title=self.title,
@@ -998,16 +998,17 @@ class OCSettingsFrame(wx.Frame):
         screen_location=self.parent.GetPosition(),
         install=True
         )
+        wx.CallAfter(self.parent.Destroy)
         
     def on_save(self, event):
-         # Throw pop up to get save location
+        # Throw pop up to get save location
         with wx.FileDialog(self.parent, wildcard="All files (*.*)|*.*", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT, defaultFile=f"OpenCore-Build-{self.constants.custom_model or self.constants.computer.real_model}", name="Save OpenCore Build") as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
 
             self.constants.oc_build_path = Path(fileDialog.GetPath())
             self.frame_modal.Destroy()
-            self.parent.Enable()
+            self.parent.Hide()
             logging.info(f"Saving OpenCore-Build to {self.constants.build_path}")
             gui_build.BuildFrame(
                 parent=None,
@@ -1016,6 +1017,7 @@ class OCSettingsFrame(wx.Frame):
                 screen_location=self.parent.GetPosition(),
                 save=True
             )
+            wx.CallAfter(self.parent.Destroy)
 
     def _update_setting(self, variable, value):
         logging.info(f"Updating Local Setting: {variable} = {value}")
