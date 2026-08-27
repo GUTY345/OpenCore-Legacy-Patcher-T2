@@ -12,6 +12,7 @@ from pathlib import Path
 from . import utilities, subprocess_wrapper
 from .. import constants
 
+# Dieses Variable ist da, um zu überprüfen, ob die OpenCore-Konfiguration fertig ist oder nicht.
 OpenCore_EFI_Konfiguration_abgeschlossen=False
 
 
