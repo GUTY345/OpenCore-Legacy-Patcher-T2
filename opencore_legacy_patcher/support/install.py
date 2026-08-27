@@ -188,7 +188,6 @@ class tui_disk_installation:
             logging.error(f"File operation failed during installation: {e}")
             logging.exception("Stack Trace:") 
             logging.info("Please try again later.")
-            # FIX 3: sys.exit(3) muss VOR dem return stehen, sonst ist es "Dead Code"
             sys.exit(3)
 
         # Volume-Icons setzen (Fehler hier kopieren wir sicherheitshalber auch als Root, da EFI geschützt ist)
