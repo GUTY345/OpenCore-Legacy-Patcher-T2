@@ -472,7 +472,7 @@ class MainFrame(wx.Frame):
         )
         
     def on_oc_settings(self, event: wx.Event = None):
-        self.Hide
+        self.Disable()
         gui_oc_settings.OCSettingsFrame(
             parent=self,
             title=self.title,
