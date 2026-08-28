@@ -133,6 +133,8 @@ To run the project from source, see here: [Build and run from source](./SOURCE.m
 * for fixing modern wireless on macOS 26 Tahoe
 * [pyquick](https://github.com/pyquick) and [hackdoc](https://github.com/hackdoc)
   * [improving support for Metallibs on macOS 26 Tahoe on unsupported non-T2 Macs](https://github.com/hackdoc/OCLP-R)
+* [stephandeutsch] (https://github.com/stephandeutsch/OpenCore-Legacy-Patcher/)
+  * for fixing USB1.1 compatability with Sequoia and Tahoe
 * [vytska69](https://github.com/vytska69)
   * [developing patches for the T2 chip](https://github.com/vytska69/OpenCore-Legacy-Patcher)
   * [Developing Secure Enclave Processor (SEP) timeout patches](https://github.com/vytska69/OpenCore-Legacy-Patcher)
