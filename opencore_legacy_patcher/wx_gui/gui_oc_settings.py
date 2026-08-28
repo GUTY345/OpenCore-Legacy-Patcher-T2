@@ -171,6 +171,8 @@ class OCSettingsFrame(wx.Frame):
                     title.SetPosition((int(horizontal_center) - int(title.GetSize()[0] / 2) - 15, height))
                     highest_height_reached = height + title.GetSize()[1] + 10
                     height += title.GetSize()[1] + 10
+                    if height > lowest_height_reached:
+                        lowest_height_reached = height
                     continue
 
                 if setting_info["type"] == "sub_title":
@@ -181,6 +183,8 @@ class OCSettingsFrame(wx.Frame):
                     sub_title.SetPosition((int(horizontal_center) - int(sub_title.GetSize()[0] / 2) - 15, height))
                     highest_height_reached = height + sub_title.GetSize()[1] + 10
                     height += sub_title.GetSize()[1] + 10
+                    if height > lowest_height_reached:
+                        lowest_height_reached = height
                     continue
 
                 if setting_info["type"] == "wrap_around":
@@ -277,6 +281,18 @@ class OCSettingsFrame(wx.Frame):
                         height += 11
                     else:
                         height += 13
+
+                # Keep 'lowest_height_reached' current as items are placed (not
+                # just once after the whole tab has been processed, see below).
+                # A 'title' entry positions itself using 'lowest_height_reached'
+                # as its starting y so it renders below everything placed so
+                # far in either column; without updating it here, any second
+                # title in a tab whose preceding items were plain
+                # checkboxes/descriptions (no 'populate' in between) would
+                # still read the stale initial value and land on the exact
+                # same position as the first title.
+                if height > lowest_height_reached:
+                    lowest_height_reached = height
 
             if height > lowest_height_reached:
                 lowest_height_reached = height
