@@ -141,15 +141,18 @@ class BuildFrame(wx.Frame):
             self.on_build_failure()
             return
         else:
-            dialog = wx.MessageDialog(
-                parent=self,
-                message=f"Would you like to install OpenCore now?",
-                caption="Finished building your OpenCore configuration!",
-                style=wx.YES_NO | wx.ICON_QUESTION
-            )
-            dialog.SetYesNoLabels("Install to disk", "View build log")
-    
-        self.on_install() if dialog.ShowModal() == wx.ID_YES else self.install_button.Enable()
+            if getattr(self, "install", False):
+                self.on_install()
+            else:
+                dialog = wx.MessageDialog(
+                    parent=self,
+                    message=f"Would you like to install OpenCore now?",
+                    caption="Finished building your OpenCore configuration!",
+                    style=wx.YES_NO | wx.ICON_QUESTION
+                )
+                dialog.SetYesNoLabels("Install to disk", "View build log")
+                
+                self.on_install() if dialog.ShowModal() == wx.ID_YES else self.install_button.Enable()
 
 
     def _build(self) -> None:

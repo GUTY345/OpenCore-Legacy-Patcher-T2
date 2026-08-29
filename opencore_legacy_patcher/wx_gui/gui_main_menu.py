@@ -87,16 +87,33 @@ class MainFrame(wx.Frame):
         version_label.SetForegroundColour(wx.Colour(128, 128, 128))
 
         # Model label
-        model_label = wx.StaticText(self, label=f"Model: {self.constants.custom_model or self.constants.computer.real_model}", pos=(-1, version_label.GetPosition()[1] + 30))
-        model_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-        model_label.Centre(wx.HORIZONTAL)
-        self.model_label = model_label
+        try:
+            if self.constants.Developer_Mode:
+                dev_label = wx.StaticText(self, label="Developer Mode is ON", pos=(-1, version_label.GetPosition()[1] + 20))
+                dev_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+                dev_label.Centre(wx.HORIZONTAL)
+                dev_label.SetForegroundColour(wx.Colour(100, 196, 102))
+
+                model_Button = wx.Button(self, label=f"Model: {self.constants.custom_model or self.constants.computer.real_model}", pos=(-1, version_label.GetPosition()[1] + 40))
+            else:
+                model_Button = wx.Button(self, label=f"Model: {self.constants.custom_model or self.constants.computer.real_model}", pos=(-1, version_label.GetPosition()[1] + 30))
+        except Exception as e:
+            logging.error("We couldn't verify whether Developer Mode is on or off due to a critical bug.")
+            logging.info("Please, report this bug.")
+            logging.exception("The error is the following:")
+            logging.info("Since we couldn't verify this, we'll assume Developer Mode is disabled.")
+            model_Button = wx.Button(self, label=f"Model: {self.constants.custom_model or self.constants.computer.real_model}", pos=(-1, version_label.GetPosition()[1] + 30))
+
+        model_Button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+        model_Button.Centre(wx.HORIZONTAL)
+        model_Button.SetToolTip("Edit the Target Model OpenCore will build for")
+        model_Button.Bind(wx.EVT_BUTTON, self.on_edit_model)
+        self.model_label = model_Button
 
         # Main Feature Buttons
-        is_matteo = getattr(self.constants, "app_mode", "albert") == "matteo"
-        if is_matteo:
+        if self.constants.Developer_Mode:
             menu_buttons = {
-                "Build OpenCore (Select Profile)": {
+                "Build OpenCore": {
                     "function": self.on_build_opencore_menu,
                     "description": ["Select and build a specific", "OpenCore profile for your system."],
                     "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
@@ -126,13 +143,12 @@ class MainFrame(wx.Frame):
                 "Settings": {
                     "function": self.on_settings,
                     "description": ["Settings, resources and tools", "for OpenCore Legacy Patcher."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
+                    "icon": str(self.constants.icns_resource_path / "OC-Patch-WrenchAndScrewDriver.icns"),
                 },
-                "📘 Patch Levels & Explanation": {
-                    "function": lambda event: self.on_show_test_info(event, 0),
-                    "description": ["Detailed guide to all test profiles", "(B/C/D), boot-args, Wi-Fi and T1."],
+                "Help": {
+                    "function": self.on_help,
+                    "description": ["Resources for OpenCore Legacy", "Patcher."],
                     "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
-                    "info_tab": 0,
                 }
             }
         else:
@@ -167,18 +183,17 @@ class MainFrame(wx.Frame):
                 "Settings": {
                     "function": self.on_settings,
                     "description": ["Settings, resources and tools", "for OpenCore Legacy Patcher."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
+                    "icon": str(self.constants.icns_resource_path / "OC-Patch-WrenchAndScrewDriver.icns"),
                 },
-                "📘 Patch Levels & Explanation": {
-                    "function": lambda event: self.on_show_test_info(event, 0),
-                    "description": ["Detailed guide to all test profiles", "(B/C/D), boot-args, Wi-Fi and T1."],
+                "Help": {
+                    "function": self.on_help,
+                    "description": ["Resources for OpenCore Legacy", "Patcher T2, including Ask Gemini."],
                     "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
-                    "info_tab": 0,
                 }
             }
 
         button_x = 25
-        button_y = model_label.GetPosition()[1] + 30
+        button_y = self.model_label.GetPosition()[1] + 30
         rollover = (len(menu_buttons) + 1) // 2
         index = 0
         max_height = 0
