@@ -114,12 +114,7 @@ class MainFrame(wx.Frame):
         # Main Feature Buttons
         if self.constants.Developer_Mode:
             menu_buttons = {
-                "Build OpenCore": {
-                    "function": self.on_build_opencore_menu,
-                    "description": ["Select and build a specific", "OpenCore profile for your system."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                    "info_tab": 0,
-                },
+
                 "Create macOS Installer": {
                     "function": self.on_create_macos_installer,
                     "description": ["Download and flash a macOS", "Installer for your system."],
@@ -128,7 +123,7 @@ class MainFrame(wx.Frame):
                 "Install drivers and patches": {
                     "function": self.on_root_patches,
                     "description": ["Installs hardware drivers and", "patches for your system after", "installing a new version of macOS."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Patch.icns"),
+                    "icon": str(self.constants.patch_icon_path),
                     "info_tab": 2,
                 },
                 "macOS Configuration": {
@@ -154,16 +149,11 @@ class MainFrame(wx.Frame):
             }
         else:
             menu_buttons = {
-                "Build and Install OpenCore": {
-                    "function": self.on_build_and_install_standard,
-                    "description": ["Build OpenCore and install", "it to your internal or external drive."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                    "info_tab": 0,
-                },
+
                 "Post-Install Root Patch": {
                     "function": self.on_root_patches,
                     "description": ["Install hardware drivers and", "patches for your system."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Patch.icns"),
+                    "icon": str(self.constants.patch_icon_path),
                     "info_tab": 2,
                 },
                 "macOS Configuration": {
