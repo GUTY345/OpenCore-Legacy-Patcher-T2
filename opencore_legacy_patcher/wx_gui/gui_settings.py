@@ -57,7 +57,8 @@ class SettingsFrame(wx.Frame):
 
         tabs = ["App", "Build", "Security", "Developer"]
         for tab in tabs:
-            panel = wx.Panel(notebook)
+            panel = wx.ScrolledWindow(notebook)
+            panel.SetScrollRate(0, 20)
             notebook.AddPage(panel, tab)
 
         sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 10)
