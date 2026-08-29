@@ -471,7 +471,8 @@ class BuildOpenCore:
                 #                  which causes micro-stutters on external displays.
                 # -igfxnotelemetry → Disable Intel GPU telemetry collection.
                 #                  Small but measurable reduction in GPU interrupt overhead.
-                # radpg=15       → Disable all Radeon power-gating states on AMD Radeon Pro 560.
+                # radpg=15       → Disable all Radeon power-gating states on AMD Radeon Pro 555/560.
+                #                  Both GPUs use the AMD Polaris 21 architecture (GCN 4th gen).
                 #                  Prevents the dGPU from aggressively clock-gating, which
                 #                  causes visible frame drops when switching between idle/active.
                 # watchdog=0     → Disable the macOS watchdog timer.
