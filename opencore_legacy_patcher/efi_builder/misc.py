@@ -24,11 +24,10 @@ from ..datasets import (
 _T2_MODELS = {
     "MacBookAir8,1", "MacBookAir8,2", "MacBookAir9,1",
     "MacBookPro15,1", "MacBookPro15,2", "MacBookPro15,3", "MacBookPro15,4",
-    "MacBookPro16,1", "MacBookPro16,2", "MacBookPro16,3", "MacBookPro16,4",
+    "MacBookPro16,1", "MacBookPro16,3", "MacBookPro16,4",
     "Macmini8,1",
     "iMac20,1", "iMac20,2",
     "iMacPro1,1",
-    "MacPro9,1"
 }
 
 
@@ -392,12 +391,24 @@ class BuildMiscellaneous:
             self.config["Misc"]["Security"]["Vault"] = "Secure"
 
     def _t1_handling(self) -> None:
-        """T1 Security Chip Handler with Crash Protection."""
+        """T1 Security Chip Handler with Crash Protection & Native Software Keystore Mode for Tahoe."""
         if self.model not in ["MacBookPro13,2", "MacBookPro13,3", "MacBookPro14,2", "MacBookPro14,3"]:
             logging.error(f"{self.model} is not a T1 Mac.")
             return
         else:
-            logging.info("- Enabling T1 Security Chip support")
+            # On macOS Tahoe (26.x / Darwin 25+) or modern test profiles, Apple dropped T1 SEP USB linkage.
+            # Injecting Ventura 13.6 kexts causes ABI/IPC mismatch with Tahoe user-space (securityd, LocalAuthentication, akd),
+            # breaking password authorization in System Settings and Apple Account login.
+            # Using Native Software Keystore mode allows Tahoe to handle password auth & Apple Account natively via CPU crypto.
+            is_tahoe_or_newer = self.constants.detected_os >= os_data.os_data.tahoe if hasattr(os_data.os_data, 'tahoe') else True
+            active_profile = getattr(self.constants, "build_profile", "standard")
+            
+            if is_tahoe_or_newer or active_profile in ["standard", "test_b", "test_c", "test_c_spoofed", "test_d"]:
+                logging.info("- T1 Mac on macOS Tahoe: Enabling Native Software Keystore Mode for Password Auth & Apple Account")
+                logging.info("  (Native Tahoe AppleKeyStore & AppleCredentialManager preserved; legacy Ventura kext downgrade bypassed)")
+                return
+
+            logging.info("- Enabling Legacy T1 Security Chip support (Ventura fallback)")
             try:
                 builder = support.BuildSupport(self.model, self.constants, self.config)
                 identifiers = ["com.apple.driver.AppleSSE", "com.apple.driver.AppleKeyStore", "com.apple.driver.AppleCredentialManager"]
@@ -461,15 +472,18 @@ class BuildMiscellaneous:
             else:
                 logging.error("We couldn't verify if injecting optional patcges are enabled or not, but they must be disabled if the variable is not set to True.")
     
-            logging.error("With alpha 16, T2 Macs will always face a Needs authenticator (81) panic and will be fixed in alpha 17. And it ended up that it is mostly OpenCorePkg bug.")
-            logging.info("Since standard OpenCorePkg for T2 Macs works only inside the installer of macOS 26 Tahoe, but to boot to the desktop, it ended up requiring a seperate OpenCorePkg fork.")
-            logging.info("Since the new OpenCorePkg fork is only used in pre-alpha 17 and later, we'll need to abort building OpenCore for your T2 Mac.")
-            logging.info("Check for available updates. If there are no available updates at this moment, consider upgrading to pre-alpha 1 for alpha 17 or later manually.")
-            logging.info("This will appear unconditionally with any new alpha 16 release from now onwards to prevent broken T2 Macs, so you don't end up with broken partitions.")
-            logging.info("Aborting softly inside the application to prevent further issues.")
-            logging.info("To upgrade manually to the pre-alpha 17, you need to go to OpenCore Legacy Patcher T2's repository, go to Releases and download the pre-alpha.")
-            logging.info("Any new fixes to fix the Needs authenticator (81) are available only in pre-alpha 17 or later. This release from now on will only receive security updates and bug fixes (including ones for non-T2 systems).")
-            sys.exit(3)
+            if getattr(self.constants, "build_profile", "") in ["test_c", "test_c_spoofed"]:
+                logging.info("Bypassing T2 build abort because TEST-C/TEST-C SPOOFED profile is active.")
+            else:
+                logging.error("With alpha 16, T2 Macs will always face a Needs authenticator (81) panic and will be fixed in alpha 17. And it ended up that it is mostly OpenCorePkg bug.")
+                logging.info("Since standard OpenCorePkg for T2 Macs works only inside the installer of macOS 26 Tahoe, but to boot to the desktop, it ended up requiring a seperate OpenCorePkg fork.")
+                logging.info("Since the new OpenCorePkg fork is only used in pre-alpha 17 and later, we'll need to abort building OpenCore for your T2 Mac.")
+                logging.info("Check for available updates. If there are no available updates at this moment, consider upgrading to pre-alpha 1 for alpha 17 or later manually.")
+                logging.info("This will appear unconditionally with any new alpha 16 release from now onwards to prevent broken T2 Macs, so you don't end up with broken partitions.")
+                logging.info("Aborting softly inside the application to prevent further issues.")
+                logging.info("To upgrade manually to the pre-alpha 17, you need to go to OpenCore Legacy Patcher T2's repository, go to Releases and download the pre-alpha.")
+                logging.info("Any new fixes to fix the Needs authenticator (81) are available only in pre-alpha 17 or later. This release from now on will only receive security updates and bug fixes (including ones for non-T2 systems).")
+                sys.exit(3)
             # Prerequisite kext checks
             for kext, ver, path in [
                 ("WhateverGreen.kext", self.constants.whatevergreen_version, self.constants.whatevergreen_path),

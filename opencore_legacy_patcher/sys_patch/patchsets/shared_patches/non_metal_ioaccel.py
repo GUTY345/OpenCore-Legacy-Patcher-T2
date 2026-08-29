@@ -27,6 +27,13 @@ class NonMetalIOAccelerator(BaseSharedPatchSet):
         TeraScale 2 and Nvidia Web Drivers broke in Mojave due to mismatched structs in
         the IOAccelerator stack
         """
+        if self._xnu_major >= os_data.tahoe.value:
+            # Non-Metal GPU patches currently cause kernel panics on macOS 26, Tahoe.
+            # Safety guard: skip this patchset entirely until a working fix is found.
+            # Unrelated patchsets (eg. Legacy Wireless) are unaffected, as they come
+            # from separate hardware/shared patch classes and are not gated here.
+            return {}
+
         if self._os_requires_patches() is False:
             return {}
 

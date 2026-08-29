@@ -6,16 +6,18 @@ Returns dict with Link and Version of the latest binary update if available
 """
 
 import logging
+import applescript
 
 from typing import Optional, Union
 from packaging import version
 
 from . import network_handler
+from . import subprocess_wrapper
 
 from .. import constants
 
 
-REPO_LATEST_RELEASE_URL: str = "https://api.github.com/repos/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/latest"
+# REPO_LATEST_RELEASE_URL is now dynamically generated from constants.repo_link
 
 
 class CheckBinaryUpdates:
@@ -33,6 +35,48 @@ class CheckBinaryUpdates:
             self.binary_version = version.parse("0.0.0")
 
         self.latest_details = None
+
+    def _request_admin_password_for_helper_repair(self) -> str:
+        """
+        Prompt for the local administrator password via a plain dialog, so it
+        can be handed to sudo ourselves for repairing the Privileged Helper
+        Tool's permissions.
+
+        Same rationale as gui_main_menu.MainFrame._request_admin_password_for_helper_repair
+        / dmg_mount.PatcherSupportPkgMount._request_admin_password: "do shell
+        script ... with administrator privileges" runs elevated via a separate
+        authorization session (/usr/libexec/security_authtrampoline) detached
+        from the current login/Aqua session. A plain "display dialog" only
+        needs a WindowServer session to render, so we use it purely to collect
+        the password.
+        """
+        try:
+            return applescript.AppleScript(
+                f'set theResult to display dialog "OpenCore Legacy Patcher needs administrator access to repair the Privileged Helper Tool\'s permissions." default answer "" with hidden answer with title "OpenCore Legacy Patcher" with icon file "{str(self.constants.app_icon_path).replace("/", ":")[1:]}"\nreturn the text returned of theResult'
+            ).run()
+        except Exception:
+            return ""
+
+    def _ensure_privileged_helper_permissions(self) -> None:
+        """
+        Ensure the Privileged Helper Tool still has its expected 4755
+        (setuid root, rwxr-xr-x) permissions before we reach out to check
+        for updates, repairing them first if needed.
+
+        Only prompts for a password when a repair is actually needed, so
+        this doesn't nag the user with a sudo prompt on every check.
+        """
+        if not subprocess_wrapper.privileged_helper_needs_setuid_repair():
+            logging.info("Privileged Helper Tool permissions are already correct, no repair needed")
+            return
+
+        logging.info("Privileged Helper Tool permissions need repair, requesting administrator password")
+        admin_password = self._request_admin_password_for_helper_repair()
+        if not admin_password:
+            logging.info("Skipped Privileged Helper Tool permission repair (no password provided)")
+            return
+
+        subprocess_wrapper.repair_privileged_helper_permissions(admin_password)
 
     def check_if_newer(self, version_to_check: Union[str, version.Version]) -> bool:
         """
@@ -95,6 +139,10 @@ class CheckBinaryUpdates:
             dict: Dictionary with Link and Version of the latest binary update if available
         """
 
+        # Self-heal the Privileged Helper Tool's permissions before doing anything
+        # network-related below. No-op (no prompt) unless a repair is actually needed.
+        self._ensure_privileged_helper_permissions()
+
         if self.constants.special_build is True:
             # Special builds do not get updates through the updater
             logging.info("You are using a special version")
@@ -104,15 +152,18 @@ class CheckBinaryUpdates:
             # We already checked
             return self.latest_details
 
-        if not network_handler.NetworkUtilities(REPO_LATEST_RELEASE_URL).verify_network_connection():
+        # Dynamically generate the API URL from constants.repo_link
+        repo_api_url = self.constants.repo_link.replace("https://github.com/", "https://api.github.com/repos/").strip("/")
+        repo_latest_release_url = f"{repo_api_url}/releases/latest"
+
+        if not network_handler.NetworkUtilities(repo_latest_release_url).verify_network_connection():
             logging.error("It failed to connect with the GitHub page")
             logging.info("Please check if your computer is connected to the internet.")
             logging.exception("Stack Trace:")
-            logging.info("If your computer is connected to the internet, it may be due to invalid syntax.")
             logging.info("If so, report this issue immediately")
             return None
             
-        response = network_handler.NetworkUtilities().get(REPO_LATEST_RELEASE_URL)
+        response = network_handler.NetworkUtilities().get(repo_latest_release_url)
         data_set = response.json()
 
         if "tag_name" not in data_set:

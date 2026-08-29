@@ -34,7 +34,10 @@ from ..wx_gui import (
     gui_help,
     gui_settings,
     gui_sys_patch_display,
+    gui_test_info,
     gui_update,
+    gui_oc_settings,
+    gui_macos_configeration,
 )
 
 class MainFrame(wx.Frame):
@@ -75,7 +78,10 @@ class MainFrame(wx.Frame):
         title_label.SetFont(gui_support.font_factory(25, wx.FONTWEIGHT_BOLD))
         title_label.Centre(wx.HORIZONTAL)
 
-        version_label = wx.StaticText(self, label=f"Version {self.constants.patcher_version_label}", pos=(-1, title_label.GetPosition()[1] + 32))
+        is_matteo = getattr(self.constants, "app_mode", "albert") == "matteo"
+
+        display_version = self.constants.experimental_version if is_matteo else self.constants.patcher_version_label
+        version_label = wx.StaticText(self, label=f"Version {display_version}", pos=(-1, title_label.GetPosition()[1] + 32))
         version_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         version_label.Centre(wx.HORIZONTAL)
         version_label.SetForegroundColour(wx.Colour(128, 128, 128))
@@ -86,53 +92,120 @@ class MainFrame(wx.Frame):
         model_label.Centre(wx.HORIZONTAL)
         self.model_label = model_label
 
-        # Main 4 Feature Buttons
-        menu_buttons = {
-            "Build and Install OpenCore": {
-                "function": self.on_build_and_install,
-                "description": ["Prepares provided drive to be able", "to boot unsupported OSes.", "Use on installers or internal drives."],
-                "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-            },
-            "Create macOS Installer": {
-                "function": self.on_create_macos_installer,
-                "description": ["Download and flash a macOS", "Installer for your system."],
-                "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
-            },
-            "Install drivers and patches": {
-                "function": self.on_post_install_root_patch,
-                "description": ["Installs hardware drivers and", "patches for your system after", "installing a new version of macOS."],
-                "icon": str(self.constants.icns_resource_path / "OC-Patch.icns"),
-            },
-            "Support": {
-                "function": self.on_help,
-                "description": ["Resources for OpenCore Legacy", "Patcher T2."],
-                "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
-            },
-        }
+        # Main Feature Buttons
+        is_matteo = getattr(self.constants, "app_mode", "albert") == "matteo"
+        if is_matteo:
+            menu_buttons = {
+                "Build OpenCore (Select Profile)": {
+                    "function": self.on_build_opencore_menu,
+                    "description": ["Select and build a specific", "OpenCore profile for your system."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                    "info_tab": 0,
+                },
+                "Create macOS Installer": {
+                    "function": self.on_create_macos_installer,
+                    "description": ["Download and flash a macOS", "Installer for your system."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
+                },
+                "Install drivers and patches": {
+                    "function": self.on_root_patches,
+                    "description": ["Installs hardware drivers and", "patches for your system after", "installing a new version of macOS."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Patch.icns"),
+                    "info_tab": 2,
+                },
+                "macOS Configeration": {
+                    "function": self.on_macos_config,
+                    "description": ["Settings, drivers and", "patches for your system."],
+                    "icon": str(self.constants.patch_icon_path),
+                },
+                "OpenCore Settings": {
+                    "function": self.on_oc_settings,
+                    "description": ["Prepares provided drive to be", "able to boot unsupported OSes."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                },
+                "Settings": {
+                    "function": self.on_settings,
+                    "description": ["Settings, resources and tools", "for OpenCore Legacy Patcher."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
+                },
+                "📘 Patch Levels & Explanation": {
+                    "function": lambda event: self.on_show_test_info(event, 0),
+                    "description": ["Detailed guide to all test profiles", "(B/C/D), boot-args, Wi-Fi and T1."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
+                    "info_tab": 0,
+                }
+            }
+        else:
+            menu_buttons = {
+                "Build and Install OpenCore": {
+                    "function": self.on_build_and_install_standard,
+                    "description": ["Build OpenCore and install", "it to your internal or external drive."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                    "info_tab": 0,
+                },
+                "Post-Install Root Patch": {
+                    "function": self.on_root_patches,
+                    "description": ["Install hardware drivers and", "patches for your system."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Patch.icns"),
+                    "info_tab": 2,
+                },
+                "macOS Configeration": {
+                    "function": self.on_macos_config,
+                    "description": ["Settings, drivers and", "patches for your system."],
+                    "icon": str(self.constants.patch_icon_path),
+                },
+                "OpenCore Settings": {
+                    "function": self.on_oc_settings,
+                    "description": ["Prepares provided drive to be", "able to boot unsupported OSes."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                },
+                "Create macOS Installer": {
+                    "function": self.on_create_macos_installer,
+                    "description": ["Download and flash a macOS", "Installer for your system."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
+                },
+                "Settings": {
+                    "function": self.on_settings,
+                    "description": ["Settings, resources and tools", "for OpenCore Legacy Patcher."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
+                },
+                "📘 Patch Levels & Explanation": {
+                    "function": lambda event: self.on_show_test_info(event, 0),
+                    "description": ["Detailed guide to all test profiles", "(B/C/D), boot-args, Wi-Fi and T1."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
+                    "info_tab": 0,
+                }
+            }
 
-        button_x = 30
+        button_x = 25
         button_y = model_label.GetPosition()[1] + 30
-        rollover = 2
+        rollover = (len(menu_buttons) + 1) // 2
         index = 0
         max_height = 0
 
         for button_name, button_function in menu_buttons.items():
             if "icon" in button_function:
-                icon = wx.StaticBitmap(self, bitmap=wx.Bitmap(button_function["icon"], wx.BITMAP_TYPE_ICON), pos=(button_x - 10, button_y), size=(64, 64))
-                if button_name == "Build and Install OpenCore":
-                    icon.SetSize((70, 70))
+                icon = wx.StaticBitmap(self, bitmap=wx.Bitmap(button_function["icon"], wx.BITMAP_TYPE_ICON), pos=(button_x - 5, button_y), size=(64, 64))
+                if "Build OpenCore" in button_name or "EXPERIMENTAL" in button_name:
+                    icon.SetSize((68, 68))
             
-            button = wx.Button(self, label=button_name, pos=(button_x + 70, button_y), size=(180, 30))
-            button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+            button = wx.Button(self, label=button_name, pos=(button_x + 68, button_y), size=(205, 30))
+            button.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_NORMAL))
             button.Bind(wx.EVT_BUTTON, lambda event, f=button_function["function"]: f(event))
 
-            if button_name == "Build and Install OpenCore":
+            if "Build OpenCore" in button_name or "EXPERIMENTAL" in button_name:
                 self.build_button = button
                 if not gui_support.CheckProperties(self.constants).host_can_build():
                     button.Disable()
                     button.SetToolTip("Building OpenCore is not supported on Hackintoshes or virtual machines. For installing OpenCore on Hackintoshes, follow Dortania's guide here: https://dortania.github.io/OpenCore-Install-Guide/")
 
-            description_label = wx.StaticText(self, label='\n'.join(button_function["description"]), pos=(button_x + 75, button.GetPosition()[1] + 33))
+            # Info / Details button right next to each entry
+            if "info_tab" in button_function:
+                info_btn = wx.Button(self, label="ℹ️", pos=(button_x + 278, button_y), size=(36, 30))
+                info_btn.SetToolTip("Click to read the detailed explanation of this option and its parameters.")
+                info_btn.Bind(wx.EVT_BUTTON, lambda event, tab=button_function["info_tab"]: self.on_show_test_info(event, tab))
+
+            description_label = wx.StaticText(self, label='\n'.join(button_function["description"]), pos=(button_x + 72, button.GetPosition()[1] + 33))
             description_label.SetFont(gui_support.font_factory(10, wx.FONTWEIGHT_NORMAL))
 
             # Maintain spacing
@@ -144,30 +217,37 @@ class MainFrame(wx.Frame):
 
             index += 1
             if index == rollover:
-                button_x = 320
+                button_x = 360
                 button_y = model_label.GetPosition()[1] + 30
 
-        # --- FOOTER BUTTONS (Settings & Gemini) ---
-        total_footer_width = 120 + 10 + 150 
-        start_x = (self.GetSize().width - total_footer_width) // 2
-        footer_y = max_height + 10
-
-        settings_btn = wx.Button(self, label="⚙️ Settings", pos=(start_x, footer_y), size=(120, 30))
-        settings_btn.Bind(wx.EVT_BUTTON, self.on_settings)
-
-        gemini_btn = wx.Button(self, label="✨ Ask Gemini", pos=(start_x + 130, footer_y), size=(150, 30))
-        gemini_btn.Bind(wx.EVT_BUTTON, self.on_gemini_help)
-
-        gemini_desc = wx.StaticText(self, label="AI Troubleshooting and\nInstallation help.", pos=(start_x + 135, footer_y + 35))
-        gemini_desc.SetFont(gui_support.font_factory(10, wx.FONTWEIGHT_NORMAL))
+        # --- RETURN TO MODE SELECTOR ---
+        if is_matteo:
+            return_btn = wx.Button(self, label="🔄 Torna al Mode Selector", pos=(-1, max_height + 20), size=(220, 30))
+            return_btn.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_BOLD))
+            return_btn.Centre(wx.HORIZONTAL)
+            return_btn.Bind(wx.EVT_BUTTON, self.on_return_to_mode_selector)
+            max_height = return_btn.GetPosition()[1] + 20
 
         # --- COPYRIGHT ---
-        copy_label = wx.StaticText(self, label=self.constants.copyright_date, pos=(-1, gemini_desc.GetPosition()[1] + 45))
+        copy_label = wx.StaticText(self, label=self.constants.copyright_date, pos=(-1, max_height + 25))
         copy_label.SetFont(gui_support.font_factory(10, wx.FONTWEIGHT_NORMAL))
         copy_label.Centre(wx.HORIZONTAL)
 
         # Final Window Size adjustment
         self.SetSize((-1, copy_label.GetPosition()[1] + 60))
+
+    def on_return_to_mode_selector(self, event: wx.Event = None):
+        try:
+            self.Hide()
+            from ..wx_gui import gui_mode_selector
+            new_frame = gui_mode_selector.ModeSelectorFrame(parent=None, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+            app = wx.GetApp()
+            if hasattr(app, 'frame'):
+                app.frame = new_frame
+                new_frame.Bind(wx.EVT_CLOSE, app.OnCloseFrame)
+            wx.CallAfter(self.Destroy)
+        except Exception as e:
+            logging.error(f"Failed to return to mode selector: {e}")
 
     def _preflight_checks(self):
         try:
@@ -264,15 +344,16 @@ class MainFrame(wx.Frame):
 
         logging.info(f"Newer version detected: {remote_version_str}")
         
-        url = "https://api.github.com/repos/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/latest"
+        # Dynamically generate changelog URL from constants.repo_link
+        repo_api_url = self.constants.repo_link.replace("https://github.com/", "https://api.github.com/repos/").strip("/")
+        changelog_api_url = f"{repo_api_url}/releases/latest"
         changelog = """## Unable to fetch changelog\n\nPlease check the Github page for more information."""
         try:
-            response = requests.get(url, headers={"User-Agent": "OpenCore-Legacy-Patcher-T2"}, timeout=10).json()
+            response = requests.get(changelog_api_url, headers={"User-Agent": self.constants.patcher_name}, timeout=10).json()
             if "body" in response:
                 changelog = response["body"].split("## Asset Information")[0]
         except Exception as e:
             logging.error(f"Failed to fetch changelog text: {e}")
-            logging.error(f"Es hat fehlgeschlagen, den Changelog-Text anzuzeigen: {e}")
 
         if not getattr(self, 'exiting_app', False) and not gui_support.is_app_exiting():
             wx.CallAfter(self.on_update, update_dict["Link"], remote_version_str, update_dict["Github Link"], changelog)
@@ -287,7 +368,6 @@ class MainFrame(wx.Frame):
         html_markdown = markdown2.markdown(changelog_text, extras=["tables"])
         html_css = css_data.updater_css
         
-        # Parent auf self gesetzt zur sauberen Speicherhierarchie
         frame = wx.Dialog(self, -1, title="", size=(650, 500))
         frame.SetMinSize((650, 500))
         frame.SetWindowStyle(wx.STAY_ON_TOP)
@@ -355,25 +435,55 @@ class MainFrame(wx.Frame):
     def _onWebviewNav(self, event):
         url = event.GetURL()
         webbrowser.open(url)
-    
-    def on_gemini_help(self, event: wx.Event):
-        import webview # Import here to avoid slowing down OCLP startup
-        
-        logging.info("- Launching Gemini AI Assistant (pywebview)")
-        
-        # Create a sleek, floating window
-        window = webview.create_window(
-            title='Gemini AI Assistant',
-            url='https://gemini.google.com',
-            width=500,
-            height=850,
-            confirm_close=False,
-            background_color='#ffffff'
+
+    def on_show_test_info(self, event: wx.Event = None, initial_tab: int = 0):
+        try:
+            dialog = gui_test_info.TestExplanationDialog(self, self.constants, initial_tab=initial_tab)
+            dialog.ShowModal()
+            dialog.Destroy()
+        except Exception as e:
+            logging.error(f"Failed to open Test Explanation dialog: {e}")
+            logging.exception("Stack Trace:")
+
+    def on_build_and_install_standard(self, event: wx.Event = None):
+        self.constants.build_profile = "standard"
+        self.on_build_and_install(event)
+
+    def on_build_opencore_menu(self, event: wx.Event = None):
+        choices = [
+            "🟢 Standard / Safe Build",
+            "🧪 [LEVEL-B] Experimental GPU",
+            "🧪 [LEVEL-C] Experimental Tahoe (Native SMBIOS)",
+            "🧪 [LEVEL-C] Experimental Spoof T2 (MacBookPro16,1)",
+            "🧪 [LEVEL-D] All-In-One Tahoe (Wi-Fi + Audio + GPU + T1)"
+        ]
+        dialog = wx.SingleChoiceDialog(
+            self,
+            "Select the OpenCore build profile you wish to generate:",
+            "Build OpenCore",
+            choices
         )
         
-        # start() is blocking by default, but in a wxPython app, 
-        # it usually needs to run in its own flow.
-        webview.start()
+        if dialog.ShowModal() == wx.ID_OK:
+            selection = dialog.GetSelection()
+            if selection == 0:
+                self.constants.build_profile = "standard"
+            elif selection == 1:
+                self.constants.build_profile = "test_b"
+            elif selection == 2:
+                self.constants.build_profile = "test_c"
+            elif selection == 3:
+                self.constants.build_profile = "test_c_spoofed"
+            elif selection == 4:
+                self.constants.build_profile = "test_d"
+            
+            self.on_build_and_install(event)
+        
+        dialog.Destroy()
+
+    def on_build_and_install_testd(self, event: wx.Event = None):
+        self.constants.build_profile = "test_d"
+        self.on_build_and_install(event)
 
     def on_build_and_install(self, event: wx.Event = None):
         try:
@@ -384,12 +494,41 @@ class MainFrame(wx.Frame):
             logging.error(f"We failed to open up Build and Install OpenCore: {e}")
             logging.exception("Stack Trace:")
 
-    def on_post_install_root_patch(self, event: wx.Event = None):    
+    def on_root_patches(self, event: wx.Event = None):
         try:
-            gui_sys_patch_display.SysPatchDisplayFrame(parent=self, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+            self.Hide()
+            gui_sys_patch_display.SysPatchDisplayFrame(parent=None, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+            wx.CallAfter(self.Destroy)
         except Exception as e:
-            logging.error(f"Failed to open Install drivers and patches: {e}")
+            logging.error(f"We failed to open up Root Patches: {e}")
             logging.exception("Stack Trace:")
+            return
+
+    def on_macos_config(self, event: wx.Event = None):
+        try:
+            gui_macos_configeration.MacosConfigFrame(
+                parent=self,
+                title=self.title,
+                global_constants=self.constants,
+                screen_location=self.GetPosition()
+            )
+        except Exception as e:
+            logging.error(f"We failed to open MacOS Configuration: {e}")
+            logging.exception("Stack Trace:")
+            return
+
+    def on_oc_settings(self, event: wx.Event = None):
+        try:
+            gui_oc_settings.OCSettingsFrame(
+                parent=self,
+                title=self.title,
+                global_constants=self.constants,
+                screen_location=self.GetPosition()
+            )
+        except Exception as e:
+            logging.error(f"We failed to open OpenCore Settings: {e}")
+            logging.exception("Stack Trace:")
+            return
 
     def on_create_macos_installer(self, event: wx.Event = None):
         try:
@@ -411,3 +550,4 @@ class MainFrame(wx.Frame):
         except Exception as e:
             logging.error(f"We failed to open up Help: {e}")
             logging.exception("Stack Trace:")
+

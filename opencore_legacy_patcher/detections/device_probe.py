@@ -833,18 +833,24 @@ class Computer:
         
         ioreg.IOObjectRelease(entry)
 
-        # FIX: Protect Native T2 Models from OCLP "Unsupported" logic drift
-        native_tahoe_intel_models = ["MacBookPro16,1", "MacBookPro16,2", "MacBookPro16,4", "Macmini8,1", "iMac20,1", "iMac20,2"]
-        
+        # "oem-product"/"oem-board" are written by our OpenCorePkg fork before it applies
+        # any SMBIOS/DataHub spoof, so they always hold the true, unspoofed hardware
+        # identity for this boot session when OpenCore ran. Only fall back to the
+        # IOPlatformExpertDevice-reported values (which reflect a spoof if one is active)
+        # when they're absent, i.e. a genuine native boot with no OpenCore involved.
+        #
+        # NOTE: a previous "protect native T2 models" special case here trusted the
+        # reported (possibly spoofed) model whenever it matched a hardcoded list of
+        # native-Tahoe-capable models. That silently broke real_model whenever a native
+        # model in that list was intentionally SMBIOS-spoofed to another model also in
+        # the list (e.g. real MacBookPro16,2 spoofed to MacBookPro16,1): reported_model
+        # became the spoofed "MacBookPro16,1", which is itself in the list, so the code
+        # trusted it over the correct oem_product value — causing build_model (correctly
+        # "MacBookPro16,2" from a properly-built config) to mismatch real_model and
+        # trigger a false "Unsupported Configuration Detected" popup.
         oem_product = utilities.get_nvram("oem-product", "4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102", decode=True)
-        
-        # If hardware is native, prioritize reported ID over spoofed NVRAM variables
-        if self.reported_model in native_tahoe_intel_models:
-            self.real_model = self.reported_model
-            self.real_board_id = self.reported_board_id
-        else:
-            self.real_model = oem_product or self.reported_model
-            self.real_board_id = utilities.get_nvram("oem-board", "4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102", decode=True) or self.reported_board_id
+        self.real_model = oem_product or self.reported_model
+        self.real_board_id = utilities.get_nvram("oem-board", "4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102", decode=True) or self.reported_board_id
 
         self.build_model = utilities.get_nvram("OCLP-Model", "4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102", decode=True)
         self.oclp_version = utilities.get_nvram("OCLP-Version", "4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102", decode=True)

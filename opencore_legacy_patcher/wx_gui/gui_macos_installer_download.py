@@ -416,7 +416,7 @@ class macOSInstallerDownloadFrame(wx.Frame):
         self._generate_catalog_frame()
 
     def on_existing(self, event: wx.Event = None) -> None:
-        frames = [self, self.frame_modal, self.parent]
+        frames = [self, self.frame_modal]
         screen_pos = self.GetScreenPosition() if self else None
 
         # Create (and show - macOSInstallerFlashFrame.__init__ already calls
@@ -425,7 +425,7 @@ class macOSInstallerDownloadFrame(wx.Frame):
         # the top-level window count hits zero, so closing every existing
         # frame first - as this used to do - could hit that and shut the
         # app down before the Flash Frame ever got a chance to be shown.
-        gui_macos_installer_flash.macOSInstallerFlashFrame(
+        flash_frame = gui_macos_installer_flash.macOSInstallerFlashFrame(
             None,
             title=self.title,
             global_constants=self.constants,
@@ -445,6 +445,21 @@ class macOSInstallerDownloadFrame(wx.Frame):
                     frame.Destroy()
                 except Exception:
                     pass
+
+        # self.parent is the *original* MainFrame - the one EntryPoint.start()
+        # bound EVT_CLOSE to (see gui_entry.py's OnCloseFrame), which explicitly
+        # calls app.ExitMainLoop() once it's done cleaning up. That handler is
+        # meant for a genuine app quit; frame.Close() on self.parent used to be
+        # included in the loop above right alongside self/self.frame_modal, so
+        # it fired immediately after the Flash Frame was created above - ending
+        # the whole app's event loop before the user ever got to see that frame
+        # (matches the "Installer(s) found" log line being followed straight by
+        # "Cleaning up wxPython GUI"). Hide it and defer destruction to real app
+        # exit instead, same pattern as on_download() above.
+        if self.parent:
+            self.parent.Hide()
+            gui_support.register_orphaned_frame(self.parent)
+            flash_frame.Bind(wx.EVT_WINDOW_DESTROY, lambda event: gui_support.destroy_orphaned_frames())
 
     def on_return(self, event: wx.Event) -> None:
         self.frame_modal.Close()

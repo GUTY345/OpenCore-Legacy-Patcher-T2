@@ -4,6 +4,30 @@ package.py: Generate packages (Installer, Uninstaller, AutoPkg-Assets)
 
 import tempfile
 import macos_pkg_builder
+import plistlib
+from pathlib import Path
+
+def _patched_generate_component_file(self) -> Path:
+    bundle = None
+    if self._pkg_file_structure:
+        for source, destination in self._pkg_file_structure.items():
+            if Path(source, "Contents", "Info.plist").exists():
+                bundle = destination
+                break
+    if bundle is None:
+        raise ValueError("No valid bundle found in the provided file structure.")
+    contents = [{
+        "BundleHasStrictIdentifier": False,
+        "BundleIsRelocatable":       self._pkg_allow_relocation,
+        "BundleIsVersionChecked":    True,
+        "BundleOverwriteAction":     "upgrade",
+        "RootRelativeBundlePath":    bundle,
+    }]
+    file = tempfile.NamedTemporaryFile(delete=False)
+    plistlib.dump(contents, Path(file.name).open("wb"))
+    return Path(file.name)
+
+macos_pkg_builder.flat_pkg.FlatPackage._generate_component_file = _patched_generate_component_file
 
 from opencore_legacy_patcher import constants
 
@@ -20,7 +44,7 @@ class GeneratePackage:
         Initialize
         """
         self._files = {
-            "./dist/OpenCore-Patcher.app": "/Library/Application Support/Dortania/OpenCore-Patcher.app",
+            "./dist/OpenCore-Legacy-Patcher-T1-MBP14,3.app": "/Library/Application Support/Dortania/OpenCore-Patcher.app",
             "./ci_tooling/privileged_helper_tool/com.dortania.opencore-legacy-patcher.privileged-helper": "/Library/PrivilegedHelperTools/com.dortania.opencore-legacy-patcher.privileged-helper",
         }
         self._autopkg_files = {
@@ -111,8 +135,8 @@ class GeneratePackage:
             f.write(GenerateScripts().postinstall_pkg())
 
         assert macos_pkg_builder.Packages(
-            pkg_output="./dist/OpenCore-Patcher.pkg",
-            pkg_bundle_id="com.dortania.opencore-legacy-patcher",
+            pkg_output="./dist/OpenCore-Legacy-Patcher-T1-MBP14,3.pkg",
+            pkg_bundle_id="com.dortania.opencore-legacy-patcher-t1",
             pkg_version=constants.Constants().patcher_version,
             pkg_allow_relocation=False,
             pkg_as_distribution=True,
@@ -120,7 +144,7 @@ class GeneratePackage:
             pkg_preinstall_script=_tmp_pkg_preinstall.name,
             pkg_postinstall_script=_tmp_pkg_postinstall.name,
             pkg_file_structure=self._files,
-            pkg_title="OpenCore Legacy Patcher T2",
+            pkg_title="OpenCore Legacy Patcher T1",
             pkg_welcome=self._generate_installer_welcome(),
         ).build() is True
 

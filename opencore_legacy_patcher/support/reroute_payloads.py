@@ -7,6 +7,7 @@ import atexit
 import plistlib
 import tempfile
 import subprocess
+import applescript
 
 import logging
 
@@ -21,8 +22,22 @@ class RoutePayloadDiskImage:
 
     def __init__(self, global_constants: constants.Constants) -> None:
         self.constants: constants.Constants = global_constants
+        self.icon_path = str(self.constants.app_icon_path).replace("/", ":")[1:]
 
         self._setup_tmp_disk_image()
+
+    def _request_admin_password(self) -> str:
+        """Prompt for the local administrator password via a plain dialog.
+
+        See PatcherSupportPkgMount._request_admin_password (sys_patch/utilities/dmg_mount.py)
+        for why this is a plain "display dialog" rather than an elevated "do shell script".
+        """
+        try:
+            return applescript.AppleScript(
+                f'set theResult to display dialog "OpenCore Legacy Patcher requires administrator access to mount patch resources." default answer "" with hidden answer with title "OpenCore Legacy Patcher" with icon file "{self.icon_path}"\nreturn the text returned of theResult'
+            ).run()
+        except Exception:
+            return ""
 
 
     def _setup_tmp_disk_image(self) -> None:
@@ -40,15 +55,15 @@ class RoutePayloadDiskImage:
             logging.info("Creating payloads directory")
             Path(self.temp_dir.name / Path("payloads")).mkdir(parents=True, exist_ok=True)
             self._unmount_active_dmgs(unmount_all_active=False)
-            output = subprocess.run(
-                [
-                    "/usr/bin/hdiutil", "attach", "-noverify", f"{self.constants.payload_path_dmg}",
-                    "-mountpoint", Path(self.temp_dir.name / Path("payloads")),
-                    "-nobrowse",
-                    "-shadow", Path(self.temp_dir.name / Path("payloads_overlay")),
-                    "-passphrase", "password"
-                ],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            output = subprocess_wrapper.mount_dmg(
+                Path(self.constants.payload_path_dmg),
+                Path(self.temp_dir.name / Path("payloads")),
+                shadow_path=Path(self.temp_dir.name / Path("payloads_overlay")),
+                password="password",
+                admin_password_prompt=self._request_admin_password,
+                # Fixed, known-correct password: "Authentication error" here can only mean
+                # the privilege gate/quarantine issue, never a wrong password (see mount_dmg)
+                retry_on_auth_error=True
             )
             if output.returncode == 0:
                 logging.info("Mounted payloads.dmg")

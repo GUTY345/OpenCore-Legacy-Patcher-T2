@@ -21,7 +21,7 @@ class GenerateApplication:
         Initialize
         """
         self._pyinstaller = [sys.executable, "-m", "PyInstaller"]
-        self._application_output = Path("./dist/OpenCore-Patcher.app")
+        self._application_output = Path("./dist/OpenCore-Legacy-Patcher-T1-MBP14,3.app")
 
         self._reset_pyinstaller_cache = reset_pyinstaller_cache
 
@@ -44,7 +44,7 @@ class GenerateApplication:
             print(f"Cleaning existing build: {self._application_output}")
             shutil.rmtree(self._application_output)
 
-        print("Generating OpenCore-Patcher.app")
+        print("Generating OpenCore-Legacy-Patcher-T1-MBP14,3.app")
         _args = self._pyinstaller + ["./OpenCore-Patcher-GUI.spec", "--noconfirm"]
         if self._reset_pyinstaller_cache:
             _args.append("--clean")
@@ -104,7 +104,7 @@ class GenerateApplication:
         """
         Patch LC_VERSION_MIN_MACOSX in Load Command to report 10.10
         """
-        _file = self._application_output / "Contents" / "MacOS" / "OpenCore-Patcher"
+        _file = self._application_output / "Contents" / "MacOS" / "OpenCore-Legacy-Patcher-T1-MBP14,3"
 
         _find    = b'\x00\x0D\x0A\x00' # 10.13
         _replace = b'\x00\x0A\x0A\x00' # 10.10
@@ -127,7 +127,7 @@ class GenerateApplication:
         """
         Patch LC_BUILD_VERSION in Load Command to report the macOS 26 SDK
         """
-        _file = self._application_output / "Contents" / "MacOS" / "OpenCore-Patcher"
+        _file = self._application_output / "Contents" / "MacOS" / "OpenCore-Legacy-Patcher-T1-MBP14,3"
 
         _find    = b'\x00\x01\x0C\x00'
         _replace = b'\x00\x00\x1A\x00'
@@ -165,7 +165,7 @@ class GenerateApplication:
         except subprocess.CalledProcessError as e:
             _stderr = (e.stderr or "").strip()
             if "not a git repository" in _stderr.lower():
-                print("Warning: this checkout has no .git directory (likely downloaded as a ZIP/tarball instead of via 'git clone') - Commit Information will show N/A. Use 'git clone' (or 'git pull' in an existing clone) instead of downloading a source archive to get a real commit URL.")
+                print("Warning: this checkout has no .git directory (likely downloaded as a ZIP/tarball instead of via 'git clone') - Commit Information will show N/A. Use 'git clone' (or 'git pu[...]")
             else:
                 print(f"Warning: 'git {' '.join(args)}' failed: {_stderr or e}")
             return ""
@@ -241,21 +241,16 @@ class GenerateApplication:
         resources_dir = self._application_output / "Contents" / "Resources"
         resources_dir.mkdir(parents=True, exist_ok=True)
 
-        for file in Path("payloads/Icon/AppIcons").glob("*.icns"):
+        for file in Path("payloads/Resources/AppIcons").glob("*.icns"):
             subprocess_wrapper.run_and_verify(
                 generate_copy_arguments(str(file), resources_dir / ""),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
 
-        subprocess_wrapper.run_and_verify(
-            generate_copy_arguments("payloads/Icon/AppIcons/Assets.car", self._application_output / "Contents" / "Resources" / ""),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-
 
     def generate(self) -> None:
         """
-        Generate OpenCore-Patcher.app
+        Generate OpenCore-Legacy-Patcher-T1-MBP14,3.app
         """
         try:
             self._embed_analytics_key()

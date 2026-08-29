@@ -89,15 +89,15 @@ class BuildStorage:
         """
         ATA (PATA) Handler
         """
-
         if not self.model in smbios_data.smbios_dictionary:
             return
         if not "Stock Storage" in smbios_data.smbios_dictionary[self.model]:
             return
         if not "PATA" in smbios_data.smbios_dictionary[self.model]["Stock Storage"]:
             return
-
-        support.BuildSupport(self.model, self.constants, self.config).enable_kext("AppleIntelPIIXATA.kext", self.constants.piixata_version, self.constants.piixata_path)
+        else:
+            logging.info("PATA/IDE drives are not recommended for modern macOS versions. These are sluggish, write with read/write up to 120Mb/s, and also, mechanical hard drives are extremely slow. If you can, I highly recommend to buy a SATA SSD that supports SATA III - they cost nowadays around 100€.")
+            support.BuildSupport(self.model, self.constants, self.config).enable_kext("AppleIntelPIIXATA.kext", self.constants.piixata_version, self.constants.piixata_path)
 
 
     def _pcie_handling(self) -> None:

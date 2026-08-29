@@ -85,11 +85,11 @@ def main() -> None:
                 git_commit_date=args.git_commit_date,
             ).generate()
 
-            check_file_exists(Path("dist/OpenCore-Patcher.app"))
+            check_file_exists(Path("dist/OpenCore-Legacy-Patcher-T1-MBP14,3.app"))
             print("--- Signiere App ---")
             print("--- Sign the app ---")
             sign_notarize.SignAndNotarize(
-                path=Path("dist/OpenCore-Patcher.app"),
+                path=Path("dist/OpenCore-Legacy-Patcher-T1-MBP14,3.app"),
                 signing_identity=args.application_signing_identity,
                 notarization_apple_id=args.notarization_apple_id,
                 notarization_password=notarization_password,
@@ -103,7 +103,7 @@ def main() -> None:
             print("--- Build packages ---")
             package.GeneratePackage().generate()
             
-            for pkg in ["OpenCore-Patcher.pkg", "OpenCore-Patcher-Uninstaller.pkg"]:
+            for pkg in ["OpenCore-Legacy-Patcher-T1-MBP14,3.pkg", "OpenCore-Patcher-Uninstaller.pkg"]:
                 pkg_path = Path(f"dist/{pkg}")
                 check_file_exists(pkg_path)
                 print(f"--- Signiere {pkg} ---")
@@ -124,6 +124,5 @@ def main() -> None:
 if __name__ == '__main__':
     _start = time.time()
     main()
-    # Fixed small English translation grammar ("has been built for" instead of "has been builded for")
     print(f"\nBuild script erfolgreich in {str(round(time.time() - _start, 2))} Sekunden abgeschlossen.")
     print(f"\nBuild script completed in {str(round(time.time() - _start, 2))} seconds.")
