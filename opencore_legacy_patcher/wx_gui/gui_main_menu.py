@@ -482,7 +482,7 @@ class MainFrame(wx.Frame):
 
     def on_macos_config(self, event: wx.Event = None):
         try:
-            gui_macos_configeration.macOSConfigerationFrame(
+            gui_macos_configeration.MacosConfigFrame(
                 parent=self,
                 title=self.title,
                 global_constants=self.constants,
