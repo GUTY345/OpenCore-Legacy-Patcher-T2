@@ -461,10 +461,43 @@ class BuildOpenCore:
                 if "agdpmod=" not in current_boot_args:
                     extra_args.append("agdpmod=pikera")
                 
+                # --- GPU / Performance boot-args (EFI-level only, no macOS modifications) ---
+                #
+                # igfxfw=2       → Force-load Apple GuC firmware on Intel HD 630.
+                #                  Hands off GPU scheduling to the firmware. Biggest single
+                #                  improvement for rendering smoothness on Tahoe.
+                # igfxonln=1     → Keep all Intel display ports "online".
+                #                  Prevents the GPU from partially powering down outputs,
+                #                  which causes micro-stutters on external displays.
+                # -igfxnotelemetry → Disable Intel GPU telemetry collection.
+                #                  Small but measurable reduction in GPU interrupt overhead.
+                # radpg=15       → Disable all Radeon power-gating states on AMD Radeon Pro 560.
+                #                  Prevents the dGPU from aggressively clock-gating, which
+                #                  causes visible frame drops when switching between idle/active.
+                # watchdog=0     → Disable the macOS watchdog timer.
+                #                  Prevents unexpected reboots/hangs on Tahoe during heavy
+                #                  GPU workloads or long compile jobs.
+                # ipc_control_port_options=0 → Relax IPC port security checks.
+                #                  Required on Tahoe to allow LaunchServices and Spotlight
+                #                  to function correctly on non-supported hardware.
+                perf_args = {
+                    "igfxfw=2":                   "igfxfw=",
+                    "igfxonln=1":                 "igfxonln=",
+                    "-igfxnotelemetry":            "-igfxnotelemetry",
+                    "radpg=15":                   "radpg=",
+                    "watchdog=0":                 "watchdog=",
+                    "ipc_control_port_options=0": "ipc_control_port_options=",
+                }
+                # First, apply the essential args (dart, alcid, etc.)
                 new_args = current_boot_args
                 if extra_args:
                     new_args = f"{current_boot_args} {' '.join(extra_args)}".strip()
-                    
+                # Then, stack the performance args on top
+                for arg, prefix in perf_args.items():
+                    if prefix not in new_args:
+                        new_args = f"{new_args} {arg}".strip()
+                        logging.info(f"  + Perf: {arg}")
+                
                 self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] = new_args
                 logging.info(f"- MacBookPro14,3: Optimized boot-args -> {new_args}")
 
