@@ -536,56 +536,143 @@ class BuildMiscellaneous:
                     logging.info("Please try again later.")
                     sys.exit(3)
                 
-            # Structure guarding for OpenCore NVRAM delete layout
-            self.config.setdefault("NVRAM", {}).setdefault("Delete", {})
-            if APPLE_NVRAM_UUID not in self.config["NVRAM"]["Delete"]:
-                self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID] = []
-            if "boot-args" not in self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID]:
-                self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID].append("boot-args")
-    
-            # Injizieren von bypass für library validation enforcement auf T2 hardware übersprungen, um frühe Kernel Panics zu vermeiden, bevor die Betriebssystem überhaupt startet
-    
-            try:
-                logging.info("- Set SIP to 0xfff - crucial to be able to boot properly on T2 Macs")
-                self._set_nvram_value(APPLE_NVRAM_UUID, "csr-active-config", binascii.unhexlify("FF0F0000"), overwrite=True)
-            except Exception as e:
-                logging.error("Setting SIP to 0xfff failed due to the following error:")
-                logging.exception("Stack Trace:")
-                logging.info("Please try again later.")
-                sys.exit(3)
-            
-            # Allows booting macOS 26 Tahoe's installer via OpenCore on T2 Macs
-            self.config.setdefault('Kernel', {}).setdefault('Patch', [])
-            kernel_patches = self.config['Kernel']['Patch']
-    
-            if not any(p.get("Comment") == "Patch AppleKeyStore SEP retry limit" for p in kernel_patches):
-                new_patch = {
-                    "Arch": "x86_64",
-                    "Identifier": "com.apple.driver.AppleKeyStore",
-                    "Base": "",
-                    "Comment": "Patch AppleKeyStore SEP retry limit",
-                    "Count": 1,
-                    "Enabled": True,
-                    "MinKernel": "25.0.0",
-                    "MaxKernel": "25.99.99",
-                    "Find": binascii.unhexlify("FF90F00100004183FF140F8D06050000"),
-                    "Replace": binascii.unhexlify("FF90F00100004183FFC80F8D06050000"),
-                    "Mask": b"",
-                    "ReplaceMask": b"",
-                    "Limit": 0,
-                    "Skip": 0
-                }
-                if self._validate_patch(new_patch):
-                    logging.info("- Injecting AppleKeyStore SEP retry-limit patch")
-                    kernel_patches.append(new_patch)
-            
-            # Bypass osinstallersetupd bridge device validation checks (Fixes Attestation Error -10000)
-            try:
-                logging.info("- Injecting User-Space Attestation bypass flags (Fixes Error -10000)")
-                self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-oas_skip_attestation")
-                self._set_nvram_value(APPLE_NVRAM_UUID, "IAS_ENV_SKIP_ATTESTATION", "1", overwrite=True)
-            except Exception as e:
-                logging.error("Failed to inject Attestation Error -10000 bypass flags:")
-                logging.exception("Stack Trace:")
-                logging.info("Please try again later.")
-                sys.exit(3)
+                if self.model in ["MacBookAir8,1", "MacBookAir8,2"]:
+                    try:
+                        logging.info("Applying patches for MacBookAir8,1 or 8,2 to fix CPU topology / thread pooling panic layouts")
+                        self.config["Kernel"]["Quirks"]["ProvideCurrentCpuInfo"] = True
+                    except Exception as e:
+                        logging.error("Applying patches to fix this specific kernel panic failed due to the following error:")
+                        logging.exception("Stack Trace:")
+                        logging.info("Please try again later.")
+                        sys.exit(3)
+                    
+                # Structure guarding for OpenCore NVRAM delete layout
+                self.config.setdefault("NVRAM", {}).setdefault("Delete", {})
+                if APPLE_NVRAM_UUID not in self.config["NVRAM"]["Delete"]:
+                    self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID] = []
+                if "boot-args" not in self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID]:
+                    self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID].append("boot-args")
+        
+                # Injizieren von bypass für library validation enforcement auf T2 hardware übersprungen, um frühe Kernel Panics zu vermeiden, bevor die Betriebssystem überhaupt startet
+        
+                try:
+                    logging.info("- Set SIP to 0xfff - crucial to be able to boot properly on T2 Macs")
+                    self._set_nvram_value(APPLE_NVRAM_UUID, "csr-active-config", binascii.unhexlify("FF0F0000"), overwrite=True)
+                except Exception as e:
+                    logging.error("Setting SIP to 0xfff failed due to the following error:")
+                    logging.exception("Stack Trace:")
+                    logging.info("Please try again later.")
+                    sys.exit(3)
+                
+                # Allows booting macOS 26 Tahoe's installer via OpenCore on T2 Macs
+                self.config.setdefault('Kernel', {}).setdefault('Patch', [])
+                kernel_patches = self.config['Kernel']['Patch']
+        
+                if not any(p.get("Comment") == "Patch AppleKeyStore SEP retry limit" for p in kernel_patches):
+                    new_patch = {
+                        "Arch": "x86_64",
+                        "Identifier": "com.apple.driver.AppleKeyStore",
+                        "Base": "",
+                        "Comment": "Patch AppleKeyStore SEP retry limit",
+                        "Count": 1,
+                        "Enabled": True,
+                        "MinKernel": "25.0.0",
+                        "MaxKernel": "25.99.99",
+                        "Find": binascii.unhexlify("FF90F00100004183FF140F8D06050000"),
+                        "Replace": binascii.unhexlify("FF90F00100004183FFC80F8D06050000"),
+                        "Mask": b"",
+                        "ReplaceMask": b"",
+                        "Limit": 0,
+                        "Skip": 0
+                    }
+                    if self._validate_patch(new_patch):
+                        logging.info("- Injecting AppleKeyStore SEP retry-limit patch")
+                        kernel_patches.append(new_patch)
+                 
+                # --- Patch 2: Force FileVault on Broken Seal ---
+                if not any(p.get("Comment") == "Force FileVault on Broken Seal" for p in kernel_patches):
+                    new_patch = {
+                        "Arch": "x86_64",
+                        "Identifier": "com.apple.filesystems.apfs",
+                        "Base": "_apfs_filevault_allowed",
+                        "Comment": "Force FileVault on Broken Seal",
+                        "Count": 0,
+                        "Enabled": True,
+                        "MinKernel": "20.4.0",
+                        "MaxKernel": "",
+                        "Find": b"",
+                        "Replace": binascii.unhexlify("B801000000C3"),
+                        "Mask": b"",
+                        "ReplaceMask": b"",
+                        "Limit": 0,
+                        "Skip": 0
+                    }
+                    if self._validate_patch(new_patch):
+                        logging.info("- Injecting Force FileVault on Broken Seal patch")
+                        kernel_patches.append(new_patch)
+                 
+                # --- Patch 3: Disable Library Validation Enforcement ---
+                if not any(p.get("Comment") == "Disable Library Validation Enforcement" for p in kernel_patches):
+                    new_patch = {
+                        "Arch": "x86_64",
+                        "Identifier": "kernel",
+                        "Base": "_cs_require_lv",
+                        "Comment": "Disable Library Validation Enforcement",
+                        "Count": 0,
+                        "Enabled": True,
+                        "MinKernel": "20.0.0",
+                        "MaxKernel": "",
+                        "Find": b"",
+                        "Replace": binascii.unhexlify("B800000000C3"),
+                        "Mask": b"",
+                        "ReplaceMask": b"",
+                        "Limit": 0,
+                        "Skip": 0
+                    }
+                    if self._validate_patch(new_patch):
+                        logging.info("- Injecting Disable Library Validation Enforcement patch")
+                        kernel_patches.append(new_patch)
+                 
+                # --- Patch 4: Disable _csr_check() in _vnode_check_signature ---
+                if not any(p.get("Comment") == "Disable _csr_check() in _vnode_check_signature" for p in kernel_patches):
+                    new_patch = {
+                        "Arch": "x86_64",
+                        "Identifier": "com.apple.driver.AppleMobileFileIntegrity",
+                        "Base": "__ZL22_vnode_check_signatureP5vnodeP5labeliP7cs_blobPjS5_ijPPcPm",
+                        "Comment": "Disable _csr_check() in _vnode_check_signature",
+                        "Count": 1,
+                        "Enabled": True,
+                        "MinKernel": "22.0.0",
+                        "MaxKernel": "",
+                        "Find": binascii.unhexlify("01000000E80000000085C075"),
+                        "Replace": binascii.unhexlify("01000000B80100000085C075"),
+                        "Mask": binascii.unhexlify("FFFFFFFFFF00000000FFFFFF"),
+                        "ReplaceMask": b"",
+                        "Limit": 0,
+                        "Skip": 0
+                    }
+                    if self._validate_patch(new_patch):
+                        logging.info("- Injecting Disable _csr_check() in _vnode_check_signature patch")
+                        kernel_patches.append(new_patch)
+                
+                # Bypass osinstallersetupd bridge device validation checks (Fixes Attestation Error -10000)
+                try:
+                    logging.info("- Injecting User-Space Attestation bypass flags (Fixes Error -10000)")
+                    self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-oas_skip_attestation")
+                    self._set_nvram_value(APPLE_NVRAM_UUID, "IAS_ENV_SKIP_ATTESTATION", "1", overwrite=True)
+                except Exception as e:
+                    logging.error("Failed to inject Attestation Error -10000 bypass flags:")
+                    logging.exception("Stack Trace:")
+                    logging.info("Please try again later.")
+                    sys.exit(3)
+                 # dieses Patch bringt dazu, dass T2 Macs den Fehler nach 29 Minuten verbleibend weiter mit die Installation fährt statt einen Fehler zu zeigen
+                try:
+                    logging.info("- Disabling UEFI updates for T2 Macs to prevent errors after 29 minutes remaining")
+                    logging.info("This patch will block UEFI updates on T2 Macs. To update the UEFI on T2 Macs while running unsupported macOS versions, if you care about your UEFI being up to date, you'll need to update it via exiting OpenCore and entering DFU mode using another Mac.")
+                    self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-oas_skip_attestation")
+                    self._set_nvram_value(APPLE_NVRAM_UUID, "run-efi-updater", "No", overwrite=True)
+                except Exception as e:
+                    logging.error("Failed to disable UEFI updates for T2 Macs after 29 minutes remaining due to an error:")
+                    logging.exception("Stack Trace:")
+                    logging.info("Please try again later.")
+                    sys.exit(3)
