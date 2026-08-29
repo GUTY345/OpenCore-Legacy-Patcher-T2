@@ -235,6 +235,17 @@ class MacosConfigFrame(wx.Frame):
         """
         settings = {
         "Graphics": {
+                "Tahoe UI Render Optimization": {
+                    "type": "checkbox",
+                    "value": global_settings.GlobalEnviromentSettings().read_property("Tahoe_UI_Render") or getattr(self.constants, "tahoe_ui_render", False),
+                    "variable": "Tahoe_UI_Render",
+                    "constants_variable": "tahoe_ui_render",
+                    "description": [
+                        "Enable experimental graphics",
+                        "optimizations for macOS Tahoe",
+                        "to improve rendering performance.",
+                    ],
+                },
                 "TeraScale 2 Acceleration": {
                     "type": "checkbox",
                     "value": global_settings.GlobalEnviromentSettings().read_property("MacBookPro_TeraScale_2_Accel") or self.constants.allow_ts2_accel,

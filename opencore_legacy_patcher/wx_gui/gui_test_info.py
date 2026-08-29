@@ -19,7 +19,7 @@ class TestExplanationDialog(wx.Dialog):
     def __init__(self, parent: wx.Window, global_constants: constants.Constants, initial_tab: int = 0) -> None:
         super().__init__(
             parent,
-            title="Guida & Spiegazione Livelli di Test, Wi-Fi, Audio e Patch",
+            title="Guide & Explanation: Test Levels, Wi-Fi, Audio & Patches",
             size=(680, 580),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         )
@@ -30,13 +30,13 @@ class TestExplanationDialog(wx.Dialog):
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Header Title
-        title_label = wx.StaticText(panel, label="📘 Guida Completa ai Livelli di Test & Patch")
+        title_label = wx.StaticText(panel, label="📘 Comprehensive Guide to Test Levels & Patches")
         title_label.SetFont(gui_support.font_factory(16, wx.FONTWEIGHT_BOLD))
         main_sizer.Add(title_label, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 12)
 
         subtitle_label = wx.StaticText(
             panel,
-            label=f"Configurazione per {self.constants.custom_model or self.constants.computer.real_model} — macOS Tahoe / T1 Experimental"
+            label=f"Configuration for {self.constants.custom_model or self.constants.computer.real_model} — macOS Tahoe / T1 Experimental"
         )
         subtitle_label.SetFont(gui_support.font_factory(11, wx.FONTWEIGHT_NORMAL))
         subtitle_label.SetForegroundColour(wx.Colour(120, 120, 120))
@@ -56,7 +56,7 @@ class TestExplanationDialog(wx.Dialog):
         text_builds.SetValue(self._get_builds_text())
         tab_builds_sizer.Add(text_builds, 1, wx.EXPAND | wx.ALL, 8)
         tab_builds.SetSizer(tab_builds_sizer)
-        notebook.AddPage(tab_builds, "🧪 Livelli di Build (A/B/C/D)")
+        notebook.AddPage(tab_builds, "🧪 Build Levels (A/B/C/D)")
 
         # --- TAB 2: Boot-args & GPU Dual-Graphics ---
         tab_bootargs = wx.Panel(notebook)
@@ -82,7 +82,7 @@ class TestExplanationDialog(wx.Dialog):
         text_t1.SetValue(self._get_t1_text())
         tab_t1_sizer.Add(text_t1, 1, wx.EXPAND | wx.ALL, 8)
         tab_t1.SetSizer(tab_t1_sizer)
-        notebook.AddPage(tab_t1, "🔐 T1 & Login Tahoe")
+        notebook.AddPage(tab_t1, "🔐 T1 & Tahoe Login")
 
         # --- TAB 4: Wi-Fi & Audio (Tahoe Fixes) ---
         tab_wifi_audio = wx.Panel(notebook)
@@ -116,51 +116,51 @@ class TestExplanationDialog(wx.Dialog):
 
     def _get_builds_text(self) -> str:
         return """============================================================
-LIVELLI DI BUILD OPENCORE (PROFILI)
+OPENCORE BUILD LEVELS (PROFILES)
 ============================================================
 
-1. 🟢 BUILD STANDARD / SAFE:
-   • Scopo: Configurazione OpenCore stock e stabile certificata da Dortania.
-   • SMBIOS: Mantiene l'SMBIOS nativo del Mac.
-   • Target: Uso quotidiano su versioni di macOS supportate e validate.
+1. 🟢 STANDARD / SAFE BUILD:
+   • Purpose: Stock and stable OpenCore configuration certified by Dortania.
+   • SMBIOS: Retains the Mac's native SMBIOS.
+   • Target: Daily use on supported and validated macOS versions.
 
 ------------------------------------------------------------
 
 2. 🧪 [LEVEL-B] EXPERIMENTAL GPU:
-   • Scopo: Diagnostica e isolamento delle problematiche grafiche (GPU).
-   • Kext: Inietta e attiva WhateverGreen.kext versione 1.7.0.
-   • Boot-arg: Inietta '-wegnoegpu' per disabilitare l'alimentazione/switching
-     della dGPU e isolare test sulla sola grafica integrata Intel.
+   • Purpose: Diagnostics and isolation of graphical (GPU) issues.
+   • Kexts: Injects and activates WhateverGreen.kext version 1.7.0.
+   • Boot-args: Injects '-wegnoegpu' to disable power/switching
+     of the dGPU and isolate testing to the Intel integrated graphics only.
 
 ------------------------------------------------------------
 
 3. 🧪 [LEVEL-C] EXPERIMENTAL TAHOE (MacBookPro14,3):
    • Goal: Experimental support for macOS 26 (Tahoe) maintaining
-     l'identità hardware nativa del MacBook Pro 2017 (T1).
-   • Boot-args automatici:
-     - 'dart=0': Risolve mapping IOMMU e periferiche Wi-Fi/Bluetooth.
-     - 'agdpmod=ignore': Bypassa Apple Graphics Device Policy ed evita
-       lo schermo nero all'avvio su MacBookPro14,3 (Polaris + Kaby Lake).
-     - 'cryptex=0 cs_allow_invalid=1': Permette il caricamento del kernel.
-   • SMBIOS: Nativo ('MacBookPro14,3'), senza spoofing.
+     the native hardware identity of the MacBook Pro 2017 (T1).
+   • Automatic Boot-args:
+     - 'dart=0': Resolves IOMMU mapping and Wi-Fi/Bluetooth peripheral issues.
+     - 'agdpmod=ignore': Bypasses Apple Graphics Device Policy and prevents
+       black screens on boot for MacBookPro14,3 (Polaris + Kaby Lake).
+     - 'cryptex=0 cs_allow_invalid=1': Allows kernel loading.
+   • SMBIOS: Native ('MacBookPro14,3'), without spoofing.
 
 ------------------------------------------------------------
 
 4. 🧪 [LEVEL-C] EXPERIMENTAL SPOOF T2:
-   • Scopo: Spoofa l'SMBIOS come 'MacBookPro16,1' / 'MacBookPro16,2' (Mac T2)
-     per verificare il comportamento dell'installer e del kernel Tahoe.
-   • Bypass T2: Bypassa il blocco di abort T2 all'interno dell'app OCLP.
+   • Purpose: Spoofs the SMBIOS to 'MacBookPro16,1' / 'MacBookPro16,2' (T2 Mac)
+     to verify the behavior of the Tahoe installer and kernel.
+   • T2 Bypass: Bypasses the T2 abort block within the OCLP app.
    • Includes all Level C boot-args (dart=0, agdpmod=ignore, cryptex=0).
 
 ------------------------------------------------------------
 
 5. 🧪 [LEVEL-D] EXPERIMENTAL ALL-IN-ONE (Wi-Fi + Audio + GPU + T1):
-   • Scopo: Profilo COMPLETO e integrato con tutte le patch attive in contemporanea.
-   • Wi-Fi: Attiva IOSkywalkFamily, IO80211FamilyLegacy, AirportBrcmFixup,
-     blocco driver nativo Skywalk e boot-arg 'ipc_control_port_options=0 amfi=0x80'.
-   • Audio: Attiva AppleALC.kext + 'alcid=13' (codec HDEF di MacBookPro14,3).
-   • GPU: Dual-GPU Kaby Lake + Polaris con 'agdpmod=pikera' e 'dart=0'.
-   • T1 Security: Login sicuro con sola password + supporto account iCloud/Apple ID.
+   • Purpose: COMPLETE profile with all patches active simultaneously.
+   • Wi-Fi: Activates IOSkywalkFamily, IO80211FamilyLegacy, AirportBrcmFixup,
+     blocks the native Skywalk driver, and uses boot-arg 'ipc_control_port_options=0 amfi=0x80'.
+   • Audio: Activates AppleALC.kext + 'alcid=13' (HDEF codec for MacBookPro14,3).
+   • GPU: Dual-GPU Kaby Lake + Polaris with 'agdpmod=pikera' and 'dart=0'.
+   • T1 Security: Secure login with password only + iCloud/Apple ID account support.
 """
 
     def _get_bootargs_text(self) -> str:
@@ -170,102 +170,102 @@ SPECIFIC BOOT-ARGS EXPLANATION FOR MACBOOKPRO14,3
 
 • dart=0
   Disables IOMMU / VT-d virtualization at the macOS kernel level.
-  Fondamentale su MacBookPro14,3 e Mac 2017 per evitare crash del driver
-  Wi-Fi Broadcom (14E4:43BA), Bluetooth e controller PCIe su macOS Tahoe.
+  Fundamental on MacBookPro14,3 and Mac 2017 to prevent crashes of the Broadcom Wi-Fi
+  driver (14E4:43BA), Bluetooth, and PCIe controllers on macOS Tahoe.
 
-• agdpmod=ignore (o agdpmod=pikera in LEVEL-D)
-  Bypassa i controlli di AppleGraphicsDevicePolicy (AGDP).
-  Nei MacBook Pro con doppia GPU (Intel HD 630 + AMD Polaris), AGDP
-  tende a disattivare le uscite video all'avvio di WindowServer,
-  causando lo schermo nero. La patch forza il driver a mantenere
-  attive le connessioni framebuffer.
+• agdpmod=ignore (or agdpmod=pikera in LEVEL-D)
+  Bypasses AppleGraphicsDevicePolicy (AGDP) checks.
+  On MacBook Pros with dual GPUs (Intel HD 630 + AMD Polaris), AGDP
+  tends to disable video outputs when WindowServer starts,
+  causing a black screen. This patch forces the driver to keep
+  framebuffer connections active.
 
 • ipc_control_port_options=0
-  Disabilita il controllo restrittivo dei messaggi IPC Mach port introdotto
-  in macOS Tahoe. Indispensabile per consentire la comunicazione tra i demoni
-  di rete 'wifip2pd' / 'airportd' e il kernel senza causare crash o bootloop.
+  Disables the restrictive Mach port IPC message checking introduced
+  in macOS Tahoe. Essential to allow communication between network daemons
+  'wifip2pd' / 'airportd' and the kernel without causing crashes or bootloops.
 
 • amfi=0x80
-  Permette ai binari patchati nel volume di root (Wi-Fi, grafica, framework)
-  di essere eseguiti dal kernel senza essere bloccati da Apple Mobile File Integrity.
+  Allows patched binaries in the root volume (Wi-Fi, graphics, frameworks)
+  to be executed by the kernel without being blocked by Apple Mobile File Integrity.
 
 • alcid=13
-  Inietta il Layout ID audio 13 per AppleALC.kext, corrispondente al codec
-  analogico di MacBookPro14,3 (Realtek ALC / AppleHDA).
+  Injects Audio Layout ID 13 for AppleALC.kext, matching the analog codec
+  of MacBookPro14,3 (Realtek ALC / AppleHDA).
 
 • cryptex=0 & cs_allow_invalid=1
-  Disabilita l'obbligo di autenticazione crittografica Cryptex e consente
-  l'avvio del kernel con kext e binari modificati.
+  Disables the Cryptex cryptographic authentication requirement and allows
+  the kernel to boot with modified kexts and binaries.
 
 • -lilubetaall
-  Forza Lilu e tutti i suoi plugin (AppleALC, WhateverGreen, AirportBrcmFixup)
-  a caricarsi anche su versioni di macOS più recenti (Tahoe 26.x).
+  Forces Lilu and all its plugins (AppleALC, WhateverGreen, AirportBrcmFixup)
+  to load even on newer versions of macOS (Tahoe 26.x).
 """
 
     def _get_t1_text(self) -> str:
         return """============================================================
-T1 SECURITY CHIP & AUTENTICAZIONE SU MACOS TAHOE (26.x)
+T1 SECURITY CHIP & AUTHENTICATION ON MACOS TAHOE (26.x)
 ============================================================
 
-• Perché Touch ID non è attivo su Tahoe?
-  Apple ha rimosso completamente il supporto al bridge USB del chip T1
-  nelle ultime versioni di macOS. Forzare i vecchi kext e framework di
-  Ventura (AppleKeyStore 13.6, biometrickitd, SharedUtils 13.6) crea una
-  grave incompatibilità ABI/IPC con i demoni di sicurezza nativi di Tahoe
-  (securityd, LocalAuthentication, akd), bloccando le richieste di password
+• Why is Touch ID inactive on Tahoe?
+  Apple completely removed support for the T1 chip's USB bridge
+  in the latest macOS versions. Forcing old kexts and frameworks from
+  Ventura (AppleKeyStore 13.6, biometrickitd, SharedUtils 13.6) creates a
+  severe ABI/IPC incompatibility with native Tahoe security daemons
+  (securityd, LocalAuthentication, akd), blocking password prompts
   in System Settings and Apple Account access.
 
-• Come funziona la modalità Native Software Keystore su Tahoe?
-  1. Preserva i driver kernel nativi di Tahoe (AppleKeyStore & AppleCredentialManager)
-     eseguendoli in modalità software (CPU crypto Intel Kaby Lake).
+• How does Native Software Keystore mode work on Tahoe?
+  1. Preserves Tahoe's native kernel drivers (AppleKeyStore & AppleCredentialManager)
+     running them in software mode (Intel Kaby Lake CPU crypto).
   2. 100% restores PASSWORD authorization in System Settings.
-  3. Consente la modifica e gestione delle password account e del portachiavi.
-  4. Sblocca l'accesso ad Apple Account / iCloud grazie all'integrazione di
-     AMFIPass (-amfipassbeta) e al bypass di attestazione (-oas_skip_attestation).
-  5. Mantiene la Touch Bar (TouchBarServer / AppleHSSPISupport) pienamente stabile.
+  3. Allows modification and management of account passwords and the keychain.
+  4. Unlocks Apple Account / iCloud access thanks to the integration of
+     AMFIPass (-amfipassbeta) and attestation bypass (-oas_skip_attestation).
+  5. Keeps the Touch Bar (TouchBarServer / AppleHSSPISupport) fully stable.
 
-• Risultato:
-  Autenticazione locale e cloud affidabili, sblocco lucchetti di sistema funzionante,
-  Apple Account operativo, senza schermate nere o crash del SecurityAgent.
+• Result:
+  Reliable local and cloud authentication, working system lock unlock,
+  operational Apple Account, with no black screens or SecurityAgent crashes.
 """
 
     def _get_wifi_audio_text(self) -> str:
         return """============================================================
-ANALISI & FUNZIONAMENTO DI WI-FI E AUDIO SU MACOS TAHOE
+ANALYSIS & OPERATION OF WI-FI AND AUDIO ON MACOS TAHOE
 ============================================================
 
-🔊 COME FUNZIONA L'AUDIO SU TAHOE (OCLP-MOD & OCLP PLUS):
-1. Problema:
-   A partire da macOS 26 Tahoe, Apple ha rimosso completamente 'AppleHDA.kext'
-   dal sistema operativo, rompendo l'audio analogico (altoparlanti interni,
-   microfoni e jack cuffie) sui Mac senza chip T2.
-2. Soluzione Integrata:
-   • Lato Root Patcher: Il patchset 'ModernAudio' re-inietta 'AppleHDA.kext'
-     in /System/Library/Extensions.
-   • Lato EFI: Viene caricato 'AppleALC.kext' (v1.9.7) insieme a 'Lilu.kext',
-     iniettando 'alcid=13' e '-lilubetaall'.
-   • Risultato: CoreAudio riconosce correttamente il codec hardware e ripristina
-     l'uscita e l'ingresso audio integrati.
+🔊 HOW AUDIO WORKS ON TAHOE (OCLP-MOD & OCLP PLUS):
+1. Problem:
+   Starting with macOS 26 Tahoe, Apple completely removed 'AppleHDA.kext'
+   from the OS, breaking analog audio (internal speakers,
+   microphones, and headphone jacks) on Macs without a T2 chip.
+2. Integrated Solution:
+   • Root Patcher Side: The 'ModernAudio' patchset re-injects 'AppleHDA.kext'
+     into /System/Library/Extensions.
+   • EFI Side: 'AppleALC.kext' (v1.9.7) is loaded alongside 'Lilu.kext',
+     injecting 'alcid=13' and '-lilubetaall'.
+   • Result: CoreAudio correctly recognizes the hardware codec and restores
+     the integrated audio input and output.
 
 ------------------------------------------------------------
 
-🌐 COME FUNZIONA IL WI-FI SU TAHOE (BROADCOM BCM943602 / 14E4:43BA):
-1. Problema:
-   Apple ha sostituito il sottosistema Wi-Fi tradizionale con la nuova
-   architettura Skywalk, eliminando il supporto nativo per i chipset Broadcom.
-2. Soluzione Integrata:
-   • In OpenCore EFI (Kernel -> Block): Viene bloccato il driver nativo
-     'com.apple.iokit.IOSkywalkFamily'.
-   • In OpenCore EFI (Kernel -> Add): Vengono iniettati:
+🌐 HOW WI-FI WORKS ON TAHOE (BROADCOM BCM943602 / 14E4:43BA):
+1. Problem:
+   Apple replaced the traditional Wi-Fi subsystem with the new
+   Skywalk architecture, dropping native support for Broadcom chipsets.
+2. Integrated Solution:
+   • In OpenCore EFI (Kernel -> Block): The native driver
+     'com.apple.iokit.IOSkywalkFamily' is blocked.
+   • In OpenCore EFI (Kernel -> Add): The following are injected:
      - 'IOSkywalkFamily.kext' (v1.2.0)
-     - 'IO80211FamilyLegacy.kext' (e plugin 'AirPortBrcmNIC.kext')
-     - 'AirportBrcmFixup.kext' (con 'brcmfx-country=IT')
+     - 'IO80211FamilyLegacy.kext' (and plugin 'AirPortBrcmNIC.kext')
+     - 'AirportBrcmFixup.kext' (with 'brcmfx-country=IT')
      - 'AMFIPass.kext'
-   • Boot-args essenziali:
-     - 'ipc_control_port_options=0': Previene il crash delle porte Mach IPC tra
-       i demoni di rete 'wifip2pd' e il kernel Tahoe.
-     - 'amfi=0x80': Permette l'esecuzione dei servizi di rete modificati.
-   • Lato Root Patcher: Dopo il primo avvio, 'Install drivers and patches'
-     applica il patchset 'ModernWireless' che fonde 'IO80211.framework' e
-     'WiFiPeerToPeer.framework' nel volume di root.
+   • Essential Boot-args:
+     - 'ipc_control_port_options=0': Prevents Mach IPC port crashes between
+       network daemons 'wifip2pd' and the Tahoe kernel.
+     - 'amfi=0x80': Allows execution of modified network services.
+   • Root Patcher Side: After the first boot, 'Install drivers and patches'
+     applies the 'ModernWireless' patchset which merges 'IO80211.framework' and
+     'WiFiPeerToPeer.framework' into the root volume.
 """

@@ -96,35 +96,11 @@ class MainFrame(wx.Frame):
         is_matteo = getattr(self.constants, "app_mode", "albert") == "matteo"
         if is_matteo:
             menu_buttons = {
-                "Build OpenCore — STANDARD": {
-                    "function": self.on_build_and_install_standard,
-                    "description": ["Build standard/safe OpenCore", "configuration for your disk."],
+                "Build OpenCore (Select Profile)": {
+                    "function": self.on_build_opencore_menu,
+                    "description": ["Select and build a specific", "OpenCore profile for your system."],
                     "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
                     "info_tab": 0,
-                },
-                "🧪 [LEVEL-B] EXPERIMENTAL GPU": {
-                    "function": self.on_build_and_install_testb,
-                    "description": ["EXPERIMENTAL GPU TEST-B", "WhateverGreen -wegnoegpu."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                    "info_tab": 0,
-                },
-                "🧪 [LEVEL-C] EXPERIMENTAL TAHOE": {
-                    "function": self.on_build_and_install_testc,
-                    "description": ["EXPERIMENTAL TAHOE/ALBERT", "dart=0 agdpmod=ignore."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                    "info_tab": 0,
-                },
-                "🧪 [LEVEL-C] EXPERIMENTAL SPOOF T2": {
-                    "function": self.on_build_and_install_testc_spoofed,
-                    "description": ["EXPERIMENTAL TAHOE/ALBERT", "spoofed as MacBookPro16,1."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                    "info_tab": 0,
-                },
-                "🧪 [LEVEL-D] ALL-IN-ONE TAHOE": {
-                    "function": self.on_build_and_install_testd,
-                    "description": ["FULL: Wi-Fi Broadcom, Audio AppleHDA,", "GPU agdpmod=pikera, T1 & Tahoe boot-args."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                    "info_tab": 3,
                 },
                 "Create macOS Installer": {
                     "function": self.on_create_macos_installer,
@@ -192,12 +168,18 @@ class MainFrame(wx.Frame):
                     "function": self.on_settings,
                     "description": ["Settings, resources and tools", "for OpenCore Legacy Patcher."],
                     "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
+                },
+                "📘 Patch Levels & Explanation": {
+                    "function": lambda event: self.on_show_test_info(event, 0),
+                    "description": ["Detailed guide to all test profiles", "(B/C/D), boot-args, Wi-Fi and T1."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
+                    "info_tab": 0,
                 }
             }
 
         button_x = 25
         button_y = model_label.GetPosition()[1] + 30
-        rollover = 5
+        rollover = (len(menu_buttons) + 1) // 2
         index = 0
         max_height = 0
 
@@ -467,17 +449,37 @@ class MainFrame(wx.Frame):
         self.constants.build_profile = "standard"
         self.on_build_and_install(event)
 
-    def on_build_and_install_testb(self, event: wx.Event = None):
-        self.constants.build_profile = "test_b"
-        self.on_build_and_install(event)
-
-    def on_build_and_install_testc(self, event: wx.Event = None):
-        self.constants.build_profile = "test_c"
-        self.on_build_and_install(event)
-
-    def on_build_and_install_testc_spoofed(self, event: wx.Event = None):
-        self.constants.build_profile = "test_c_spoofed"
-        self.on_build_and_install(event)
+    def on_build_opencore_menu(self, event: wx.Event = None):
+        choices = [
+            "🟢 Standard / Safe Build",
+            "🧪 [LEVEL-B] Experimental GPU",
+            "🧪 [LEVEL-C] Experimental Tahoe (Native SMBIOS)",
+            "🧪 [LEVEL-C] Experimental Spoof T2 (MacBookPro16,1)",
+            "🧪 [LEVEL-D] All-In-One Tahoe (Wi-Fi + Audio + GPU + T1)"
+        ]
+        dialog = wx.SingleChoiceDialog(
+            self,
+            "Select the OpenCore build profile you wish to generate:",
+            "Build OpenCore",
+            choices
+        )
+        
+        if dialog.ShowModal() == wx.ID_OK:
+            selection = dialog.GetSelection()
+            if selection == 0:
+                self.constants.build_profile = "standard"
+            elif selection == 1:
+                self.constants.build_profile = "test_b"
+            elif selection == 2:
+                self.constants.build_profile = "test_c"
+            elif selection == 3:
+                self.constants.build_profile = "test_c_spoofed"
+            elif selection == 4:
+                self.constants.build_profile = "test_d"
+            
+            self.on_build_and_install(event)
+        
+        dialog.Destroy()
 
     def on_build_and_install_testd(self, event: wx.Event = None):
         self.constants.build_profile = "test_d"
