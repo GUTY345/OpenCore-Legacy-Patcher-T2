@@ -20,8 +20,6 @@ class Constants:
         self.patcher_version_label=self.patcher_version
         self.patcher_support_pkg_version:     str = "2.0.0"  # PatcherSupportPkg
         self.copyright_date:                  str = "Copyright © 2020-2026 Dortania"
-        self.patcher_name:                    str = "OpenCore Legacy Patcher T1"
-        self.patcher_full_name:               str = f"{self.patcher_name} version {self.patcher_version_label}"
 
         # URLs
         self.url_patcher_support_pkg:         str = "https://github.com/YBronst/PatcherSupportPkg/download/"
@@ -914,3 +912,13 @@ class Constants:
         "Mac-94245AF5819B141B",  # AppleInternal MacBookPro8,3
         "Mac-942B5B3A40C91381",  # AppleInternal iMac12,2
     ]
+
+    @property
+    def patcher_name(self) -> str:
+        if getattr(self, "Developer_Mode", False):
+            return "OpenCore Legacy Patcher T1"
+        return "OpenCore Legacy Patcher T2"
+
+    @property
+    def patcher_full_name(self) -> str:
+        return f"{self.patcher_name} version {self.patcher_version_label}"
