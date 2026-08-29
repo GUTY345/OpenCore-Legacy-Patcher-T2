@@ -10,7 +10,7 @@ from Cocoa import NSApp, NSApplication
 
 from .. import constants
 from ..sys_patch.patchsets import HardwarePatchsetDetection
-from ..efi_builder.misc import _T2_MODELS
+
 
 from ..wx_gui import (
     gui_cache_os_update,
@@ -121,13 +121,10 @@ class EntryPoint:
             entry = gui_sys_patch_start.SysPatchStartFrame
             patches = HardwarePatchsetDetection(constants=self.constants).device_properties
         elif entry is gui_mode_selector.ModeSelectorFrame:
-            # Skip Mode Selector for T2 Macs: they don't need the dual-mode UI
-            # (which is experimental and targeted at T1 Macs only)
-            detected_model = self.constants.custom_model or (
-                self.constants.computer.real_model if self.constants.computer else None
-            )
-            if detected_model and detected_model in _T2_MODELS:
-                logging.info(f"T2 Mac detected ({detected_model}), bypassing Mode Selector → Standard UI")
+            # Skip Mode Selector if Developer Mode is not explicitly enabled.
+            # (The dual-mode UI is experimental and targeted at developers/testers)
+            if not self.constants.Developer_Mode:
+                logging.info(f"Developer Mode is OFF, bypassing Mode Selector → Standard UI")
                 self.constants.app_mode = "albert"
                 entry = gui_main_menu.MainFrame
 
