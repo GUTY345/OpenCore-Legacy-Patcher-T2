@@ -10,6 +10,7 @@ from Cocoa import NSApp, NSApplication
 
 from .. import constants
 from ..sys_patch.patchsets import HardwarePatchsetDetection
+from ..efi_builder.misc import _T2_MODELS # benötigt für T2 Macs
 
 
 from ..wx_gui import (
