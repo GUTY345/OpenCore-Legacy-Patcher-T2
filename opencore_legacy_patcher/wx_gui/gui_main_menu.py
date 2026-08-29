@@ -38,6 +38,7 @@ from ..wx_gui import (
     gui_update,
     gui_oc_settings,
     gui_macos_configeration,
+    gui_model_change,
 )
 
 class MainFrame(wx.Frame):
@@ -531,6 +532,14 @@ class MainFrame(wx.Frame):
             logging.error(f"We failed to open MacOS Configuration: {e}")
             logging.exception("Stack Trace:")
             return
+    def on_edit_model(self, event: wx.Event = None):
+        self.Disable()
+        gui_model_change.ModelPickerFrame(
+            parent=self,
+            title=self.title,
+            global_constants=self.constants,
+            screen_location=self.GetPosition(),
+        )
 
     def on_oc_settings(self, event: wx.Event = None):
         try:
