@@ -105,7 +105,7 @@ class TestExplanationDialog(wx.Dialog):
 
         # Bottom Close Button
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        btn_close = wx.Button(panel, label="Chiudi", size=(120, 32))
+        btn_close = wx.Button(panel, label="Close", size=(120, 32))
         btn_close.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_NORMAL))
         btn_close.Bind(wx.EVT_BUTTON, lambda event: self.EndModal(wx.ID_OK))
         button_sizer.Add(btn_close, 0, wx.ALL, 10)

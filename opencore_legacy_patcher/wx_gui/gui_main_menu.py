@@ -222,7 +222,7 @@ class MainFrame(wx.Frame):
 
         # --- RETURN TO MODE SELECTOR ---
         if is_matteo:
-            return_btn = wx.Button(self, label="🔄 Torna al Mode Selector", pos=(-1, max_height + 20), size=(220, 30))
+            return_btn = wx.Button(self, label="🔄 Go back to Mode Selector", pos=(-1, max_height + 20), size=(220, 30))
             return_btn.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_BOLD))
             return_btn.Centre(wx.HORIZONTAL)
             return_btn.Bind(wx.EVT_BUTTON, self.on_return_to_mode_selector)

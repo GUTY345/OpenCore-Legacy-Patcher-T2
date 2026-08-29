@@ -92,15 +92,6 @@ class OCSettingsFrame(wx.Frame):
 
         bot_sizer.AddSpacer(20)
 
-        # Add Install OpenCore Button 
-        install_oc_button = wx.Button(frame, label="Install OpenCore", pos=(-1, -1), size = (120, 30))
-        install_oc_button.Bind(wx.EVT_BUTTON, self.on_install)
-        install_oc_button.SetDefault()
-        install_oc_button.SetToolTip("Builds and Installs OpenCore to disk")
-        install_oc_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-        if gui_support.CheckProperties(self.constants).host_can_build() is False:
-            install_oc_button.Disable()
-        bot_sizer.Add(install_oc_button, 0, wx.ALIGN_CENTER | wx.ALL, 0)
 
         # Add return button
         return_button = wx.Button(frame, label="Return", pos=(-1, -1), size=(110, 30))
@@ -1004,16 +995,6 @@ class OCSettingsFrame(wx.Frame):
         self.frame_modal.Destroy()
         self.parent.Enable()
 
-    def on_install(self, event):
-        self.frame_modal.Destroy()
-        self.parent.Hide()
-        gui_build.BuildFrame(
-        parent=None,
-        title=self.title,
-        global_constants=self.constants,
-        screen_location=self.parent.GetPosition(),
-        install=True
-        )
         wx.CallAfter(self.parent.Destroy)
         
     def on_save(self, event):
@@ -1030,8 +1011,7 @@ class OCSettingsFrame(wx.Frame):
                 parent=None,
                 title=self.title,
                 global_constants=self.constants,
-                screen_location=self.parent.GetPosition(),
-                save=True
+                screen_location=self.parent.GetPosition()
             )
             wx.CallAfter(self.parent.Destroy)
 
