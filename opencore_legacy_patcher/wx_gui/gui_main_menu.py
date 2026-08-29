@@ -79,16 +79,25 @@ class MainFrame(wx.Frame):
         title_label.Centre(wx.HORIZONTAL)
 
         is_matteo = getattr(self.constants, "app_mode", "albert") == "matteo"
+        if is_matteo:
+            self.SetBackgroundColour(wx.Colour(0, 0, 0))
+            title_label.SetForegroundColour(wx.Colour(255, 255, 255))
+
         display_version = self.constants.experimental_version if is_matteo else self.constants.patcher_version_label
         version_label = wx.StaticText(self, label=f"Version {display_version}", pos=(-1, title_label.GetPosition()[1] + 32))
         version_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         version_label.Centre(wx.HORIZONTAL)
-        version_label.SetForegroundColour(wx.Colour(128, 128, 128))
+        if is_matteo:
+            version_label.SetForegroundColour(wx.Colour(180, 180, 180))
+        else:
+            version_label.SetForegroundColour(wx.Colour(128, 128, 128))
 
         # Model label
         model_label = wx.StaticText(self, label=f"Model: {self.constants.custom_model or self.constants.computer.real_model}", pos=(-1, version_label.GetPosition()[1] + 30))
         model_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         model_label.Centre(wx.HORIZONTAL)
+        if is_matteo:
+            model_label.SetForegroundColour(wx.Colour(255, 255, 255))
         self.model_label = model_label
 
         # Main Feature Buttons
@@ -208,6 +217,10 @@ class MainFrame(wx.Frame):
             
             button = wx.Button(self, label=button_name, pos=(button_x + 68, button_y), size=(205, 30))
             button.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_NORMAL))
+            if is_matteo:
+                # Apply Tahoe theme (Mac Blue)
+                button.SetBackgroundColour(wx.Colour(0, 122, 255))
+                button.SetForegroundColour(wx.Colour(255, 255, 255))
             button.Bind(wx.EVT_BUTTON, lambda event, f=button_function["function"]: f(event))
 
             if "Build OpenCore" in button_name or "EXPERIMENTAL" in button_name:
@@ -220,10 +233,15 @@ class MainFrame(wx.Frame):
             if "info_tab" in button_function:
                 info_btn = wx.Button(self, label="ℹ️", pos=(button_x + 278, button_y), size=(36, 30))
                 info_btn.SetToolTip("Click to read the detailed explanation of this option and its parameters.")
+                if is_matteo:
+                    info_btn.SetBackgroundColour(wx.Colour(0, 122, 255))
+                    info_btn.SetForegroundColour(wx.Colour(255, 255, 255))
                 info_btn.Bind(wx.EVT_BUTTON, lambda event, tab=button_function["info_tab"]: self.on_show_test_info(event, tab))
 
             description_label = wx.StaticText(self, label='\n'.join(button_function["description"]), pos=(button_x + 72, button.GetPosition()[1] + 33))
             description_label.SetFont(gui_support.font_factory(10, wx.FONTWEIGHT_NORMAL))
+            if is_matteo:
+                description_label.SetForegroundColour(wx.Colour(200, 200, 200))
 
             # Maintain spacing
             row_height = 85
@@ -237,13 +255,34 @@ class MainFrame(wx.Frame):
                 button_x = 360
                 button_y = model_label.GetPosition()[1] + 30
 
+        # --- RETURN TO MODE SELECTOR ---
+        if is_matteo:
+            return_btn = wx.Button(self, label="🔄 Torna al Mode Selector", pos=(-1, max_height + 20), size=(220, 30))
+            return_btn.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_BOLD))
+            return_btn.SetBackgroundColour(wx.Colour(60, 60, 60))
+            return_btn.SetForegroundColour(wx.Colour(255, 255, 255))
+            return_btn.Centre(wx.HORIZONTAL)
+            return_btn.Bind(wx.EVT_BUTTON, self.on_return_to_mode_selector)
+            max_height = return_btn.GetPosition()[1] + 20
+
         # --- COPYRIGHT ---
         copy_label = wx.StaticText(self, label=self.constants.copyright_date, pos=(-1, max_height + 25))
         copy_label.SetFont(gui_support.font_factory(10, wx.FONTWEIGHT_NORMAL))
         copy_label.Centre(wx.HORIZONTAL)
+        if is_matteo:
+            copy_label.SetForegroundColour(wx.Colour(120, 120, 120))
 
         # Final Window Size adjustment
         self.SetSize((-1, copy_label.GetPosition()[1] + 60))
+
+    def on_return_to_mode_selector(self, event: wx.Event = None):
+        try:
+            self.Hide()
+            from ..wx_gui import gui_mode_selector
+            gui_mode_selector.ModeSelectorFrame(parent=None, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+            wx.CallAfter(self.Destroy)
+        except Exception as e:
+            logging.error(f"Failed to return to mode selector: {e}")
 
     def _preflight_checks(self):
         try:
