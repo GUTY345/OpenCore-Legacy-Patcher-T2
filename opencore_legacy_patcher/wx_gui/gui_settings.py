@@ -55,9 +55,7 @@ class SettingsFrame(wx.Frame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.AddSpacer(10)
 
-        tabs = list(self.settings.keys())
-        if not self.constants.Developer_Mode:
-            tabs.remove("Developer")
+        tabs = ["App", "Build", "Security", "Developer"]
         for tab in tabs:
             panel = wx.Panel(notebook)
             notebook.AddPage(panel, tab)
@@ -254,6 +252,16 @@ class SettingsFrame(wx.Frame):
                     ],
                     "override_function": self._update_global_settings,
                 },
+                "Developer / Experimental Mode": {
+                    "type": "checkbox",
+                    "override_function": self.on_enable_dev_mode,
+                    "variable": "Developer_Mode",
+                    "value": self.constants.Developer_Mode,
+                    "description": [
+                        "Turns on Developer/Experimental Mode.",
+                        "Requires restarting the app to take effect."
+                    ],
+                },
             },
             "Statistics": {
                 "Statistics": {
@@ -266,16 +274,6 @@ class SettingsFrame(wx.Frame):
                 },
             },
             "Developer": {
-                "Enable Developer Mode": {
-                    "type": "checkbox",
-                    "override_function": self.on_enable_dev_mode,
-                    "variable": "Developer_Mode",
-                    "value": self.constants.Developer_Mode,
-                    "description": [
-                        "Turns on Developer Mode for this app instance.",
-                        "Requires restarting the app to take effect."
-                    ],
-                },
                 "Validation": {
                     "type": "title",
                 },
