@@ -258,7 +258,11 @@ class MainFrame(wx.Frame):
         try:
             self.Hide()
             from ..wx_gui import gui_mode_selector
-            gui_mode_selector.ModeSelectorFrame(parent=None, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+            new_frame = gui_mode_selector.ModeSelectorFrame(parent=None, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+            app = wx.GetApp()
+            if hasattr(app, 'frame'):
+                app.frame = new_frame
+                new_frame.Bind(wx.EVT_CLOSE, app.OnCloseFrame)
             wx.CallAfter(self.Destroy)
         except Exception as e:
             logging.error(f"Failed to return to mode selector: {e}")
