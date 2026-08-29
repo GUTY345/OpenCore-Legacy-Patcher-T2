@@ -421,8 +421,8 @@ Hardware Information:
             tmp_value = "PYTHON_NONE_VALUE"
         global_settings.GlobalEnviromentSettings().write_property(f"GUI:{variable}", tmp_value)
 
-    def on_enable_dev_mode(self, event: wx.Event, variable: str, constants: constants.Constants) -> None:
-        is_enabled = event.GetEventObject().GetValue()
+    def on_enable_dev_mode(self, variable: str, value: bool, constants_variable: str) -> None:
+        is_enabled = value
         dev_file = Path("~/.dortania_developer").expanduser()
         if is_enabled:
             logging.info("Turning on Developer Mode")
