@@ -27,9 +27,12 @@ class BuildFrame(wx.Frame):
     Create a frame for building OpenCore
     Uses a Modal Dialog for smoother transition from other frames
     """
-    def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None) -> None:
+    def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None, **kwargs) -> None:
         logging.info("Initializing Build Frame")
         super(BuildFrame, self).__init__(parent, title=title, size=(350, 200), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
+        
+        self.install = kwargs.get("install", False)
+        self.save = kwargs.get("save", False)
         gui_support.GenerateMenubar(self, global_constants).generate()
 
         self.build_successful: bool = False
@@ -143,6 +146,15 @@ class BuildFrame(wx.Frame):
         else:
             if getattr(self, "install", False):
                 self.on_install()
+            elif getattr(self, "save", False):
+                dialog = wx.MessageDialog(
+                    parent=self,
+                    message=f"OpenCore has been built and saved to:\n{self.constants.oc_build_path}",
+                    caption="Save Successful",
+                    style=wx.OK | wx.ICON_INFORMATION
+                )
+                dialog.ShowModal()
+                self.frame_modal.Destroy()
             else:
                 dialog = wx.MessageDialog(
                     parent=self,

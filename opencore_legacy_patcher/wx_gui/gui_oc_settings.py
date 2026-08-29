@@ -1020,7 +1020,8 @@ class OCSettingsFrame(wx.Frame):
                 parent=None,
                 title=self.title,
                 global_constants=self.constants,
-                screen_location=self.parent.GetPosition()
+                screen_location=self.parent.GetPosition(),
+                save=True
             )
             wx.CallAfter(self.parent.Destroy)
 
