@@ -44,7 +44,7 @@ class GeneratePackage:
         Initialize
         """
         self._files = {
-            "./dist/OpenCore-Legacy-Patcher-T1-MBP14,3.app": "/Library/Application Support/Dortania/OpenCore-Patcher.app",
+            "./dist/OpenCore-Patcher.app": "/Library/Application Support/Dortania/OpenCore-Patcher.app",
             "./ci_tooling/privileged_helper_tool/com.dortania.opencore-legacy-patcher.privileged-helper": "/Library/PrivilegedHelperTools/com.dortania.opencore-legacy-patcher.privileged-helper",
         }
         self._autopkg_files = {
