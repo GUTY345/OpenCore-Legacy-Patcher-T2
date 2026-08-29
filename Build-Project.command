@@ -85,11 +85,11 @@ def main() -> None:
                 git_commit_date=args.git_commit_date,
             ).generate()
 
-            check_file_exists(Path("dist/OpenCore-Legacy-Patcher-T1-MBP14,3.app"))
+            check_file_exists(Path("dist/OpenCore-Patcher.app"))
             print("--- Signiere App ---")
             print("--- Sign the app ---")
             sign_notarize.SignAndNotarize(
-                path=Path("dist/OpenCore-Legacy-Patcher-T1-MBP14,3.app"),
+                path=Path("dist/OpenCore-Patcher.app"),
                 signing_identity=args.application_signing_identity,
                 notarization_apple_id=args.notarization_apple_id,
                 notarization_password=notarization_password,
