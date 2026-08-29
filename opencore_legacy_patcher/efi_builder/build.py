@@ -128,9 +128,6 @@ class BuildOpenCore:
                     "SyncRuntimePermissions": False,
                     "DevirtualiseMmio": False,
                 })
-                self.config.setdefault("Misc", {}).setdefault("Debug", {}).update({
-                    "DisableWatchDog": True, # setzt DisableWatchDog auf True, um einige Kernel Panics zu beheben
-                })
                 self.config.setdefault("PlatformInfo", {})["UpdateSMBIOSMode"] = "Create" # Costum verursacht Probleme auf T2 Macs, insbesonders auf T2 Macs mit gespoofter SMBIOS, indem einige Sachen erst gar nicht funktionieren oder funktionieren nicht richtig, wie die Batteries des MacBook zu laden.
                 self.config.setdefault("Misc", {}).setdefault("Security", {})["SecureBootModel"] = "Disabled"
             except Exception as e:
