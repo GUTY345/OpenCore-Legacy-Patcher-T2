@@ -19,6 +19,7 @@ from ..wx_gui import (
     gui_sys_patch_start,
     gui_support,
     gui_update,
+    gui_mode_selector,
 )
 
 
@@ -27,6 +28,7 @@ class SupportedEntryPoints:
     Enum for supported entry points
     """
     MAIN_MENU  = gui_main_menu.MainFrame
+    MODE_SELECT = gui_mode_selector.ModeSelectorFrame
     BUILD_OC   = gui_build.BuildFrame
     INSTALL_OC = gui_install_oc.InstallOCFrame
     SYS_PATCH  = gui_sys_patch_start.SysPatchStartFrame
@@ -104,7 +106,7 @@ class EntryPoint:
         NSApp().activateIgnoringOtherApps_(True)
 
 
-    def start(self, entry: SupportedEntryPoints = gui_main_menu.MainFrame, start_patching: bool = False) -> None:
+    def start(self, entry: SupportedEntryPoints = gui_mode_selector.ModeSelectorFrame, start_patching: bool = False) -> None:
         """
         Launches entry point for the wxPython GUI
         """

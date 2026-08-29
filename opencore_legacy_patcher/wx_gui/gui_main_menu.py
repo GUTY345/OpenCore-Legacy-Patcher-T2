@@ -36,6 +36,8 @@ from ..wx_gui import (
     gui_sys_patch_display,
     gui_test_info,
     gui_update,
+    gui_oc_settings,
+    gui_macos_configeration,
 )
 
 class MainFrame(wx.Frame):
@@ -76,7 +78,9 @@ class MainFrame(wx.Frame):
         title_label.SetFont(gui_support.font_factory(25, wx.FONTWEIGHT_BOLD))
         title_label.Centre(wx.HORIZONTAL)
 
-        version_label = wx.StaticText(self, label=f"Version {self.constants.patcher_version_label}", pos=(-1, title_label.GetPosition()[1] + 32))
+        is_matteo = getattr(self.constants, "app_mode", "albert") == "matteo"
+        display_version = self.constants.experimental_version if is_matteo else self.constants.patcher_version_label
+        version_label = wx.StaticText(self, label=f"Version {display_version}", pos=(-1, title_label.GetPosition()[1] + 32))
         version_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         version_label.Centre(wx.HORIZONTAL)
         version_label.SetForegroundColour(wx.Colour(128, 128, 128))
@@ -88,60 +92,107 @@ class MainFrame(wx.Frame):
         self.model_label = model_label
 
         # Main Feature Buttons
-        menu_buttons = {
-            "Build OpenCore — STANDARD": {
-                "function": self.on_build_and_install_standard,
-                "description": ["Build standard/safe OpenCore", "configuration for your disk."],
-                "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                "info_tab": 0,
-            },
-            "🧪 [LEVEL-B] EXPERIMENTAL GPU": {
-                "function": self.on_build_and_install_testb,
-                "description": ["EXPERIMENTAL GPU TEST-B", "WhateverGreen -wegnoegpu."],
-                "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                "info_tab": 0,
-            },
-            "🧪 [LEVEL-C] EXPERIMENTAL TAHOE": {
-                "function": self.on_build_and_install_testc,
-                "description": ["EXPERIMENTAL TAHOE/ALBERT", "dart=0 agdpmod=ignore."],
-                "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                "info_tab": 0,
-            },
-            "🧪 [LEVEL-C] EXPERIMENTAL SPOOF T2": {
-                "function": self.on_build_and_install_testc_spoofed,
-                "description": ["EXPERIMENTAL TAHOE/ALBERT", "spoofed as MacBookPro16,1."],
-                "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                "info_tab": 0,
-            },
-            "🧪 [LEVEL-D] ALL-IN-ONE TAHOE": {
-                "function": self.on_build_and_install_testd,
-                "description": ["FULL: Wi-Fi Broadcom, Audio AppleHDA,", "GPU agdpmod=pikera, T1 & Tahoe boot-args."],
-                "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                "info_tab": 3,
-            },
-            "Create macOS Installer": {
-                "function": self.on_create_macos_installer,
-                "description": ["Download and flash a macOS", "Installer for your system."],
-                "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
-            },
-            "Install drivers and patches": {
-                "function": self.on_root_patches,
-                "description": ["Installs hardware drivers and", "patches for your system after", "installing a new version of macOS."],
-                "icon": str(self.constants.icns_resource_path / "OC-Patch.icns"),
-                "info_tab": 2,
-            },
-            "Settings": {
-                "function": self.on_settings,
-                "description": ["Settings, resources and tools", "for OpenCore Legacy Patcher."],
-                "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
-            },
-            "📘 Patch Levels & Explanation": {
-                "function": lambda event: self.on_show_test_info(event, 0),
-                "description": ["Detailed guide to all test profiles", "(B/C/D), boot-args, Wi-Fi and T1."],
-                "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
-                "info_tab": 0,
+        is_matteo = getattr(self.constants, "app_mode", "albert") == "matteo"
+        if is_matteo:
+            menu_buttons = {
+                "Build OpenCore — STANDARD": {
+                    "function": self.on_build_and_install_standard,
+                    "description": ["Build standard/safe OpenCore", "configuration for your disk."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                    "info_tab": 0,
+                },
+                "🧪 [LEVEL-B] EXPERIMENTAL GPU": {
+                    "function": self.on_build_and_install_testb,
+                    "description": ["EXPERIMENTAL GPU TEST-B", "WhateverGreen -wegnoegpu."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                    "info_tab": 0,
+                },
+                "🧪 [LEVEL-C] EXPERIMENTAL TAHOE": {
+                    "function": self.on_build_and_install_testc,
+                    "description": ["EXPERIMENTAL TAHOE/ALBERT", "dart=0 agdpmod=ignore."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                    "info_tab": 0,
+                },
+                "🧪 [LEVEL-C] EXPERIMENTAL SPOOF T2": {
+                    "function": self.on_build_and_install_testc_spoofed,
+                    "description": ["EXPERIMENTAL TAHOE/ALBERT", "spoofed as MacBookPro16,1."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                    "info_tab": 0,
+                },
+                "🧪 [LEVEL-D] ALL-IN-ONE TAHOE": {
+                    "function": self.on_build_and_install_testd,
+                    "description": ["FULL: Wi-Fi Broadcom, Audio AppleHDA,", "GPU agdpmod=pikera, T1 & Tahoe boot-args."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                    "info_tab": 3,
+                },
+                "Create macOS Installer": {
+                    "function": self.on_create_macos_installer,
+                    "description": ["Download and flash a macOS", "Installer for your system."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
+                },
+                "Install drivers and patches": {
+                    "function": self.on_root_patches,
+                    "description": ["Installs hardware drivers and", "patches for your system after", "installing a new version of macOS."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Patch.icns"),
+                    "info_tab": 2,
+                },
+                "macOS Configeration": {
+                    "function": self.on_macos_config,
+                    "description": ["Settings, drivers and", "patches for your system."],
+                    "icon": str(self.constants.patch_icon_path),
+                },
+                "OpenCore Settings": {
+                    "function": self.on_oc_settings,
+                    "description": ["Prepares provided drive to be", "able to boot unsupported OSes."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                },
+                "Settings": {
+                    "function": self.on_settings,
+                    "description": ["Settings, resources and tools", "for OpenCore Legacy Patcher."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
+                },
+                "📘 Patch Levels & Explanation": {
+                    "function": lambda event: self.on_show_test_info(event, 0),
+                    "description": ["Detailed guide to all test profiles", "(B/C/D), boot-args, Wi-Fi and T1."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
+                    "info_tab": 0,
+                }
             }
-        }
+        else:
+            menu_buttons = {
+                "Build and Install OpenCore": {
+                    "function": self.on_build_and_install_standard,
+                    "description": ["Build OpenCore and install", "it to your internal or external drive."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                    "info_tab": 0,
+                },
+                "Post-Install Root Patch": {
+                    "function": self.on_root_patches,
+                    "description": ["Install hardware drivers and", "patches for your system."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Patch.icns"),
+                    "info_tab": 2,
+                },
+                "macOS Configeration": {
+                    "function": self.on_macos_config,
+                    "description": ["Settings, drivers and", "patches for your system."],
+                    "icon": str(self.constants.patch_icon_path),
+                },
+                "OpenCore Settings": {
+                    "function": self.on_oc_settings,
+                    "description": ["Prepares provided drive to be", "able to boot unsupported OSes."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                },
+                "Create macOS Installer": {
+                    "function": self.on_create_macos_installer,
+                    "description": ["Download and flash a macOS", "Installer for your system."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
+                },
+                "Settings": {
+                    "function": self.on_settings,
+                    "description": ["Settings, resources and tools", "for OpenCore Legacy Patcher."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
+                }
+            }
 
         button_x = 25
         button_y = model_label.GetPosition()[1] + 30
@@ -427,6 +478,33 @@ class MainFrame(wx.Frame):
         except Exception as e:
             logging.error(f"We failed to open up Root Patches: {e}")
             logging.exception("Stack Trace:")
+            return
+
+    def on_macos_config(self, event: wx.Event = None):
+        try:
+            gui_macos_configeration.macOSConfigerationFrame(
+                parent=self,
+                title=self.title,
+                global_constants=self.constants,
+                screen_location=self.GetPosition()
+            )
+        except Exception as e:
+            logging.error(f"We failed to open MacOS Configuration: {e}")
+            logging.exception("Stack Trace:")
+            return
+
+    def on_oc_settings(self, event: wx.Event = None):
+        try:
+            gui_oc_settings.OCSettingsFrame(
+                parent=self,
+                title=self.title,
+                global_constants=self.constants,
+                screen_location=self.GetPosition()
+            )
+        except Exception as e:
+            logging.error(f"We failed to open OpenCore Settings: {e}")
+            logging.exception("Stack Trace:")
+            return
 
     def on_create_macos_installer(self, event: wx.Event = None):
         try:
