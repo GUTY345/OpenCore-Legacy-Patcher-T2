@@ -482,6 +482,13 @@ class LegacyMetal3802(BaseSharedPatchSet):
         """
         Dictionary of patches
         """
+        if self._xnu_major >= os_data.tahoe.value:
+            # Metal 3802 patches currently cause kernel panics on macOS 26, Tahoe.
+            # Safety guard: skip this patchset entirely until a working fix is found.
+            # Unrelated patchsets (eg. Legacy Wireless) are unaffected, as they come
+            # from separate hardware/shared patch classes and are not gated here.
+            return {}
+
         return {
             **self._patches_metal_3802_common(),
             **self._patches_metal_3802_common_extended(),

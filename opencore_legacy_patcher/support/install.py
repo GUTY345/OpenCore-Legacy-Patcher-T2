@@ -6,11 +6,14 @@ import logging
 import plistlib
 import subprocess
 import re
-import sys  # FIX: Wichtig für sys.exit() bei kritischen Fehlern
+import sys
 from pathlib import Path
 
 from . import utilities, subprocess_wrapper
 from .. import constants
+
+# Dieses Variable ist da, um zu überprüfen, ob die OpenCore-Konfiguration fertig ist oder nicht.
+OpenCore_EFI_Konfiguration_abgeschlossen=False
 
 
 class tui_disk_installation:
@@ -186,7 +189,6 @@ class tui_disk_installation:
             logging.error(f"File operation failed during installation: {e}")
             logging.exception("Stack Trace:") 
             logging.info("Please try again later.")
-            # FIX 3: sys.exit(3) muss VOR dem return stehen, sonst ist es "Dead Code"
             sys.exit(3)
 
         # Volume-Icons setzen (Fehler hier kopieren wir sicherheitshalber auch als Root, da EFI geschützt ist)
@@ -212,7 +214,13 @@ class tui_disk_installation:
             logging.info("Unmounting the EFI partition")
             # FIX 4: Auch unmount als Root ausführen, da wir es als Root gemountet haben
             subprocess_wrapper.run_as_root(["/usr/sbin/diskutil", "umount", mount_path])
-
-        # FIX 5: Die Erfolgsmeldung wird NUR ausgegeben, wenn wir bis hierhin nicht abgebrochen haben!
-        logging.info("OpenCore Transfer complete")
-        return True
+            OpenCore_EFI_Konfiguration_abgeschlossen=True
+        # behebt einen Fehler, indem bedingungslos OpenCore Transfer complete anzeigt. Dies ist auch eine Sicherheitslücke, die erlaubt Angreifern ungefertigtes EFI-Configuration auf den EFI oder andere OpenCore Partition zu platzieren, um DoS-Angriffe zu starten. Es ist eine extrem seriöse Sicherheitslücke, die zu Datenverlust und manchmal sogar Geldverlust bringen kann.
+        if OpenCore_EFI_Konfiguration_abgeschlossen==True:
+            logging.info("OpenCore Transfer complete")
+            return True
+        else:
+            logging.error("Configuring OpenCore failed due to the following error:")
+            logging.exception("Stack Trace:")
+            logging.info("Please report this issue.")
+            sys.exit(3)

@@ -13,7 +13,7 @@ import time
 
 from .. import constants
 
-from ..datasets import os_data
+from ..datasets import os_data, model_array
 from ..support import install
 
 from ..wx_gui import (
@@ -314,8 +314,9 @@ class InstallOCFrame(wx.Frame):
                 return
 
             elif not self.constants.custom_model:
-                url = "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2-Instructions-for-T2-Macs/tree/main"
-                webbrowser.open(url)
+                if self.constants.computer.real_model in model_array.T2Macs:
+                    url = "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2-Instructions-for-T2-Macs/tree/main"
+                    webbrowser.open(url)
                 gui_support.RestartHost(self).restart(message="OpenCore has finished installing to disk.\n\nYou will need to reboot and hold the Option key and select OpenCore/Boot EFI's option.\n\nWould you like to reboot?\n\nIn some cases, instead of OpenCore it is labeled as Windows on T2 Macs if you\n\nare running Boot Camp on your Mac.")
             else:
                 popup_message = wx.MessageDialog(

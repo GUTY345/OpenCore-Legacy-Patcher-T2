@@ -124,6 +124,5 @@ def main() -> None:
 if __name__ == '__main__':
     _start = time.time()
     main()
-    # Fixed small English translation grammar ("has been built for" instead of "has been builded for")
     print(f"\nBuild script erfolgreich in {str(round(time.time() - _start, 2))} Sekunden abgeschlossen.")
     print(f"\nBuild script completed in {str(round(time.time() - _start, 2))} seconds.")

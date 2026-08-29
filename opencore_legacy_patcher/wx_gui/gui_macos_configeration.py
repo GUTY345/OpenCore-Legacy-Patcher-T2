@@ -1,35 +1,39 @@
 """
-gui_settings.py: Settings Frame for the GUI
+gui_macos_configeration.py: MacOS Settings and Patch Frame
 """
-
 import wx
-import pprint
 import logging
+import subprocess
+import pprint
+
 
 from .. import constants
 
+from ..sys_patch import sys_patch
 
 from ..wx_gui import (
     gui_support,
+    gui_sys_patch_display,
     gui_update
+)
+
+from ..datasets import (
+    smbios_data,
+    os_data,
 )
 from ..support import (
     global_settings,
     network_handler,
-    analytics_handler
-)
-from ..datasets import (
-    smbios_data,
-    os_data
+    subprocess_wrapper,
 )
 
 
-class SettingsFrame(wx.Frame):
+class MacosConfigFrame(wx.Frame):
     """
-    Modal-based Settings Frame
+    Create a modal frame for macOS and root patch related settings and configerations
     """
     def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None):
-        logging.info("Initializing Settings Frame")
+        logging.info("Initializing MacOS Configeration Frame")
         self.constants: constants.Constants = global_constants
         self.title: str = title
         self.parent: wx.Frame = parent
@@ -38,8 +42,9 @@ class SettingsFrame(wx.Frame):
 
         self.settings = self._settings()
 
-        self.frame_modal = wx.Dialog(parent, title=title, size=(600, 685))
+        self.frame_modal = wx.Dialog(parent, title=title, size=(600, 520))
         self._generate_elements(self.frame_modal)
+
         self.frame_modal.ShowWindowModal()
 
     def _generate_elements(self, frame: wx.Frame = None) -> None:
@@ -64,11 +69,21 @@ class SettingsFrame(wx.Frame):
 
         sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 10)
 
+
+        # Add root patch frame button
+        root_patch_button = wx.Button(frame, label="Root Patching", pos=(-1, -1), size=(120, 30))
+        root_patch_button.Bind(wx.EVT_BUTTON, self.on_root_patch)
+        root_patch_button.SetToolTip("Install Drivers and Kernel Extentions to restore functionality and proformance")
+        root_patch_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+        if gui_support.CheckProperties(self.constants).host_can_build() is False:
+            root_patch_button.Disable()
+        sizer.Add(root_patch_button, 0, wx.ALIGN_CENTER | wx.ALL, 0)
+       
         # Add return button
         return_button = wx.Button(frame, label="Return", pos=(-1, -1), size=(100, 30))
         return_button.Bind(wx.EVT_BUTTON, self.on_return)
         return_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-        sizer.Add(return_button, 0, wx.ALIGN_CENTER | wx.ALL, 10)
+        sizer.Add(return_button, 0, wx.ALIGN_CENTER | wx.ALL, 0)
 
         frame.SetSizer(sizer)
 
@@ -218,79 +233,123 @@ class SettingsFrame(wx.Frame):
             }
         }
         """
-
-        models = [model for model in smbios_data.smbios_dictionary if "_" not in model and " " not in model and smbios_data.smbios_dictionary[model]["Board ID"] is not None]
-        socketed_imac_models = ["iMac9,1", "iMac10,1", "iMac11,1", "iMac11,2", "iMac11,3", "iMac12,1", "iMac12,2"]
-        socketed_gpu_models = socketed_imac_models + ["MacPro3,1", "MacPro4,1", "MacPro5,1", "Xserve2,1", "Xserve3,1"]
-
         settings = {
-            "App": {
-                "General": {
-                    "type": "title",
+        "Graphics": {
+                "TeraScale 2 Acceleration": {
+                    "type": "checkbox",
+                    "value": global_settings.GlobalEnviromentSettings().read_property("MacBookPro_TeraScale_2_Accel") or self.constants.allow_ts2_accel,
+                    "variable": "MacBookPro_TeraScale_2_Accel",
+                    "constants_variable": "allow_ts2_accel",
+                    "description": [
+                        "Enable AMD TeraScale 2 GPU",
+                        "Acceleration on MacBookPro8,2 and",
+                        "MacBookPro8,3.",
+                        "By default this is disabled due to",
+                        "common GPU failures on these models.",
+                    ],
+                    "override_function": self._update_global_settings,
+                    "condition": not bool(self.constants.computer.real_model not in ["MacBookPro8,2", "MacBookPro8,3"])
                 },
                 "wrap_around 1": {
                     "type": "wrap_around",
                 },
-                "Allow Reporting": {
-                    "type": "checkbox",
-                    "value": global_settings.GlobalEnviromentSettings().read_property("EnableCrashAndAnalyticsReporting"),
-                    "variable": "EnableCrashAndAnalyticsReporting",
-                    "description": [
-                        "When disabled, patcher will not",
-                        "report any info to Dortania.",
-                    ],
-                    "override_function": self._update_global_settings,
-                    "condition": not analytics_handler.ANALYTICS_SERVER and analytics_handler.SITE_KEY == None
-                },
-                "Remove Unused KDKs": {
-                    "type": "checkbox",
-                    "value": global_settings.GlobalEnviromentSettings().read_property("ShouldNukeKDKs") or self.constants.should_nuke_kdks,
-                    "variable": "ShouldNukeKDKs",
-                    "constants_variable": "should_nuke_kdks",
-                    "description": [
-                        "When enabled, the app will remove",
-                        "unused Kernel Debug Kits from the system",
-                        "during root patching.",
-                    ],
-                    "override_function": self._update_global_settings,
-                },
-            },
-            "Statistics": {
-                "Statistics": {
+                "Non-Metal Configuration": {
                     "type": "title",
                 },
-                "Populate Stats": {
-                    "type": "populate",
-                    "function": self._populate_app_stats,
-                    "args": wx.Frame,
+                "Log out required to apply changes to SkyLight": {
+                    "type": "sub_title",
                 },
-            },
-            "Developer": {
-                "Disable Developer Mode": {
+                "Dark Menu Bar": {
                     "type": "checkbox",
-                    "override_function": self.on_disable_dev_mode,
-                    "variable": "",
+                    "value": self._get_system_settings("Moraea_DarkMenuBar"),
+                    "variable": "Moraea_DarkMenuBar",
                     "description": [
-                        "Turns off Ddeveloper Mode for this app instance.",
+                        "If Beta Menu Bar is enabled,",
+                        "menu bar colour will dynamically",
+                        "change as needed.",
                     ],
+                    "override_function": self._update_system_defaults,
+                    "condition": gui_support.CheckProperties(self.constants).host_is_non_metal(general_check=True)
                 },
-                "Validation": {
-                    "type": "title",
-                },
-                "Trigger Exception": {
-                    "type": "button",
-                    "function": self.on_test_exception,
+                "Beta Blur": {
+                    "type": "checkbox",
+                    "value": self._get_system_settings("Moraea_BlurBeta"),
+                    "variable": "Moraea_BlurBeta",
                     "description": [
+                        "Control window blur behaviour.",
                     ],
+                    "override_function": self._update_system_defaults,
+                    "condition": gui_support.CheckProperties(self.constants).host_is_non_metal(general_check=True)
+
                 },
-                "wrap_around 1": {
+                "Beach Ball Cursor Workaround": {
+                    "type": "checkbox",
+                    "value": self._get_system_settings("Moraea.EnableSpinHack"),
+                    "variable": "Moraea.EnableSpinHack",
+                    "description": [
+                        "Control beach ball cursor behaviour.",
+                    ],
+                    "override_function": self._update_system_defaults_root,
+                    "condition": gui_support.CheckProperties(self.constants).host_is_non_metal(general_check=True)
+                },
+                "wrap_around 2": {
                     "type": "wrap_around",
                 },
-                "Export constants": {
-                    "type": "button",
-                    "function": self.on_export_constants,
+                "Beta Menu Bar": {
+                    "type": "checkbox",
+                    "value": self._get_system_settings("Amy.MenuBar2Beta"),
+                    "variable": "Amy.MenuBar2Beta",
                     "description": [
-                        "Export constants.py values to a txt file.",
+                        "Supports dynamic colour changes.",
+                        "Note: Setting is still experimental.",
+                        "If you experience issues, please",
+                        "disable this setting.",
+                    ],
+                    "override_function": self._update_system_defaults,
+                    "condition": gui_support.CheckProperties(self.constants).host_is_non_metal(general_check=True)
+                },
+                "Disable Beta Rim": {
+                    "type": "checkbox",
+                    "value": self._get_system_settings("Moraea_RimBetaDisabled"),
+                    "variable": "Moraea_RimBetaDisabled",
+                    "description": [
+                        "Control Window Rim rendering.",
+                    ],
+                    "override_function": self._update_system_defaults,
+                    "condition": gui_support.CheckProperties(self.constants).host_is_non_metal(general_check=True)
+                },
+                "Disable Color Widgets Enforcement": {
+                    "type": "checkbox",
+                    "value": self._get_system_settings("Moraea_ColorWidgetDisabled"),
+                    "variable": "Moraea_ColorWidgetDisabled",
+                    "description": [
+                        "Control Color Desktop Widgets Enforcement.",
+                    ],
+                    "override_function": self._update_system_defaults,
+                    "condition": gui_support.CheckProperties(self.constants).host_is_non_metal(general_check=True)
+                },
+            },
+      "Developer": {
+                "Developer Root Volume Patching": {
+                    "type": "title",
+                },
+                "Mount Root Volume": {
+                    "type": "button",
+                    "function": self.on_mount_root_vol,
+                    "description": [
+                        "Life's too short to type 'sudo mount -o",
+                        "nobrowse -t apfs /dev/diskXsY",
+                        "/System/Volumes/Update/mnt1' every time.",
+                    ],
+                },
+                "wrap_around 2": {
+                    "type": "wrap_around",
+                },
+                "Save Root Volume": {
+                    "type": "button",
+                    "function": self.on_bless_root_vol,
+                    "description": [
+                        "Rebuild kernel cache and bless snapshot 🙏",
                     ],
                 },
             },
@@ -298,41 +357,8 @@ class SettingsFrame(wx.Frame):
 
         return settings
 
-
-
-
-
-    def _populate_app_stats(self, panel: wx.Frame) -> None:
-        title: wx.StaticText = None
-        for child in panel.GetChildren():
-            if child.GetLabel() == "Statistics":
-                title = child
-                break
-
-        lines = f"""Application Information:
-    Application Version: {self.constants.patcher_version}
-    PatcherSupportPkg Version: {self.constants.patcher_support_pkg_version}
-    Application Path: {self.constants.launcher_binary}
-    Application Mount: {self.constants.payload_path}
-
-Commit Information:
-    Branch: {self.constants.commit_info[0]}
-    Date: {self.constants.commit_info[1]}
-    URL: {self.constants.commit_info[2] if self.constants.commit_info[2] != "" else "N/A"}
-
-Booted Information:
-    Booted OS: XNU {self.constants.detected_os} ({self.constants.detected_os_version})
-    Booted Patcher Version: {self.constants.computer.oclp_version}
-    Booted OpenCore Version: {self.constants.computer.opencore_version}
-    Booted OpenCore Disk: {self.constants.booted_oc_disk}
-
-Hardware Information:
-    {pprint.pformat(self.constants.computer, indent=4)}
-"""
-        # TextCtrl: properties
-        self.app_stats = wx.TextCtrl(panel, value=lines, pos=(-1, title.GetPosition()[1] + 30), size=(600, 525), style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_RICH2)
-        self.app_stats.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-
+       
+    
     def on_checkbox(self, event: wx.Event, warning_pop: str = "", override_function: bool = False) -> None:
         """
         """
@@ -359,10 +385,11 @@ Hardware Information:
 
         self._update_setting(self.settings[self._find_parent_for_key(label)][label]["variable"], value)
         if label == "Allow native models":
-            if gui_support.CheckProperties(self.constants).host_can_build() is True:
-                self.constants.allow_building = True
-            else:
-                self.constants.allow_building = False
+            if hasattr(self.parent, 'build_button') and self.parent.build_button:
+                if gui_support.CheckProperties(self.constants).host_can_build() is True:
+                    self.parent.build_button.Enable()
+                else:
+                    self.parent.build_button.Disable()
 
 
     def on_spinctrl(self, event: wx.Event, label: str) -> None:
@@ -371,22 +398,17 @@ Hardware Information:
         value = event.GetEventObject().GetValue()
         self._update_setting(self.settings[self._find_parent_for_key(label)][label]["variable"], value)
 
-    def _find_parent_for_key(self, key: str) -> str:
-        for parent in self.settings:
-            if key in self.settings[parent]:
-                return parent
+
+    def _update_setting(self, variable, value):
+        logging.info(f"Updating Local Setting: {variable} = {value}")
+        setattr(self.constants, variable, value)
+        tmp_value = value
+        if tmp_value is None:
+            tmp_value = "PYTHON_NONE_VALUE"
+        global_settings.GlobalEnviromentSettings().write_property(f"GUI:{variable}", tmp_value)
 
 
-    def on_choice(self, event: wx.Event, label: str) -> None:
-        """
-        """
-        value = event.GetString()
-        self._update_setting(self.settings[self._find_parent_for_key(label)][label]["variable"], value)
-
-    def on_return(self, event):
-        self.frame_modal.Destroy()
-
-    def _update_global_settings(self, variable, value, global_setting = None):
+    def _update_global_settings(self, variable, value, global_setting = None) -> None:
         logging.info(f"Updating Global Setting: {variable} = {value}")
         tmp_value = value
         if tmp_value is None:
@@ -394,6 +416,86 @@ Hardware Information:
         global_settings.GlobalEnviromentSettings().write_property(variable, tmp_value)
         if global_setting is not None:
             self._update_setting(global_setting, value)
+
+
+    def _update_system_defaults(self, variable, value, global_setting = None):
+        value_type = type(value)
+        if value_type is str:
+            value_type = "-string"
+        elif value_type is int:
+            value_type = "-int"
+        elif value_type is bool:
+            value_type = "-bool"
+
+        logging.info(f"Updating System Defaults: {variable} = {value} ({value_type})")
+        subprocess.run(["/usr/bin/defaults", "write", "-globalDomain", variable, value_type, str(value)])
+
+
+    def _update_system_defaults_root(self, variable, value, global_setting = None):
+        value_type = type(value)
+        if value_type is str:
+            value_type = "-string"
+        elif value_type is int:
+            value_type = "-int"
+        elif value_type is bool:
+            value_type = "-bool"
+
+        logging.info(f"Updating System Defaults (root): {variable} = {value} ({value_type})")
+        subprocess_wrapper.run_as_root(["/usr/bin/defaults", "write", "/Library/Preferences/.GlobalPreferences.plist", variable, value_type, str(value)])
+
+    def _get_system_settings(self, variable) -> bool:
+        result = subprocess.run(["/usr/bin/defaults", "read", "-globalDomain", variable], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        if result.returncode == 0:
+            try:
+                return bool(int(result.stdout.decode().strip()))
+            except:
+                return False
+        return False
+
+
+    def on_return(self, event):
+        self.frame_modal.Destroy()
+
+    def on_root_patch(self, event):
+        self.frame_modal.Destroy()
+        gui_sys_patch_display.SysPatchDisplayFrame(
+            parent=self.parent,
+            title=self.title,
+            global_constants=self.constants,
+            screen_location=self.parent.GetPosition()
+        )
+
+
+    def on_nightly(self, event: wx.Event) -> None:
+        # Ask prompt for which branch
+        branches = ["main"]
+        if self.constants.commit_info[0] not in ["Running from source", "Built from source"]:
+            branches = [self.constants.commit_info[0].split("/")[-1]]
+        result = network_handler.NetworkUtilities().get("https://api.github.com/repos/dortania/OpenCore-Legacy-Patcher/branches")
+        if result is not None:
+            result = result.json()
+            for branch in result:
+                if branch["name"] == "gh-pages":
+                    continue
+                if branch["name"] not in branches:
+                    branches.append(branch["name"])
+
+            with wx.SingleChoiceDialog(self.parent, "Which branch would you like to download?", "Branch Selection", branches) as dialog:
+                if dialog.ShowModal() == wx.ID_CANCEL:
+                    return
+
+                branch = dialog.GetStringSelection()
+        else:
+            branch = "main"
+
+        gui_update.UpdateFrame(
+            parent=self.parent,
+            title=self.title,
+            global_constants=self.constants,
+            screen_location=self.parent.GetPosition(),
+            url=f"https://nightly.link/dortania/OpenCore-Legacy-Patcher/workflows/build-app-wxpython/{branch}/OpenCore-Patcher.pkg.zip",
+            version_label="(Nightly)"
+        )
 
 
     def on_export_constants(self, event: wx.Event) -> None:
@@ -412,30 +514,23 @@ Hardware Information:
     def on_test_exception(self, event: wx.Event) -> None:
         raise Exception("Test Exception")
 
-    def _update_setting(self, variable, value):
-        logging.info(f"Updating Local Setting: {variable} = {value}")
-        setattr(self.constants, variable, value)
-        tmp_value = value
-        if tmp_value is None:
-            tmp_value = "PYTHON_NONE_VALUE"
-        global_settings.GlobalEnviromentSettings().write_property(f"GUI:{variable}", tmp_value)
+    def on_mount_root_vol(self, event: wx.Event) -> None:
+        #Don't need to pass model as we're bypassing all logic
+        if sys_patch.PatchSysVolume("",self.constants)._mount_root_vol() == True:
+            wx.MessageDialog(self.parent, "Root Volume Mounted, remember to fix permissions before saving the Root Volume", "Success", wx.OK | wx.ICON_INFORMATION).ShowModal()
+        else:
+            wx.MessageDialog(self.parent, "Root Volume Mount Failed, check terminal output", "Error", wx.OK | wx.ICON_ERROR).ShowModal()
 
-    def on_disable_dev_mode(self, event: wx.Event, variable: str, constants: constants.Constants) -> None:
-        logging.info("Turning off Developer Mode")
-        # model_text: wx.StaticText = None
-        # dev_mode_text: wx.StaticText = None
-        # version_text: wx.StaticText = None
+    def on_bless_root_vol(self, event: wx.Event) -> None:
+        #Don't need to pass model as we're bypassing all logic
+        if sys_patch.PatchSysVolume("",self.constants)._rebuild_root_volume() == True:
+            wx.MessageDialog(self.parent, "Root Volume saved, please reboot to apply changes", "Success", wx.OK | wx.ICON_INFORMATION).ShowModal()
+        else:
+            wx.MessageDialog(self.parent, "Root Volume update Failed, check terminal output", "Error", wx.OK | wx.ICON_ERROR).ShowModal()
+    
 
-        # for child in self.Parent.GetChildren():
-            # if isinstance(child, wx.StaticText):
-                # if child.GetLabel() == "Developer Mode is ON":
-                    # dev_mode_text = child
-                # elif child.GetLabel() == f"Model: {self.constants.custom_model or self.constants.computer.real_model}":
-                    # model_text = child
-                # elif child.GetLabel() == f"Version {self.constants.patcher_version}":
-                    # version_text = child
+    def _find_parent_for_key(self, key: str) -> str:
+        for parent in self.settings:
+            if key in self.settings[parent]:
+                return parent
             
-        self.constants.Developer_Mode = False
-        # dev_mode_text.Destroy()
-        # model_text.SetPosition(-1, version_text.GetPosition()[1] + 30)
-        self.frame_modal.Destroy()

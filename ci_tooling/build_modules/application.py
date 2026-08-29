@@ -165,7 +165,7 @@ class GenerateApplication:
         except subprocess.CalledProcessError as e:
             _stderr = (e.stderr or "").strip()
             if "not a git repository" in _stderr.lower():
-                print("Warning: this checkout has no .git directory (likely downloaded as a ZIP/tarball instead of via 'git clone') - Commit Information will show N/A. Use 'git clone' (or 'git pull' in an existing clone) instead of downloading a source archive to get a real commit URL.")
+                print("Warning: this checkout has no .git directory (likely downloaded as a ZIP/tarball instead of via 'git clone') - Commit Information will show N/A. Use 'git clone' (or 'git pu[...]")
             else:
                 print(f"Warning: 'git {' '.join(args)}' failed: {_stderr or e}")
             return ""
@@ -241,16 +241,11 @@ class GenerateApplication:
         resources_dir = self._application_output / "Contents" / "Resources"
         resources_dir.mkdir(parents=True, exist_ok=True)
 
-        for file in Path("payloads/Icon/AppIcons").glob("*.icns"):
+        for file in Path("payloads/Resources/AppIcons").glob("*.icns"):
             subprocess_wrapper.run_and_verify(
                 generate_copy_arguments(str(file), resources_dir / ""),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
-
-        subprocess_wrapper.run_and_verify(
-            generate_copy_arguments("payloads/Icon/AppIcons/Assets.car", self._application_output / "Contents" / "Resources" / ""),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
 
 
     def generate(self) -> None:

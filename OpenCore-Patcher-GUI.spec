@@ -6,10 +6,6 @@ import time
 import subprocess
 from pathlib import Path
 
-from PyInstaller.building.api import PYZ, EXE, COLLECT
-from PyInstaller.building.osx import BUNDLE
-from PyInstaller.building.build_main import Analysis
-
 # Fix: Use PyInstaller's built-in global 'SPECPATH' instead of '__file__'
 try:
     SPEC_DIR = Path(SPECPATH).resolve()
@@ -55,7 +51,7 @@ exe = EXE(pyz,
           a.scripts,
           [],
           exclude_binaries=True,
-          name='OpenCore-Legacy-Patcher-T1-MBP14,3',
+          name='OpenCore-Patcher',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -73,18 +69,18 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                upx_exclude=[],
-               name='OpenCore-Legacy-Patcher-T1-MBP14,3')
+               name='OpenCore-Patcher')
 
 app = BUNDLE(coll,
-             name='OpenCore-Legacy-Patcher-T1-MBP14,3.app',
-             icon=str(SPEC_DIR / "payloads/Icon/AppIcons/OC-Patcher.icns"), # Fix: Use the corrected SPEC_DIR variable
+             name='OpenCore-Patcher.app',
+             icon=str(SPEC_DIR / "payloads/Resources/AppIcons/OC-Patcher.icns"), # Fix: Use the corrected SPEC_DIR variable and Resources path
              bundle_identifier="com.dortania.opencore-legacy-patcher",
              info_plist={
                 "CFBundleName": "OpenCore Legacy Patcher",
                 "CFBundleVersion": constants.Constants().patcher_version,
                 "CFBundleShortVersionString": constants.Constants().patcher_version,
                 "NSHumanReadableCopyright": constants.Constants().copyright_date,
-                "LSMinimumSystemVersion": "10.13.6",
+                "LSMinimumSystemVersion": "11.7.11",
                 "NSRequiresAquaSystemAppearance": False,
                 "NSHighResolutionCapable": True,
                 "Build Date": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),

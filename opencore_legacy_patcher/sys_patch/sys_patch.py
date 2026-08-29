@@ -122,6 +122,7 @@ class PatchSysVolume:
         self.needs_kmutil_exemptions = False  # For '/Library/Extensions' rebuilds
         self.kdk_path = None
         self.metallib_path = None
+        self._metallib_preflight_refresh_attempted = False
 
         # GUI will detect hardware patches before starting PatchSysVolume()
         # However the TUI will not, so allow for data to be passed in manually avoiding multiple calls
@@ -543,7 +544,7 @@ class PatchSysVolume:
             str: Full destination path
         """
         try:
-            if method_type in [PatchType.OVERWRITE_SYSTEM_VOLUME, PatchType.MERGE_SYSTEM_VOLUME]:
+            if method_type in [PatchType.OVERWRITE_SYSTEM_VOLUME, PatchType.MERGE_SYSTEM_VOLUME, PatchType.REMOVE_SYSTEM_VOLUME]:
                 return str(self.mount_location) + patch_directory
             else:
                 return str(self.mount_location_data) + patch_directory
@@ -715,7 +716,7 @@ class PatchSysVolume:
         self._write_patchset(required_patches)
 
 
-    def _resolve_metallib_support_pkg(self, _post_install_retry: bool = False) -> str:
+    def _resolve_metallib_support_pkg(self, _post_install_retry: bool = False, force_refresh: bool = False) -> str:
         """
         Resolve MetalLibSupportPkg.
         
@@ -730,7 +731,8 @@ class PatchSysVolume:
         metallib_obj = metallib_handler.MetalLibraryObject(
             self.constants,
             self.constants.detected_os_build,
-            self.constants.detected_os_version
+            self.constants.detected_os_version,
+            ignore_installed=force_refresh
         )
         
         if not metallib_obj.success:
@@ -794,13 +796,21 @@ class PatchSysVolume:
             Exception: If variant is unknown
         """
         logging.debug(f"Resolving dynamic patchset: {variant}")
-        
-        if variant == DynamicPatchset.MetallibSupportPkg:
-            return self._resolve_metallib_support_pkg()
-        else:
-            logging.error(f"Unknown Dynamic Patchset: {variant}")
+        # behebt eine Sicherheitslücke, die erlaubt Angreifern, das App zum Absturz bringen beim unerwartetes Fehler oder davon auszunutzen, belibiges Code auszuführen
+        try:
+            logging.info("Resolving dynamic patchset")
+            if variant == DynamicPatchset.MetallibSupportPkg:
+                return self._resolve_metallib_support_pkg()
+                logging.info("Successfully resolved the dynamic patchset")
+            else:
+                logging.error(f"Unknown Dynamic Patchset: {variant}")
+                logging.exception("Stack Trace:")
+                raise Exception(f"Unknown Dynamic Patchset: {variant}")
+        except Exception as e:
+            logging.error("Couldn't resolve patchset due to unexpected error:")
             logging.exception("Stack Trace:")
-            raise Exception(f"Unknown Dynamic Patchset: {variant}")
+            logging.info("Please try again later.")
+            sys.exit(3)
 
 
     def _preflight_checks(self, required_patches: dict, source_files_path: Path) -> dict:
@@ -837,16 +847,25 @@ class PatchSysVolume:
                 if method_type not in required_patches[patch]:
                     continue
                     
-                for install_patch_directory in required_patches[patch][method_type]:
-                    for install_file in required_patches[patch][method_type][install_patch_directory]:
+                for install_patch_directory in list(required_patches[patch][method_type]):
+                    for install_file in list(required_patches[patch][method_type][install_patch_directory]):
+                        is_dynamic_patchset = False
                         try:
                             # Resolve dynamic patchsets
                             if required_patches[patch][method_type][install_patch_directory][install_file] in DynamicPatchset:
+                                is_dynamic_patchset = True
                                 required_patches[patch][method_type][install_patch_directory][install_file] = self._resolve_dynamic_patchset(
                                     required_patches[patch][method_type][install_patch_directory][install_file]
                                 )
                         except TypeError:
                             pass
+                        # behebt auch eine Sicherheitslücke, die erlaubt Angreifern, falls dies nicht ein erwartetes Fehler ist, beliebiges Code auszuführen
+                        except Exception as e:
+                            logging.error("We couldn't resolve the dynamic patchset and install Metallibs due to the following error:")
+                            logging.exception("Stack Trace:")
+                            logging.info("Please try again later.")
+                            logging.info("Try reporting this issue to the OpenCore Legacy Patcher T2 repository and check for updates.")
+                            sys.exit(3)
 
                         source_file = (
                             required_patches[patch][method_type][install_patch_directory][install_file]
@@ -858,12 +877,55 @@ class PatchSysVolume:
                         # Check whether to source from root
                         if not required_patches[patch][method_type][install_patch_directory][install_file].startswith("/"):
                             source_file = source_files_path + "/" + source_file
-                        
+
                         if not Path(source_file).exists():
-                            logging.error(f"Failed to find {source_file}")
-                            logging.exception("Stack Trace:")
-                            raise Exception(f"Failed to find {source_file}")
-                        
+                            # _local_metallib_installed() only matches an already-installed
+                            # MetallibSupportPkg folder by macOS build name, never by verifying
+                            # every file inside it is actually present. If an earlier run left
+                            # behind a package that's missing files this patchset needs (e.g.
+                            # upstream shipped an incomplete release for this build and later
+                            # fixed it), every future preflight attempt would keep failing on the
+                            # same stale "already installed" cache forever. Force one fresh
+                            # re-download/install before giving up.
+                            if (
+                                self.metallib_path
+                                and source_file.startswith(str(self.metallib_path))
+                                and not self._metallib_preflight_refresh_attempted
+                            ):
+                                self._metallib_preflight_refresh_attempted = True
+                                logging.warning(f"- {source_file} missing from cached MetallibSupportPkg, forcing a fresh download")
+                                try:
+                                    refreshed_path = self._resolve_metallib_support_pkg(force_refresh=True)
+                                    self._resolve_dynamic_patchset.cache_clear()
+                                    required_patches[patch][method_type][install_patch_directory][install_file] = refreshed_path
+                                    source_file = refreshed_path + install_patch_directory + "/" + install_file
+                                # behebt eine Sicherheitslücke, indem das Fehler ausgedrückt wurde, aber das Prozess nicht richtig beendete und dass das Fehler nicht besonders verständlich war. Angreifern können davon ausnutzen ohne der Ahnung des Nutzers auszuführen, ohne überhaupt das zu loggen, um schädliches Code ungemerkt zu ausführen. Und auch, Angreifern können davon ausnutzen, um ClickFix-Angriffe zu starten.
+                                except Exception as e:
+                                    logging.error(f"- Failed to force-refresh MetallibSupportPkg: {e}")
+                                    logging.exception("Stack Trace:")
+                                    logging.info("Try reporting this issue to the OpenCore Legacy Patcher T2 repository and check for updates.")
+                                    sys.exit(3)
+
+                            if not Path(source_file).exists():
+                                if is_dynamic_patchset:
+                                    # Even after a fresh MetallibSupportPkg pull, this specific file is
+                                    # still missing. MetallibSupportPkg packages are generated per exact
+                                    # macOS build by a third-party service and aren't guaranteed to
+                                    # contain every single metallib for every build/Mac combination (see
+                                    # reports of e.g. missing VisionKitInternal.framework/.../default.metallib
+                                    # on multiple different builds, even after updating macOS). Treat a
+                                    # missing file sourced from it as non-fatal: skip installing just this
+                                    # one file instead of aborting root patching entirely, since these are
+                                    # supplemental shader libraries, not files every patch set depends on
+                                    # to function.
+                                    logging.warning(f"- MetallibSupportPkg is missing {install_patch_directory}/{install_file} for this build, skipping")
+                                    del required_patches[patch][method_type][install_patch_directory][install_file]
+                                    continue
+                                else:
+                                    logging.error(f"Failed to find {source_file}")
+                                    logging.exception("Stack Trace:")
+                                    raise Exception(f"Failed to find {source_file}")
+
                         logging.debug(f"Verified file exists: {source_file}")
 
         # Make sure old SkyLight plugins aren't being used

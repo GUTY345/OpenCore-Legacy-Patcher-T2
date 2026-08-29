@@ -1,4 +1,594 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.17001.1 - 4.0.0 alpha 17.1.1
+This release:
+
+Metal 3802 and non-Metal patches are not working and known very well to cause yellow screen and kernel panics on macOS 26. To prevent this, I'll put safety guards to prevent these patches from getting injected into macOS 26 while @gandolf243 is working on it to ifx these patches on Tahoe, while the already known to be working patches or ones that are going to be tested yet, only those are going to be injected.
+For unsupported T2 Macs, I found this bug: acidanthera/OpenCorePkg#620 . I'm working closely with Accidanthera to get this OpenCorePkg bug fixed.
+Diese Version:
+
+Metal 3802 und Nicht-Metal-Patches funktionieren nicht und sind dafür bekannt, unter macOS 26 zu Yellow Screens und Kernel-Panics zu führen. Um dies zu verhindern, werden Sicherheitsvorkehrungen getroffen, damit diese Patches nicht in macOS 26 eingespielt werden, während @gandolf243 daran arbeitet, sie per ifx auf Tahoe zu integrieren. Nur bereits bekannte, funktionierende oder noch zu testende Patches werden eingespielt.
+Für nicht unterstützte T2-Macs habe ich diesen Bug gefunden: acidanthera/OpenCorePkg#620. Ich arbeite eng mit Accidanthera zusammen, um diesen OpenCorePkg-Bug zu beheben.
+
+## 4.0.0.17001 - 4.0.0 alpha 17.1
+This release:
+- removes Gemini generated vulnerability fixes that cause issues: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/commit/f326e311e1fa0fe0f54c04322dbac33a0af1f5ae
+- since unsupported T2 Macs to even boot into Tahoe's installer via OpenCorePkg it needs SMBIOS spoofing at the moment; thus when building OpenCore with SMBIOS spoofing set to None it will throw an error that guides you how to spoof the SMBIOS instead to avoid kernel panics or WindowServer failing to process when choosing the language at this time. 
+- Adds a scroll bar inside Security to fix not being able to see all SIP settings that are available
+<img width="712" height="797" alt="Bildschirmfoto 2026-08-26 um 02 17 06" src="https://github.com/user-attachments/assets/bd09ae43-2a6c-4413-ac99-69a73673dd32" />
+- fixes an issue where part of the text inside Security was unvisible
+- Disable Library Validation and Disable AMFI settings are also now disabled for T2 targets as they're useless since a long time since T2 Macs handle this differently
+- Secure Boot Model is also disabled, since on T2 Macs SecureBootModel settings are handled differently since a long time
+- fixes a bug in CI/CD pipelines where when running OpenCore Legacy Patcher T2 from source or building it since alpha 17 it was overriding the existing ocvalidate and macserial that were already readily available, which also could cause issues later on during building the patcher
+- fixes a bug where 2019 Mac Pro was treated like a non-T2 Mac when building OpenCore with Allow native models option enabled by adding MacPro9,1 to the T2 Macs dictionary
+- updates OpenCore to 2.0.1.1
+- fixes a bug where when building OpenCore for real Macs from a Hackintosh or virtual machine, even if the target model was an SMBIOS for real Macs, after a vulnerability was patched where an attacker could trick a Hackintosh user into performing denial of service attacks by replacing a working EFI that they configured for their Hackintosh with one that works only on real Macs to cause a kernel panic - which later on became a widely abused vulnerability after it got patched, the result was that Hackintosh users and users who run macOS in virtual machines were locked out of building OpenCore for real Macs when the target wasn't their Hackintosh.
+
+## 4.0.0.17000.1 - 4.0.0 alpha 17.0.1
+This release:
+
+fixes a bug where upon trying to root patch, often it doesn't escalate properly to mount Universal-Binaries.dmg, especially if not running macOS 26 Tahoe
+
+fixes a vulnerability in storage.py:
+
+  if not self.model in smbios_data.smbios_dictionary:
+              return
+          if not "Stock Storage" in smbios_data.smbios_dictionary[self.model]:
+              return
+          if not "PATA" in smbios_data.smbios_dictionary[self.model]["Stock Storage"]:
+              return
+  
+          support.BuildSupport(self.model, self.constants, self.config).enable_kext("AppleIntelPIIXATA.kext", self.constants.piixata_version, self.constants.piixata_path) # <- here's the vulnerability - it injects AppleIntelIXATA unconditionally
+Impact: an attacker could remove the rest of the conditions to force in certain circumstances to inject AppleIntelXATA unconditionally to slow down Macs or cause unexpected behavior on Macs with SATA interface.
+
+Diese Version:
+
+Behebt einen Fehler, der dazu führt, dass beim Versuch, einen Root-Patch zu installieren, die Universal-Binaries.dmg-Datei oft nicht korrekt eingebunden wird, insbesondere wenn nicht macOS 26 Tahoe verwendet wird.
+
+Behebt eine Sicherheitslücke in storage.py:
+
+if not self.model in smbios_data.smbios_dictionary:
+return
+if not "Stock Storage" in smbios_data.smbios_dictionary[self.model]:
+return
+if not "PATA" in smbios_data.smbios_dictionary[self.model]["Stock Storage"]:
+return
+
+support.BuildSupport(self.model, self.constants, self.config).enable_kext("AppleIntelPIIXATA.kext", self.constants.piixata_version, self.constants.piixata_path) # <- Hier liegt die Sicherheitslücke – AppleIntelIXATA wird bedingungslos injiziert.
+
+Auswirkung: Einen Angreifer kann die if-Bedingungen zu entfernen, um bedingungslos AppleIntellXATA zu injizieren, um Macs verlangsamen oder unerwartetes Verhalten zu verursachen.
+
+## 4.0.0.17000 - 4.0.0 alpha 17
+This version brings the new user interface of this patcher, huge xthanks to @gandolf243. Before I start talking about what's fixed in this version, I want to explain the new UI first:
+First things first, the main menu now looks like this:
+
+<img width="712" height="598" alt="Bildschirmfoto 2026-08-22 um 22 28 37" src="https://github.com/user-attachments/assets/6562cd94-79e9-4b23-b4bc-f7c4e1d409f7" />
+
+This is the old UI:
+<img width="812" height="652" alt="Bildschirmfoto 2026-08-22 um 22 29 15" src="https://github.com/user-attachments/assets/b355e0ff-edd9-4398-8feb-1ecd55975207" />
+
+Now, you can configure OpenCore-related settings and then directly click on Install OpenCore - no need to first close settings, then click on the Build and Install OpenCore, etc. You can also now save the OpenCore configuration by just clicking Save OpenCore.
+<img width="712" height="797" alt="Bildschirmfoto 2026-08-22 um 22 30 46" src="https://github.com/user-attachments/assets/c0ec7741-2d0f-4208-bc8d-7bec2091fdb2" />
+
+On T2 Macs, since it is necessary to set SIP to 0xFFF, which means SIP needs to be completely disabled, and the value is hardcoded, the setting for System Integrity Protection for these Macs was since a long time useless. So these settings are shown only on non-T2 Macs. On T2 Macs, you'll get this:
+<img width="712" height="797" alt="Bildschirmfoto 2026-08-22 um 22 37 35" src="https://github.com/user-attachments/assets/c00ece14-5286-4e97-8622-4136a4cfdaea" />
+
+When you click Install OpenCore, you'll see which drive to select as usual:
+
+<img width="492" height="308" alt="Bildschirmfoto 2026-08-22 um 22 41 47" src="https://github.com/user-attachments/assets/174d707d-f30b-48a6-9200-b85c21ec473b" />
+
+But now, with this release, you'll be able to install OpenCore to any partition that is formatted as FAT32 via Disk Utility:
+<img width="412" height="275" alt="Bildschirmfoto 2026-08-22 um 22 42 52" src="https://github.com/user-attachments/assets/b892979c-3efc-4afe-b160-57b1494d1f28" />
+
+I strongly recommend not to put OpenCore inside your EFI partition, rather than on a secondary partition formatted as FAT32. Like this, you don't have to modify the EFI, and you reduce the attack surface by a lot if an attacker were to find a vulnerability in OpenCore. Like this, an attacker can't intercept the boot sequence of macOS. Especially if you care about cybersecurity a lot, I don't recommend placing your OpenCore config to the EFI partition. I recommend instead to create a seperate partition formatted as FAT32 via Disk Utility.
+
+NOTE: installing OpenCore to another partition rather than the EFI partition only works on Macs with UEFI, which are the Macs from 2012 onwards.
+
+The install drivers and patches button is now called root patching and is now located inside macOS Configuration. Again, when you click macOS Configuration, you can configure all root patches that you want to be included if you want to configure anything, mostly these settings are for advanced users, and then you can click Root Patching. And then the root patching process continues as normal.
+<img width="712" height="632" alt="Bildschirmfoto 2026-08-22 um 22 48 16" src="https://github.com/user-attachments/assets/bc4840bb-48a3-4af3-8219-29994b612130" />
+
+Also, the macOS Configuration icon has a dynamic icon and depending on the version of macOS that you're currently running, it shows a different icon. I'm running Tahoe, so it shows the Tahoe icon.
+
+Since most settings have been relocated, now the Settings button has only info about the version of this patcher and some other statistics, Remove unused KDKs and Report info to Dortania, which setting is greyed out and not available.
+<img width="1424" height="1594" alt="image" src="https://github.com/user-attachments/assets/1c49476e-2e3d-4fdf-938b-b2f0a49d8b2e" />
+
+And now, the Ask Gemini button is located inside Support:
+
+<img width="712" height="598" alt="Bildschirmfoto 2026-08-22 um 22 51 46" src="https://github.com/user-attachments/assets/327627ed-bc55-4ac7-9699-0ba67c414226" />
+
+The create macOS installer button works the same way as previously.
+
+Now, to change the Target model, it's as simple as clicking on Model: MacBookPro16,2 (or whatever is your SMBIOS):
+<img width="1424" height="1196" alt="Bild 22 08 26 um 22 54" src="https://github.com/user-attachments/assets/1f9b3882-e610-4f94-a369-53a480fe9388" />
+
+Then you select your target model:
+
+<img width="712" height="598" alt="Bildschirmfoto 2026-08-22 um 22 56 19" src="https://github.com/user-attachments/assets/e45acd25-7f24-4a4f-8efc-eb108073f3ff" />
+
+And you click Done. It's that simple.
+
+This version:
+- brand new UI, thanks to @gandolf243 
+- fixes a bug where upon trying to flash a macOS installer, it immediately crashes without any obvious logs like if nothing ever happened
+- fixes Priveleged Helper Tool permission issues where upon trying to flash macOS's installer, it denies to do so; and may fix also other issues along the line
+- fixes a bug where on T2 Macs may inject SMC related patches, which on T2 Macs causes a kernel panic
+- on T2 Macs, in alpha 16, there were many issues that are now fixed in alpha 17 and were fixed in the pre-alpha 17, which is now alpha 17 and no longer a pre-alpha from boot loops to battery charging issues
+- now, on T2 Macs, you no longer have to spoof the SMBIOS to be able to boot into macOS - it works now out of the box
+- on supported T2 Macs (on unsupported T2 Macs isn't tested yet), as soon as you don't spoof the SMBIOS, even via OpenCorePkg booting, the Touch ID works. However, Apple Pay is not possible to be enabled on T2 Macs as it requires SIP to be enabled, while to boot via OpenCorePkg it requires to be completely disabled.
+- removes some broken Gemini generated vulnerability fixes which increases stability by another 30-40%
+- fixes the following vulnerabilities:
+gui_main_menu.py:
+- fixes a vulnerability where an attacker could trick a user into updating OpenCore even if they haven't given a permission because of unconditional update OpenCore instructions inside the code:
+
+                   if pop_up.GetReturnCode() != wx.ID_YES:
+                        logging.info("Skipping OpenCore and root volume patch update...")
+                        return
+                   # <- here's the vulnerability - 1. an attacker could launch a DoS attack by supplying the update mechanism with invalid code to crash the application; 2. an attacker could delete the  if pop_up.GetReturnCode() != wx.ID_YES: condition to trick the user into installing OpenCore and root patches updates without their consent
+                    logging.info("Updating OpenCore and root volume patches...")
+                    self.constants.update_stage = gui_support.AutoUpdateStages.CHECKING
+                    self.Hide()
+                    pos = self.GetPosition()
+                    gui_build.BuildFrame(
+                        parent=None,
+                        title=self.title,
+                        global_constants=self.constants,
+                        screen_location=pos,
+                        install=True
+                    )
+                    wx.CallAfter(self.Destroy)
+
+Impact: an attacker could supply the _check_for_updates or any other function with invalid code to launch a denial of service attack to crash the application. Or an attacker could delete the  if pop_up.GetReturnCode() != wx.ID_YES: condition to trick the user into updating OpenCore and root patches without their consent. This is fixed by putting the update code under an else condition and also in try/except blocks for error handling.
+
+Remaining:
+- MacBookPro7,1 and other Core 2 Duo Macs are not able to boot: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues/206 - this is an OpenCorePkg bug; will fix in the next days
+- Remains root patches to be tested against Sequoia, Sonoma, Ventura, Monterey and Big Sur systems and eventually implement legacy OS fallback for mounting Universal-Binaries.dmg. At the moment, it works only with macOS 26.4 Tahoe and newer.
+- Remains to be tested on unsupported T2 Macs
+- Fix yellow screen https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues/194 , however I'm not sure how to fix that issue; waiting for contributors to fix it. If anyone can fix it, I recommend to reach me to add as a contributor or create a fork and then push a PR.
+
+## 4.0.0.16913 - 4.0.0 pre-alpha 5.3 for alpha 17
+This release fixes a UI bug in Settings where the description for Allow native models may overlap.
+Diese Version behebt einen Fehler in der Benutzeroberfläche der Einstellungen, bei dem sich die Beschreibung für „Allow native models“ überschneiden konnte.
+
+## 4.0.0.16912 - 4.0.0 pre-alpha 5.2 for alpha 17
+This release:
+- removes some Gemini generated vulnerability fixes that the maintainer couldn't understand that caused many weird issues. With this, stability increases by 50+% and reduce bugs by 50%.
+- Allow spoofing native Macs is moved to Build
+- fixes a the following vulnerability in constants.py:
+
+          try:
+                      logging.info("Checking if the version is special")
+                      version.parse(self.patcher_version)
+                      return False
+                  except version.InvalidVersion:
+                      logging.info("We have confirmed that this is a special version")
+                      logging.info("You won't receive automatic updates.")
+                      return True
+         # <- here's the vulnerability - there's no error handling if there is an unexpected error.
+
+Impact: an attacker could launch a denial of service attack to crash the application.
+
+
+Diese Version:
+
+- Behebt einige von Gemini generierte Sicherheitslückenkorrekturen, die der Maintainer nicht nachvollziehen konnte und die zu vielen ungewöhnlichen Problemen führten. Dadurch wird die Stabilität um über 50 % erhöht und die Anzahl der Fehler um 50 % reduziert.
+
+- Die Option zum Spoofing nativer Macs wurde in den Build-Prozess verschoben.
+
+- Behebt die folgende Sicherheitslücke in constants.py:
+          
+              try:
+                      logging.info("Checking if the version is special")
+                      version.parse(self.patcher_version)
+                      return False
+                  except version.InvalidVersion:
+                      logging.info("We have confirmed that this is a special version")
+                      logging.info("You won't receive automatic updates.")
+                      return True
+          # <- Hier liegt die Sicherheitslücke: Es gibt keine Fehlerbehandlung bei unerwarteten Fehlern.
+
+Auswirkung: Ein Angreifer könnte einen Denial-of-Service-Angriff starten, um die Anwendung zum Absturz zu bringen.
+
+## 4.0.0.16051 - 4.0.0 alpha 16.4.1
+This release removes some Gemini generated vulnerability fixes that the maintainer couldn't understand that caused many weird issues. With this, stability increases by 50+% and reduce bugs by 50%.
+
+Diese Version entfernt einige von Gemini generierte Sicherheitslückenkorrekturen, die der Entwickler nicht nachvollziehen konnte und die zu zahlreichen unerwarteten Problemen führten. Dadurch wird die Stabilität um über 50% erhöht und die Anzahl der Fehler um 50 % reduziert.
+
+## 4.0.0.16911 -  4.0.0 pre-alpha 5.1 for alpha 17:
+This release fixes a bug where on unsupported T2 Macs, Build and install OpenCore is greyed out.
+Diese Version behebet einen Fehler, indem auf nicht unterstützte T2 Macs Build and Install OpenCore ausgegraut wurde.
+
+## 4.0.0.16910 - 4.0.0 pre-alpha 5 for alpha 17:
+This release:
+- fixes UI bugs in the update screen where it says Would you like to instead of Would you like to update due to not enough space on the screen
+- fixes a bug where root-volume file removal writing to the sealed live volume instead of the mounted copy when root patching on a Mac that requires Metallibs https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/commit/059cc9a659e9ff3c240b732b66b950916d44a007
+- moves all debugging features in Settings in a seperate Debug tab to make it easier to find these debugging features when needed - such as, Kext Debugging
+- All settings from Extras are moved to Advanced to make it easier to navigate
+- fixes a bug on T2 Macs where upon trying to format a partition on the internal SSD as APFS, it fails to do so because the UUID of the partition is not properly seen by macOS due to OpenCore configuration issue; to e exact, the cause was UpdateSMBIOSMode was set to Costum instead of Create. However, another issue remains that blocks still formatting the internal drive as APFS properly: on T2 Macs when trying to format the drive while booted via OpenCorePkg, VEK fails to access the internal drive #192 
+- fixes a bug where T2 MacBooks when booting via OpenCorePkg, it won't charge even when booted via OpenCorePkg, regardless if booting natively supported macOS releases or unsupported macOS versions
+- fixes the following vulnerabilities:
+- fixes a vulnerability where an attacker or bad Hackintosh user could trick a Hackintosh user into building OpenCore EFIs for real Macs by spoofing the SMBIOS as a Mac computer
+- fixes a bug and a vulnerability where the patcher itself checks if the config the current OpenCore is running was checked against the SMBIOS instead of checking real hardware. This could cause false alarms. An attacker could abuse this to cause a DoS attack by tricking the user into building an EFI that is not suitable for their Mac.
+- fixes a vulnerability where it doesn't mention what SIP is in Settings > Security. An attacker could trick an unaware user into completely disabling SIP to trick the user into launching a malicious application that tampers with core system files. This is fixed by explaining what SIP is, what does it do and if they don't know how SIP does work, not to recommend touching that menu.
+in sys_patch.py:
+- an attacker could crash the application to cause a DoS attack or execute arbitary code:
+          # <- here's the vulnerability - there's no try/except block to isolate any errors. Like this, an attacker could launch a DoS attack to crash the app or execute arbitary code. Furthermore, when it fails to resolve the dynamic patchset and causes an expected error, it only says Unknown Dynamic Patchset without any more information. An attacker could abuse this to launch a ClickFix attack.
+       if variant == DynamicPatchset.MetallibSupportPkg:
+                  return self._resolve_metallib_support_pkg()
+              else:
+                  logging.error(f"Unknown Dynamic Patchset: {variant}")
+
+Impact: an attacker could supply the if condition with an invalid syntax to crash the application or execute arbitary code. 
+Another impact: an attacker could also launch a ClickFix attack due to only saying Unknown Dynamic Patchset without any more information.
+- an attacker could execute arbitary code due to lack of error handling when there is an unexpected error when running a preflight check:
+            def _preflight_checks(self, required_patches: dict, source_files_path: Path) -> dict:
+                    """
+                    Run preflight checks before patching.
+                    
+                    Validates:
+                    - All required files exist
+                    - Dynamic patchsets are resolved
+                    - Legacy plugin cleanup
+                    - Kernel cache cleanup
+                    - Hardware-specific setup (SNB, KDK)
+            
+                    Parameters:
+                        required_patches (dict): Patchset dictionary (from HardwarePatchsetDetection)
+                        source_files_path (Path): Path to the source files (PatcherSupportPkg)
+            
+                    Returns:
+                        dict: Updated patchset dictionary
+                        
+                    Raises:
+                        Exception: If critical preflight check fails
+                    """
+                    logging.info("- Running Preflight Checks before patching")
+            
+                    # Validate all required files exist
+                    for patch in required_patches:
+                        for method_type in [
+                            PatchType.OVERWRITE_SYSTEM_VOLUME,
+                            PatchType.OVERWRITE_DATA_VOLUME,
+                            PatchType.MERGE_SYSTEM_VOLUME,
+                            PatchType.MERGE_DATA_VOLUME
+                        ]:
+                            if method_type not in required_patches[patch]:
+                                continue
+            
+                            for install_patch_directory in list(required_patches[patch][method_type]):
+                                for install_file in list(required_patches[patch][method_type][install_patch_directory]):
+                                    is_dynamic_patchset = False
+                                    try:
+                                        # Resolve dynamic patchsets
+                                        if required_patches[patch][method_type][install_patch_directory][install_file] in DynamicPatchset:
+                                            is_dynamic_patchset = True
+                                            required_patches[patch][method_type][install_patch_directory][install_file] = self._resolve_dynamic_patchset(
+                                                required_patches[patch][method_type][install_patch_directory][install_file]
+                                            )
+                                    except TypeError:
+                                        pass
+                                 # <- here's the vulnerability right after except TypeError - it lacks error handling when an unexpected error happens
+
+Impact: an attacker could write intentionally invalid syntax to cause the process to crash to cause an unexpected error and then to execute arbitary code. This is fixed by adding error handling when an unexpected error happens.
+
+- A couple of lines later, there's another vulnerability that when it fails to force refresh MetallibSupportPkg, the process may not quit, which could lead to a Root patching is complete message unconditionally. And another vulnerability where it doesn't say clearly what is exactly failing:
+                  try:
+                          refreshed_path = self._resolve_metallib_support_pkg(force_refresh=True)
+                          self._resolve_dynamic_patchset.cache_clear()
+                          required_patches[patch][method_type][install_patch_directory][install_file] = refreshed_path
+                          source_file = refreshed_path + install_patch_directory + "/" + install_file
+  
+                      except Exception as e: # <- here's the vulnerability - the app may say unconditionally that the Root patches have been installed despite not done so, and doesn't say what exactly is failing
+                          logging.error(f"- Failed to force-refresh MetallibSupportPkg: {e}")
+
+Impact: an attacker could write an invalid syntax to execute arbitary code without the user's knowledge. And also an attacker could launch a DoS attack by tricking the user that the Root patching process is completed while their system no longer boots up. This is fixed by adding in the error handling logging.exception and sys.exit(3).
+
+- A few lines later, another vulnerability appears that unconditionally it may throw Failed to find a source file:
+
+                        if not Path(source_file).exists():
+                                                        if is_dynamic_patchset:
+                                                            # Even after a fresh MetallibSupportPkg pull, this specific file is
+                                                            # still missing. MetallibSupportPkg packages are generated per exact
+                                                            # macOS build by a third-party service and aren't guaranteed to
+                                                            # contain every single metallib for every build/Mac combination (see
+                                                            # reports of e.g. missing VisionKitInternal.framework/.../default.metallib
+                                                            # on multiple different builds, even after updating macOS). Treat a
+                                                            # missing file sourced from it as non-fatal: skip installing just this
+                                                            # one file instead of aborting root patching entirely, since these are
+                                                            # supplemental shader libraries, not files every patch set depends on
+                                                            # to function.
+                                                            logging.warning(f"- MetallibSupportPkg is missing {install_patch_directory}/{install_file} for this build, skipping")
+                                                            del required_patches[patch][method_type][install_patch_directory][install_file]
+                                                            continue
+                                                        logging.error(f"Failed to find {source_file}") # <- here's the vulnerability - an attacker could delete the if not Path condition to force the patcher into throwing an error to cause a denial of service attack.
+                                                        logging.exception("Stack Trace:")
+                                                        raise Exception(f"Failed to find {source_file}")
+Impact: an attacker could leave a Mac in a half patched state by removing the if not Path condition to force displaying an error Failed to find source file to cause a denial of service attack. This is fixed by nesting the error handling in an else condition.
+
+gui_settings.py:
+- fixes a vulnerability where an attacker could silently replace OpenCore Legacy Patcher T2 with OpenCore Legacy Patcher Nightly by Dortania by simply calling the on_nightly function. This is fixed by retiring the unused on_nightly function.
+
+constants.py:
+- fixes a 0 day vulnerability where an attacker could disable automatic updates to trick the user into staying on a vulnerable version to exploit other unpatched flaws - this is known to be already exploited in the wild to return the Disable automatic updates function that I retired
+
+What does this mean for genuine fork developers who are returning this function to keep users from switching from their forks back to my mainstream repository? This means that this is no longer possible and fork developers to avoid this, they need to change the update API sources to their own to avoid getting users switching back to the mainstream project by accident.
+
+gui_main_menu.py:
+
+            def _check_for_updates(self):
+                    if self.constants.has_checked_updates is True:
+                        logging.info("We have already checked for updates.")
+                        return
+                # <- here's a vulnerability - an attacker could delete the if self.constants.has_checked_updates is True condition to overload OpenCore Legacy Patcher T2's update API to cause a DoS attack against GitHub's API
+                    ignore_updates = global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates") # <- another vulnerability that lets attackers disable automatic updates to trick the user into using known vulnerable versions to exploit already known vulnerabilities
+                    if ignore_updates is True:
+                        self.constants.ignore_updates = True
+                        return
+                
+                    self.constants.ignore_updates = False
+                    self.constants.has_checked_updates = True
+
+Impact: an attacker could remove the if ignore_updates is True condition to cause the app to check unconditionally to check for updates to cause a DoS by overloading the victim's Mac with unconditional checking for update requests to cause a DoS attack against the GitHub API. This is fixed by nesting the code for checking for updates under else like this:
+       else:
+                logging.info("Checking for updates")
+                self.constants.has_checked_updates = True
+                
+                update_dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
+                if not update_dict:
+                    return
+- 4 line later, starting from line 247, starts another vulnerability where an unexpected error handling if it unexpectedly fails to check for updates, an attacker could crash the app to cause a DoS attack and trick the user into using a known vulnerable version to exploit already known vulnerabilities:
+
+                  remote_version_str = update_dict["Version"]
+                              local_version_str = self.constants.patcher_version
+                          
+                              try:
+                                  remote_v = version.parse(str(remote_version_str))
+                                  local_v = version.parse(local_version_str)
+                          
+                                  if remote_v <= local_v:
+                                      logging.info(f"{self.constants.patcher_name} is up to date. (Local: {local_v} >= Remote: {remote_v})")
+                                      return
+                          
+                              except version.InvalidVersion:
+                                  logging.error("Your version is invalid")
+                                  if remote_version_str == local_version_str:
+                                      return
+                             # <- exactly here is the next vulnerability - an attacker could launch a DoS attack to trick the user into using a known vulnerable version
+
+Impact: an attacker could supply the checking for updates function with an invalid syntax to cause an unexpected error to crash the app to force a user into using a known, vulnerable version
+
+
+## 4.0.0.16050 - 4.0.0 alpha 16.4.0
+This release:
+- fixes UI bugs in the update screen where it says Would you like to instead of Would you like to update due to not enough space on the screen
+- fixes a bug where root-volume file removal writing to the sealed live volume instead of the mounted copy when root patching on a Mac that requires Metallibs https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/commit/059cc9a659e9ff3c240b732b66b950916d44a007
+- moves all debugging features in Settings in a seperate Debug tab to make it easier to find these debugging features when needed - such as, Kext Debugging
+- All settings from Extras are moved to Advanced to make it easier to navigate
+- adds an experimental EF for macOS 26I to the repository for MacBookPro14,3 - if it works, report here: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/pull/190 . If it doesn't, report an issue., thx @Medelcartelinc
+- fixes the following vulnerabilities:
+- fixes a vulnerability where an attacker or bad Hackintosh user could trick a Hackintosh user into building OpenCore EFIs for real Macs by spoofing the SMBIOS as a Mac computer
+- fixes a bug and a vulnerability where the patcher itself checks if the config the current OpenCore is running was checked against the SMBIOS instead of checking real hardware. This could cause false alarms. An attacker could abuse this to cause a DoS attack by tricking the user into building an EFI that is not suitable for their Mac.
+- fixes a vulnerability where it doesn't mention what SIP is in Settings > Security. An attacker could trick an unaware user into completely disabling SIP to trick the user into launching a malicious application that tampers with core system files. This is fixed by explaining what SIP is, what does it do and if they don't know how SIP does work, not to recommend touching that menu.
+in sys_patch.py:
+- an attacker could crash the application to cause a DoS attack or execute arbitary code:
+          # <- here's the vulnerability - there's no try/except block to isolate any errors. Like this, an attacker could launch a DoS attack to crash the app or execute arbitary code. Furthermore, when it fails to resolve the dynamic patchset and causes an expected error, it only says Unknown Dynamic Patchset without any more information. An attacker could abuse this to launch a ClickFix attack.
+       if variant == DynamicPatchset.MetallibSupportPkg:
+                  return self._resolve_metallib_support_pkg()
+              else:
+                  logging.error(f"Unknown Dynamic Patchset: {variant}")
+
+Impact: an attacker could supply the if condition with an invalid syntax to crash the application or execute arbitary code. 
+Another impact: an attacker could also launch a ClickFix attack due to only saying Unknown Dynamic Patchset without any more information.
+- an attacker could execute arbitary code due to lack of error handling when there is an unexpected error when running a preflight check:
+            def _preflight_checks(self, required_patches: dict, source_files_path: Path) -> dict:
+                    """
+                    Run preflight checks before patching.
+                    
+                    Validates:
+                    - All required files exist
+                    - Dynamic patchsets are resolved
+                    - Legacy plugin cleanup
+                    - Kernel cache cleanup
+                    - Hardware-specific setup (SNB, KDK)
+            
+                    Parameters:
+                        required_patches (dict): Patchset dictionary (from HardwarePatchsetDetection)
+                        source_files_path (Path): Path to the source files (PatcherSupportPkg)
+            
+                    Returns:
+                        dict: Updated patchset dictionary
+                        
+                    Raises:
+                        Exception: If critical preflight check fails
+                    """
+                    logging.info("- Running Preflight Checks before patching")
+            
+                    # Validate all required files exist
+                    for patch in required_patches:
+                        for method_type in [
+                            PatchType.OVERWRITE_SYSTEM_VOLUME,
+                            PatchType.OVERWRITE_DATA_VOLUME,
+                            PatchType.MERGE_SYSTEM_VOLUME,
+                            PatchType.MERGE_DATA_VOLUME
+                        ]:
+                            if method_type not in required_patches[patch]:
+                                continue
+            
+                            for install_patch_directory in list(required_patches[patch][method_type]):
+                                for install_file in list(required_patches[patch][method_type][install_patch_directory]):
+                                    is_dynamic_patchset = False
+                                    try:
+                                        # Resolve dynamic patchsets
+                                        if required_patches[patch][method_type][install_patch_directory][install_file] in DynamicPatchset:
+                                            is_dynamic_patchset = True
+                                            required_patches[patch][method_type][install_patch_directory][install_file] = self._resolve_dynamic_patchset(
+                                                required_patches[patch][method_type][install_patch_directory][install_file]
+                                            )
+                                    except TypeError:
+                                        pass
+                                 # <- here's the vulnerability right after except TypeError - it lacks error handling when an unexpected error happens
+
+Impact: an attacker could write intentionally invalid syntax to cause the process to crash to cause an unexpected error and then to execute arbitary code. This is fixed by adding error handling when an unexpected error happens.
+
+- A couple of lines later, there's another vulnerability that when it fails to force refresh MetallibSupportPkg, the process may not quit, which could lead to a Root patching is complete message unconditionally. And another vulnerability where it doesn't say clearly what is exactly failing:
+                  try:
+                          refreshed_path = self._resolve_metallib_support_pkg(force_refresh=True)
+                          self._resolve_dynamic_patchset.cache_clear()
+                          required_patches[patch][method_type][install_patch_directory][install_file] = refreshed_path
+                          source_file = refreshed_path + install_patch_directory + "/" + install_file
+  
+                      except Exception as e: # <- here's the vulnerability - the app may say unconditionally that the Root patches have been installed despite not done so, and doesn't say what exactly is failing
+                          logging.error(f"- Failed to force-refresh MetallibSupportPkg: {e}")
+
+Impact: an attacker could write an invalid syntax to execute arbitary code without the user's knowledge. And also an attacker could launch a DoS attack by tricking the user that the Root patching process is completed while their system no longer boots up. This is fixed by adding in the error handling logging.exception and sys.exit(3).
+
+- A few lines later, another vulnerability appears that unconditionally it may throw Failed to find a source file:
+
+                        if not Path(source_file).exists():
+                                                        if is_dynamic_patchset:
+                                                            # Even after a fresh MetallibSupportPkg pull, this specific file is
+                                                            # still missing. MetallibSupportPkg packages are generated per exact
+                                                            # macOS build by a third-party service and aren't guaranteed to
+                                                            # contain every single metallib for every build/Mac combination (see
+                                                            # reports of e.g. missing VisionKitInternal.framework/.../default.metallib
+                                                            # on multiple different builds, even after updating macOS). Treat a
+                                                            # missing file sourced from it as non-fatal: skip installing just this
+                                                            # one file instead of aborting root patching entirely, since these are
+                                                            # supplemental shader libraries, not files every patch set depends on
+                                                            # to function.
+                                                            logging.warning(f"- MetallibSupportPkg is missing {install_patch_directory}/{install_file} for this build, skipping")
+                                                            del required_patches[patch][method_type][install_patch_directory][install_file]
+                                                            continue
+                                                        logging.error(f"Failed to find {source_file}") # <- here's the vulnerability - an attacker could delete the if not Path condition to force the patcher into throwing an error to cause a denial of service attack.
+                                                        logging.exception("Stack Trace:")
+                                                        raise Exception(f"Failed to find {source_file}")
+Impact: an attacker could leave a Mac in a half patched state by removing the if not Path condition to force displaying an error Failed to find source file to cause a denial of service attack. This is fixed by nesting the error handling in an else condition.
+
+gui_settings.py:
+- fixes a vulnerability where an attacker could silently replace OpenCore Legacy Patcher T2 with OpenCore Legacy Patcher Nightly by Dortania by simply calling the on_nightly function. This is fixed by retiring the unused on_nightly function.
+
+constants.py:
+- fixes a 0 day vulnerability where an attacker could disable automatic updates to trick the user into staying on a vulnerable version to exploit other unpatched flaws - this is known to be already exploited in the wild to return the Disable automatic updates function that I retired
+
+What does this mean for genuine fork developers who are returning this function to keep users from switching from their forks back to my mainstream repository? This means that this is no longer possible and fork developers to avoid this, they need to change the update API sources to their own to avoid getting users switching back to the mainstream project by accident.
+
+gui_main_menu.py:
+
+            def _check_for_updates(self):
+                    if self.constants.has_checked_updates is True:
+                        logging.info("We have already checked for updates.")
+                        return
+                # <- here's a vulnerability - an attacker could delete the if self.constants.has_checked_updates is True condition to overload OpenCore Legacy Patcher T2's update API to cause a DoS attack against GitHub's API
+                    ignore_updates = global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates") # <- another vulnerability that lets attackers disable automatic updates to trick the user into using known vulnerable versions to exploit already known vulnerabilities
+                    if ignore_updates is True:
+                        self.constants.ignore_updates = True
+                        return
+                
+                    self.constants.ignore_updates = False
+                    self.constants.has_checked_updates = True
+
+Impact: an attacker could remove the if ignore_updates is True condition to cause the app to check unconditionally to check for updates to cause a DoS by overloading the victim's Mac with unconditional checking for update requests to cause a DoS attack against the GitHub API. This is fixed by nesting the code for checking for updates under else like this:
+       else:
+                logging.info("Checking for updates")
+                self.constants.has_checked_updates = True
+                
+                update_dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
+                if not update_dict:
+                    return
+- 4 line later, starting from line 247, starts another vulnerability where an unexpected error handling if it unexpectedly fails to check for updates, an attacker could crash the app to cause a DoS attack and trick the user into using a known vulnerable version to exploit already known vulnerabilities:
+
+                  remote_version_str = update_dict["Version"]
+                              local_version_str = self.constants.patcher_version
+                          
+                              try:
+                                  remote_v = version.parse(str(remote_version_str))
+                                  local_v = version.parse(local_version_str)
+                          
+                                  if remote_v <= local_v:
+                                      logging.info(f"{self.constants.patcher_name} is up to date. (Local: {local_v} >= Remote: {remote_v})")
+                                      return
+                          
+                              except version.InvalidVersion:
+                                  logging.error("Your version is invalid")
+                                  if remote_version_str == local_version_str:
+                                      return
+                             # <- exactly here is the next vulnerability - an attacker could launch a DoS attack to trick the user into using a known vulnerable version
+
+Impact: an attacker could supply the checking for updates function with an invalid syntax to cause an unexpected error to crash the app to force a user into using a known, vulnerable version
+
+## 4.0.0.16903 - 4.0.0 pre-alpha 4 for alpha 17
+This release:
+
+updates OpenCore to 2.0.0.6
+updates ocvalidate and macserial to OpenCore 2.0.0.6
+fixes a bug where build OpenCore EFI wasn't greyed out on Hackintoshes and supported Macs
+Fixes stale MetallibSupportPkg cache masking missing framework metallibs in preflight checks
+Adds MacBook Pro 2020 4 thunderbolt 3 ports and Mac Pro 2019 to the dictionary called _T2_MODELS to fix an issue where upon booting OpenCore on these models it triggers Activation Lock or kernel panics
+
+## 4.0.0.16049 - 4.0.0 alpha 16.3.9
+Note: if your Mac requires dart=0 to be added as a boot argument to get WiFi and isn't done so automatically by the patcher, please report and I'll add it to the list of Macs that requires this boot argument. I added this boot argument on the Macs that are tested and confirmed to require this argument. This release:
+
+Adds MacBook Pro 2020 4 thunderbolt 3 ports and Mac Pro 2019 to the list with _T2_MODELS as otherwise it skips critical patches that without them when booting OpenCore, it would immediately trigger Activation Lock or a kernel panic when even booting natively supported macOS releases
+
+fixes OpenCore transfer silently reports success on USB flash drive installs
+
+enables WiFi and Bluetooth on MacBookPro14,1
+
+Fixes stale MetallibSupportPkg cache masking missing framework metallibs in preflight checks
+
+fixes yellow screen on certain GPUs
+
+fixes a bug where on certain systems, including T1 Macs, RSRRepair fails to run, in which turn results in a black screen or white screen with cursor fixes a yellow screen bug at 99% complete on iMac15,1, iMac17,1 and MacPro6,1 due to missing boot arguments required for macOS 26 Tahoe enables WiFi and Bluetooth on MacBookPro14,1
+
+fixes a bug that prevents from installing Metal 3802 and non-Metal patches
+
+adds support for the T1 security chip on macOS 26 Tahoe
+
+fixes a vulnerability where in validation.py if an errror occurs, it doesn't print in the Terminal. An attacker could abuse this to launch ClickFix attacks. fixes a bug where in validation.py, still it was pointed my own fork's PatcherSupportPkg link, which if it tries to fetch from it, it will throw an error since it's deprecated adds support for T1 security chip in macOS 26 Tahoe Add multiple kernel patches for FileVault and validation for T2 Macs
+
+## 4.0.0.16902 - 4.0.0 pre-alpha 3 for alpha 17
+This release:
+
+updates OpenCore to 2.0.0.5
+updates ocvalidate and macserial to 2.0.0.5
+fixes a bug where on certain systems, including T1 Macs, RSRRepair fails to run, in which turn results in a black screen or white screen with cursor
+fixes a yellow screen bug at 99% complete on iMac15,1, iMac17,1 and MacPro6,1 due to missing boot arguments required for macOS 26 Tahoe
+enables WiFi and Bluetooth on MacBookPro14,1
+
+Diese Version:
+
+Aktualisiert OpenCore auf Version 2.0.0.5
+Aktualisiert ocvalidate und macserial auf Version 2.0.0.5
+Behebt einen Fehler, der dazu führte, dass RSRRepair auf bestimmten Systemen, einschließlich T1 Macs, nicht ausgeführt werden konnte und ein schwarzer oder weißer Bildschirm mit Cursor angezeigt wurde
+Behebt einen Fehler, der bei 99 % abgeschlossen auf iMac15,1, iMac17,1 und MacPro6,1 aufgrund fehlender Startargumente für macOS 26 Tahoe einen gelben Bildschirm anzeigte
+Aktiviert WLAN und Bluetooth auf MacBookPro14,1
+
+## 4.0.0.16901 - 4.0.0 pre-alpha 2 for alpha 17
+This release:
+
+fixes a bug that prevents from installing Metal 3802 and non-Metal patches
+
+Fix permission-denied loop on global settings file owned by root - a bug that exists ever since the 4.0.0 alpha 5 update, or simply called the emergency update that patched critical vulnerabilities but created this bug alongside it
+
+fixes a bug where when trying to build OpenCore to the USB drive, the USB drive remains with no EFI despite it briefly mounts it
+
+fixes 2 vulnerabilities:
+
+   def _t2_handling(self) -> None: # <- an identical vulnerability applies for the T1 handling too
+          """T2 Security Chip Handler."""
+          if not self._is_t2_mac():
+              return
+          enable_experimental_patches = False # Nur auf True setzen wenn der Benutzer manuell selbst bearbeitet und wechselt enable_experimental_patches von False auf True 
+         # <- here's the vulnerability - it doesn't strictly check if it is a T1/T2 Mac or not. Like this, an attacker could delete the if condition to cause DoS or intentionally lower the security
+          logging.info("If you want to enable optional patches that haven't been tested yet, you should download go to releases")
+          logging.info(", then download the zip file, extract it, and then, open up misc.py.")
+          logging.info("And afterwards, you need manually to set enable_experimental_patches from False to True")
+          builder = support.BuildSupport(self.model, self.constants, self.config)
+Impact: an attacker could force users to inject T1/T2 patches onto non-T1/T2 systems to cause DoS and disable completely System Integrity Protection. This is fixed by nesting the rest of the logic that applies to T1/T2 Macs under else.
+
+fixes a vulnerability where in validation.py if an errror occurs, it doesn't print in the Terminal. An attacker could abuse this to launch ClickFix attacks.
+fixes a bug where in validation.py, still it was pointed my own fork's PatcherSupportPkg link, which if it tries to fetch from it, it will throw an error since it's deprecated
+adds support for T1 security chip in macOS 26 Tahoe
+Add multiple kernel patches for FileVault and validation for T2 Macs
+
 ## 4.0.0.16048 - 4.0.0 alpha 16.3.8
 This release:
 
@@ -51,6 +641,11 @@ logging.info("Anschließend müssen Sie "enable_experimental_patches" manuell vo
 builder = support.BuildSupport(self.model, self.constants, self.config)
 
 Auswirkung: Ein Angreifer könnte Benutzer zwingen, T1/T2-Patches auf Nicht-T1/T2-Systemen zu installieren, um einen DoS-Angriff auszulösen und den Systemintegritätsschutz vollständig zu deaktivieren. Dies wird behoben, indem die restliche Logik, die für T1/T2-Macs gilt, in einen else-Zweig verschachtelt wird.
+
+## 4.0.0.16900 - 4.0.0 pre-alpha 1 for alpha 17
+This release migrates to a costum OpenCorePkg fork in order to try to boot macOS 26 on unsupported T2 Macs by fixing issues available in OpenCorePkg
+
+Diese Version migriert zu einem angepassten OpenCorePkg-Fork, um zu versuchen, macOS 26 auf nicht unterstützten T2-Macs zu starten, indem in OpenCorePkg vorhandene Probleme behoben werden.
 
 ## 4.0.0.16047 - 4.0.0 alpha 16.3.7
 This release:
@@ -931,7 +1526,7 @@ Diese Version behebt kritische Sicherheitslücken:
                         function(self.model, self.constants, self.config) # <- Hier liegt die Sicherheitslücke – die try/except-Schleife, die eine Ausnahme auslöst, falls ein Fehler auftritt, fehlt vollständig.
 Auswirkung: Wenn eine Funktion nicht ordnungsgemäß aufgerufen wird, sich fehlerhaft verhält oder ein Angreifer einfach auf eine beliebige Funktion verweist, kann ein Angreifer DoS-Angriffe starten, um die Anwendung zum Absturz zu bringen oder beliebigen Code auszuführen.
 
-## 4.0.0.12030 - 4.0.0 alpha 15.6 (outside the development branch)
+## 4.0.0.12030 - 4.0.0 alpha 15.6
 This release improves user experience and transparency inside the installer. For example, prior to this release, it said it will install OpenCore Legacy Patcher instead of OpenCore Legacy Patcher T2.
 And also fixes critical vulnerabilities:
 - it installed a Priveleged Helper tool that is no longer in use since 3.0.0 alpha 4.3 that is executing as root. This gives the ability for attackers to execute arbitary code with root privileges, which would allow attackers to modify critical system files.
@@ -1014,7 +1609,7 @@ Auswirkungen: Angreifer können diese Sicherheitslücke ausnutzen, um einen Kern
 Außerdem, es gibt keinen Sinn, nach sys.exit(3), return False auszuführen - und doch, es ist eine gefährliche Sicherheitslücke.
 Furthermore, there is no point in executing `return False` after `sys.exit(3)` - and it is a dangerous vulnerability.
 
-## 4.0.0.12023 - alpha 15.5.3: (outside the development branch)
+## 4.0.0.12023 - alpha 15.5.3
 This release fixes a bug where on T2 Macs it skips injecting critical patches that have different Find and Replace byte lenghts by simply stopping the process in case this happens.
 Diese Version behebt einen Fehler, der dazu führt, dass auf T2 Macs das Einfügen kritischer Patches mit unterschiedlichen Find- und Replace-Bytelängen übersprungen wird, indem der Prozess in diesem Fall einfach gestoppt wird.
 
@@ -1044,7 +1639,7 @@ Before: When calling /bin/mv or /bin/rm, the system had to pass the path to the 
 After: Since pathlib processes paths more atomically, or directly at the operating system level, the window of opportunity for such manipulation is significantly reduced. Furthermore, `unlink(missing_ok=True)` prevents errors with non-existent files without the need for shell error messages.
 
 
-``` 3. Improved Error Handling and Stability
+3. Improved Error Handling and Stability
 
 Before: While the return value of the subprocess call was checked, failures of the shell itself (e.g., permission errors or blocked paths) were often only logged in a rudimentary way.
 
@@ -1083,7 +1678,7 @@ Verbesserung: Da pathlib den Pfad explizit als Objekt verwaltet, ist das Skript 
 updates BlueToolFixup, NVMeFix, CPUFriend and AirportBrcmFixup to their latest versions to ensure stability, security and macOS 26 Tahoe compatability. This includes fixes that affect non-T2 Macs primarily, but also, T2 Macs.
 BlueToolFixup, NVMeFix, CPUFriend und AirportBrcmFixup werden auf die neuesten Versionen aktualisiert, um Stabilität, Sicherheit und Kompatibilität mit macOS 26 Tahoe zu gewährleisten. Dies umfasst Fehlerbehebungen, die sich hauptsächlich auf Nicht-T2-Macs, aber auch auf T2-Macs auswirken.
 
-## 4.0.0.12021 - alpha 15.5.1 (outside the development branch)
+## 4.0.0.12021 - alpha 15.5.1
 This release fixes update reliability issues.
 Diese Version behebt Probleme mit der Zuverlässigkeit von Updates.
 If you are using alpha 15.5.0 or earlier, you should download it manually.
@@ -1091,7 +1686,7 @@ Falls Sie Alpha 15.5.0 oder älter verwenden, Sie sollen manuell herunterladen.
 Those who are using pre-alphas, they only get alpha updates, or in very certain cases, RCs or late pre-alpha versions.
 Wer Vorab-Alphas nutzt, erhält nur Alpha-Updates oder in sehr bestimmten Fällen RCs oder späte Vorab-Alpha-Versionen.
 
-## 4.0.0.12020 - alpha 15.5: (outside the development branch)
+## 4.0.0.12020 - alpha 15.5
 This version:
 
 swtiches away from a/prea builds as the updater treats those as special versions and that's a huge vulnerability that makes people leave with vulnerable versions on their machines.

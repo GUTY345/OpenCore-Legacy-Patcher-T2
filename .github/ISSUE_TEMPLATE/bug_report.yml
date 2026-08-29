@@ -131,6 +131,7 @@ body:
     attributes:
       label: Steps to upload the logs of the kernel panic if any (if not, you can skip this step or write -) / Schritte zum Hochladen der Protokolle des Kernel-Panics, falls vorhanden (falls keiner, dann Sie können das überspringen oder einen - schreiben) 
       placeholder: |
+        If this is a kernel panic, follow these steps / Falls das einen Kernel Panic ist, folgen Sie bitte die folgenden Schritten:
         Whenever is possible, please upload a slow motion video displaying the boot sequence before and during the kernel panic.
         And here's how to upload logs from OpenCore:
         1. When you face the kernel panic, force shut down your Mac by holding the power button for 10 seconds
@@ -138,19 +139,19 @@ body:
         3. Then, click the power button to start the Mac again
         4. Hold Option and choose Macintosh HD (or whatever is called your main drive)
         5. Open the OpenCore Legacy Patcher T2 app
-        6. Click on Settings
+        6. Click on OpenCore
+        7. Go to Debugging
         7. Enable Verbose, OpenCore Debugging and Kext Debugging
-        8. Click on Return
-        9. Build OpenCore as usual
-        10. Boot your Mac into OpenCore
-        11. Once the kernel panic appears, force shut down your Mac and boot back into the main drive
-        12. Open Terminal
-        13. Type sudo diskutil mount /dev/disk0s1 and hit Enter
-        14. Type your password (you won't see it!) and hit Enter
-        15. Now the EFI is mounted, open Finder
-        16. Click on EFI
-        17. Select all files inside it
-        18. Right click -> Compress - it will create a Zip file
+        8. Build OpenCore as usual
+        9. Boot your Mac into OpenCore
+        10. Once the kernel panic appears, force shut down your Mac and boot back into the main drive
+        11. Open Terminal
+        12. Type sudo diskutil mount /dev/disk0s1 and hit Enter
+        13. Type your password (you won't see it!) and hit Enter
+        14. Now the EFI is mounted, open Finder
+        15. Click on EFI
+        16. Select all files inside it
+        17. Right click -> Compress - it will create a Zip file
         18. Upload it here
 
         Laden Sie nach Möglichkeit ein Slow-Motion-Video hoch, das den Bootvorgang vor und während der Kernel-Panik zeigt.
@@ -160,20 +161,20 @@ body:
         3. Klicken Sie dann auf den Einschaltetaste, um den Mac neu zu starten.
         4. Halten Sie die Wahltaste (⌥) gedrückt und wählen Sie „Macintosh HD“ (oder wie auch immer Ihr Hauptlaufwerk heißt).
         5. Öffnen Sie die App „OpenCore Legacy Patcher T2“.
-        6. Klicken Sie auf „Settings“.
+        6. Klicken Sie auf „OpenCrore“.
+        7. Gehen Sie nach Debugging
         7. Aktivieren Sie „Verbose“, „OpenCore Debugging“ und „Kext Debugging“.
-        8. Klicken Sie auf „Return“.
-        9. Bauen Sie OpenCore wie gewohnt.
-        10. Starten Sie Ihren Mac mit OpenCore.
-        11. Sobald der Kernel-Panic erneut auftritt, erzwingen Sie das Herunterfahren Ihres Macs und starten Sie ihn wieder vom Hauptlaufwerk.
-        12. Öffnen Sie das Terminal.
-        13. Geben Sie „sudo diskutil mount /dev/disk0s1“ ein und drücken Sie die Eingabetaste.
-        14. Geben Sie Ihr Passwort ein (es wird nicht angezeigt!) und drücken Sie die Eingabetaste.
-        15. Das EFI-Laufwerk ist nun gemountet. Öffnen Sie den Finder.
-        16. Klicken Sie auf EFI.
-        17. Wählen Sie alle darin enthaltenen Dateien aus.
-        18. Klicken Sie mit der rechten Maustaste und wählen Sie „Komprimieren“. Dadurch wird eine ZIP-Datei erstellt.
-        19. Laden Sie die Datei hier hoch.
+        8. Bauen Sie OpenCore wie gewohnt.
+        9. Starten Sie Ihren Mac mit OpenCore.
+        10. Sobald der Kernel-Panic erneut auftritt, erzwingen Sie das Herunterfahren Ihres Macs und starten Sie ihn wieder vom Hauptlaufwerk.
+        11. Öffnen Sie das Terminal.
+        12. Geben Sie „sudo diskutil mount /dev/disk0s1“ ein und drücken Sie die Eingabetaste.
+        13. Geben Sie Ihr Passwort ein (es wird nicht angezeigt!) und drücken Sie die Eingabetaste.
+        14. Das EFI-Laufwerk ist nun gemountet. Öffnen Sie den Finder.
+        15. Klicken Sie auf EFI.
+        16. Wählen Sie alle darin enthaltenen Dateien aus.
+        17. Klicken Sie mit der rechten Maustaste und wählen Sie „Komprimieren“. Dadurch wird eine ZIP-Datei erstellt.
+        18. Laden Sie die Datei hier hoch.
     validations:
       required: false
 

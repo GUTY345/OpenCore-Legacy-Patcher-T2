@@ -161,6 +161,16 @@ class BuildGraphicsAudio:
         """
 
         if not self.constants.custom_model:
+            # Once the real GFX0 device (the one AppleGraphicsDevicePolicy actually
+            # keys off) has been matched below, its path must never be overwritten
+            # by a later loop iteration. On machines with more than one independent
+            # dGPU and no PCIe bridge relationship between them -- e.g. MacPro6,1's
+            # two built-in GCN 1 cards -- the "mismatch" branch below used to treat
+            # every other real GPU as if it were the same bridged card, so whichever
+            # GPU happened to be enumerated last silently won and the agdpmod/
+            # shikigva DeviceProperties patch landed on the wrong PCI path, leaving
+            # the actual GFX0 unpatched (solid yellow AGDCDiagnose screen).
+            gfx0_matched = False
             for i, device in enumerate(self.computer.gpus):
                     logging.info(f"- Found dGPU ({i + 1}): {utilities.friendly_hex(device.vendor_id)}:{utilities.friendly_hex(device.device_id)}")
                     self.config["#Revision"][f"Hardware-iMac-dGPU-{i + 1}"] = f"{utilities.friendly_hex(device.vendor_id)}:{utilities.friendly_hex(device.device_id)}"
@@ -168,6 +178,12 @@ class BuildGraphicsAudio:
                     # Work-around for AMD Navi MXM cards with PCIe bridge
                     if not self.computer.dgpu:
                         self.computer.dgpu=self.computer.gpus[i]
+
+                    if gfx0_matched:
+                        # Already resolved the true GFX0 path; a further, genuinely
+                        # separate dGPU (not a bridge duplicate of the same card)
+                        # must not clobber it.
+                        continue
 
                     if device.pci_path != self.computer.dgpu.pci_path:
                         logging.info("- device path and GFX0 Device path are different")
@@ -185,6 +201,7 @@ class BuildGraphicsAudio:
                         self.gfx0_path = self.computer.dgpu.pci_path
                         logging.info(f"- Found GFX0 Device Path: {self.gfx0_path}")
                         logging.info(f"- Found GPU Arch: {self.computer.dgpu.arch}")
+                        gfx0_matched = True
 
         else:
             if not self.constants.custom_model:
