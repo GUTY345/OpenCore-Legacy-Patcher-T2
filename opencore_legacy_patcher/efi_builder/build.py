@@ -442,21 +442,31 @@ class BuildOpenCore:
             real_model = getattr(self.constants.computer, 'real_model', self.model) if hasattr(self.constants, 'computer') else self.model
             if real_model == "MacBookPro14,3" or self.model == "MacBookPro14,3":
                 current_boot_args = self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"]
+                
+                # Rimuovi args di debug inutili
+                cleaned = [a for a in current_boot_args.split() if a not in ["debug=0x100", "keepsyms=1"]]
+                current_boot_args = " ".join(cleaned)
+                
                 extra_args = []
                 # dart=0: Disables IOMMU/VT-d to prevent peripheral mapping issues
                 if "dart=0" not in current_boot_args:
                     extra_args.append("dart=0")
-                # LEVEL-D specific: Use pikera to fix external monitor flickering
-                # Otherwise, fallback to standard ignore patch
+                # alcid=13: Necessario per audio jack su MBP14,3 T1
+                if "alcid=" not in current_boot_args:
+                    extra_args.append("alcid=13")
+                # -nokcmismatchpanic: Previene kernel panic al boot
+                if "-nokcmismatchpanic" not in current_boot_args:
+                    extra_args.append("-nokcmismatchpanic")
+                # agdpmod=pikera: Fix display policy / black screen
                 if "agdpmod=" not in current_boot_args:
-                    if self.constants.build_profile == "test_d":
-                        extra_args.append("agdpmod=pikera")
-                    else:
-                        extra_args.append("agdpmod=ignore")
+                    extra_args.append("agdpmod=pikera")
+                
+                new_args = current_boot_args
                 if extra_args:
                     new_args = f"{current_boot_args} {' '.join(extra_args)}".strip()
-                    self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] = new_args
-                    logging.info(f"- MacBookPro14,3: Added boot-args: {' '.join(extra_args)}")
+                    
+                self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] = new_args
+                logging.info(f"- MacBookPro14,3: Optimized boot-args -> {new_args}")
 
             support.BuildSupport(self.model, self.constants, self.config).cleanup()
             self._save_config()
