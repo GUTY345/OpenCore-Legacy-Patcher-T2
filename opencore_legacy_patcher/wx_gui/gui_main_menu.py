@@ -234,7 +234,7 @@ class MainFrame(wx.Frame):
             index += 1
             if index == rollover:
                 button_x = 360
-                button_y = model_label.GetPosition()[1] + 30
+                button_y = self.model_label.GetPosition()[1] + 30
 
         # --- RETURN TO MODE SELECTOR ---
         if is_matteo:
