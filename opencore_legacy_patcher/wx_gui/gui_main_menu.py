@@ -50,7 +50,7 @@ class MainFrame(wx.Frame):
         self.constants: constants.Constants = global_constants
         self.title: str = title
 
-        self.model_label: wx.StaticText = None
+        self.model_button: wx.Button = None
         self.build_button: wx.Button = None
         
         # FIX: Absicherung gegen Thread-Races & Verwaiste Fenster-Referenzen
@@ -109,7 +109,7 @@ class MainFrame(wx.Frame):
         model_Button.Centre(wx.HORIZONTAL)
         model_Button.SetToolTip("Edit the Target Model OpenCore will build for")
         model_Button.Bind(wx.EVT_BUTTON, self.on_edit_model)
-        self.model_label = model_Button
+        self.model_button = model_Button
 
         # Main Feature Buttons
         if self.constants.Developer_Mode:
@@ -131,7 +131,7 @@ class MainFrame(wx.Frame):
                     "icon": str(self.constants.icns_resource_path / "OC-Patch.icns"),
                     "info_tab": 2,
                 },
-                "macOS Configeration": {
+                "macOS Configuration": {
                     "function": self.on_macos_config,
                     "description": ["Settings, drivers and", "patches for your system."],
                     "icon": str(self.constants.patch_icon_path),
@@ -144,7 +144,7 @@ class MainFrame(wx.Frame):
                 "Settings": {
                     "function": self.on_settings,
                     "description": ["Settings, resources and tools", "for OpenCore Legacy Patcher."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Patch-WrenchAndScrewDriver.icns"),
+                    "icon": str(self.constants.icns_resource_path / "OC-Patcher.icns"),
                 },
                 "Help": {
                     "function": self.on_help,
@@ -166,7 +166,7 @@ class MainFrame(wx.Frame):
                     "icon": str(self.constants.icns_resource_path / "OC-Patch.icns"),
                     "info_tab": 2,
                 },
-                "macOS Configeration": {
+                "macOS Configuration": {
                     "function": self.on_macos_config,
                     "description": ["Settings, drivers and", "patches for your system."],
                     "icon": str(self.constants.patch_icon_path),
@@ -184,7 +184,7 @@ class MainFrame(wx.Frame):
                 "Settings": {
                     "function": self.on_settings,
                     "description": ["Settings, resources and tools", "for OpenCore Legacy Patcher."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Patch-WrenchAndScrewDriver.icns"),
+                    "icon": str(self.constants.icns_resource_path / "OC-Patcher.icns"),
                 },
                 "Help": {
                     "function": self.on_help,
@@ -194,7 +194,7 @@ class MainFrame(wx.Frame):
             }
 
         button_x = 25
-        button_y = self.model_label.GetPosition()[1] + 30
+        button_y = self.model_button.GetPosition()[1] + 30
         rollover = (len(menu_buttons) + 1) // 2
         index = 0
         max_height = 0
@@ -234,7 +234,7 @@ class MainFrame(wx.Frame):
             index += 1
             if index == rollover:
                 button_x = 360
-                button_y = self.model_label.GetPosition()[1] + 30
+                button_y = self.model_button.GetPosition()[1] + 30
 
         # --- RETURN TO MODE SELECTOR ---
         if is_matteo:

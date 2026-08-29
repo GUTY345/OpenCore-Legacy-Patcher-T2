@@ -92,6 +92,16 @@ class OCSettingsFrame(wx.Frame):
 
         bot_sizer.AddSpacer(20)
 
+        # Add Build and Install OpenCore Button
+        build_oc_button = wx.Button(frame, label="Build and Install OpenCore", pos=(-1, -1), size=(200, 30))
+        build_oc_button.Bind(wx.EVT_BUTTON, self.on_build_and_install)
+        build_oc_button.SetToolTip("Builds and Installs OpenCore to your disk")
+        build_oc_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+        if gui_support.CheckProperties(self.constants).host_can_build() is False:
+            build_oc_button.Disable()
+        bot_sizer.Add(build_oc_button, 0, wx.ALIGN_CENTER | wx.ALL, 0)
+
+        bot_sizer.AddSpacer(20)
 
         # Add return button
         return_button = wx.Button(frame, label="Return", pos=(-1, -1), size=(110, 30))
@@ -995,7 +1005,6 @@ class OCSettingsFrame(wx.Frame):
         self.frame_modal.Destroy()
         self.parent.Enable()
 
-        wx.CallAfter(self.parent.Destroy)
         
     def on_save(self, event):
         # Throw pop up to get save location
@@ -1014,6 +1023,20 @@ class OCSettingsFrame(wx.Frame):
                 screen_location=self.parent.GetPosition()
             )
             wx.CallAfter(self.parent.Destroy)
+
+    def on_build_and_install(self, event):
+        self.frame_modal.Destroy()
+        self.parent.Hide()
+        logging.info("Updating OpenCore and root volume patches...")
+        self.constants.update_stage = gui_support.AutoUpdateStages.CHECKING
+        gui_build.BuildFrame(
+            parent=None,
+            title=self.title,
+            global_constants=self.constants,
+            screen_location=self.parent.GetPosition(),
+            install=True
+        )
+        wx.CallAfter(self.parent.Destroy)
 
     def _update_setting(self, variable, value):
         logging.info(f"Updating Local Setting: {variable} = {value}")

@@ -266,12 +266,14 @@ class SettingsFrame(wx.Frame):
                 },
             },
             "Developer": {
-                "Disable Developer Mode": {
+                "Enable Developer Mode": {
                     "type": "checkbox",
-                    "override_function": self.on_disable_dev_mode,
-                    "variable": "",
+                    "override_function": self.on_enable_dev_mode,
+                    "variable": "Developer_Mode",
+                    "value": self.constants.Developer_Mode,
                     "description": [
-                        "Turns off Ddeveloper Mode for this app instance.",
+                        "Turns on Developer Mode for this app instance.",
+                        "Requires restarting the app to take effect."
                     ],
                 },
                 "Validation": {
@@ -420,22 +422,15 @@ Hardware Information:
             tmp_value = "PYTHON_NONE_VALUE"
         global_settings.GlobalEnviromentSettings().write_property(f"GUI:{variable}", tmp_value)
 
-    def on_disable_dev_mode(self, event: wx.Event, variable: str, constants: constants.Constants) -> None:
-        logging.info("Turning off Developer Mode")
-        # model_text: wx.StaticText = None
-        # dev_mode_text: wx.StaticText = None
-        # version_text: wx.StaticText = None
-
-        # for child in self.Parent.GetChildren():
-            # if isinstance(child, wx.StaticText):
-                # if child.GetLabel() == "Developer Mode is ON":
-                    # dev_mode_text = child
-                # elif child.GetLabel() == f"Model: {self.constants.custom_model or self.constants.computer.real_model}":
-                    # model_text = child
-                # elif child.GetLabel() == f"Version {self.constants.patcher_version}":
-                    # version_text = child
-            
-        self.constants.Developer_Mode = False
-        # dev_mode_text.Destroy()
-        # model_text.SetPosition(-1, version_text.GetPosition()[1] + 30)
-        self.frame_modal.Destroy()
+    def on_enable_dev_mode(self, event: wx.Event, variable: str, constants: constants.Constants) -> None:
+        is_enabled = event.GetEventObject().GetValue()
+        dev_file = Path("~/.dortania_developer").expanduser()
+        if is_enabled:
+            logging.info("Turning on Developer Mode")
+            dev_file.touch()
+            self.constants.Developer_Mode = True
+        else:
+            logging.info("Turning off Developer Mode")
+            if dev_file.exists():
+                dev_file.unlink()
+            self.constants.Developer_Mode = False
