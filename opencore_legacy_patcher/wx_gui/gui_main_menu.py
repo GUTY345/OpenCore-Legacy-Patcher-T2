@@ -125,12 +125,18 @@ class MainFrame(wx.Frame):
                     "description": ["Download and flash a macOS", "Installer for your system."],
                     "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
                 },
+                "Install drivers and patches": {
+                    "function": self.on_root_patches,
+                    "description": ["Installs hardware drivers and", "patches for your system after", "installing a new version of macOS."],
+                    "icon": str(self.constants.patch_icon_path),
+                    "info_tab": 2,
+                },
                 "macOS Configuration": {
                     "function": self.on_macos_config,
                     "description": ["Settings, drivers and", "patches for your system."],
                     "icon": str(self.constants.patch_icon_path),
                 },
-                "OpenCore": {
+                "OpenCore Settings": {
                     "function": self.on_oc_settings,
                     "description": ["Prepares provided drive to be", "able to boot unsupported OSes."],
                     "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
