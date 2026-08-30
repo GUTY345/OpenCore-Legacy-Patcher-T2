@@ -111,14 +111,19 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
         return subprocess.run(args[0], **kwargs)
 
     if Path(OCLP_PRIVILEGED_HELPER).exists():
-        return subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
+        result = subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
+        if result.returncode == PrivilegedHelperErrorCodes.OCLP_PHT_ERROR_INVALID_CERTIFICATES:
+            logging.warning("Privileged Helper Tool failed due to invalid certificates (non-official build). Falling back to osascript.")
+        else:
+            return result
     else:
         logging.warning(f"Privileged Helper Tool not found at {OCLP_PRIVILEGED_HELPER}. Falling back to osascript.")
-        import shlex
-        cmd_string = shlex.join(str(arg) for arg in args[0])
-        as_safe_string = cmd_string.replace('\\', '\\\\').replace('"', '\\"')
-        apple_script = f'do shell script "{as_safe_string}" with administrator privileges'
-        return subprocess.run(["osascript", "-e", apple_script], **kwargs)
+        
+    import shlex
+    cmd_string = shlex.join(str(arg) for arg in args[0])
+    as_safe_string = cmd_string.replace('\\', '\\\\').replace('"', '\\"')
+    apple_script = f'do shell script "{as_safe_string}" with administrator privileges'
+    return subprocess.run(["osascript", "-e", apple_script], **kwargs)
 
 
 def mount_dmg(
