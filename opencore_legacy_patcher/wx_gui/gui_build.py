@@ -97,9 +97,36 @@ class BuildFrame(wx.Frame):
 
         # Profile selection for MacBookPro14,3
         target_model = self.constants.custom_model or self.constants.computer.real_model
-        self.radio_standard = None
-        self.radio_testb = None
+        if target_model == "MacBookPro14,3":
+            self.radio_standard = wx.RadioButton(frame, label="STANDARD / SAFE", pos=(-1, next_y), style=wx.RB_GROUP)
+            self.radio_standard.Centre(wx.HORIZONTAL)
+            next_y += 30
 
+            self.radio_testa = wx.RadioButton(frame, label="TEST-A (GPU)", pos=(-1, next_y))
+            self.radio_testa.Centre(wx.HORIZONTAL)
+            next_y += 30
+
+            self.radio_testb = wx.RadioButton(frame, label="TEST-B (GPU + No-Compat)", pos=(-1, next_y))
+            self.radio_testb.Centre(wx.HORIZONTAL)
+            next_y += 30
+            
+            self.radio_testc = wx.RadioButton(frame, label="TEST-C (GPU + No-Compat + VBootArgs)", pos=(-1, next_y))
+            self.radio_testc.Centre(wx.HORIZONTAL)
+            next_y += 40
+            
+            if self.constants.build_profile == "test_c":
+                self.radio_testc.SetValue(True)
+            elif self.constants.build_profile == "test_b":
+                self.radio_testb.SetValue(True)
+            elif self.constants.build_profile == "test_a":
+                self.radio_testa.SetValue(True)
+            else:
+                self.radio_standard.SetValue(True)
+        else:
+            self.radio_standard = None
+            self.radio_testa = None
+            self.radio_testb = None
+            self.radio_testc = None
 
         # Button: Install OpenCore
         install_button = wx.Button(frame, label="🔩 Install OpenCore", pos=(-1, next_y), size=(150, 30))

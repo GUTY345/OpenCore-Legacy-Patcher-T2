@@ -315,9 +315,9 @@ class GenerateScripts:
         self.zsh_functions = ZSHFunctions()
 
         self.files = [
-            "Applications/OpenCore-Patcher.app",
+            "Applications/OpenCore-Patcher-T2.app",
             "Library/Application Support/Dortania/Update.plist",
-            "Library/Application Support/Dortania/OpenCore-Patcher.app",
+            "Library/Application Support/Dortania/OpenCore-Patcher-T2.app",
             "Library/PrivilegedHelperTools/com.dortania.opencore-legacy-patcher.privileged-helper"
         ]
 
@@ -429,8 +429,8 @@ class GenerateScripts:
         _script += "\n"
 
         _script += "helperPath=\"Library/PrivilegedHelperTools/com.dortania.opencore-legacy-patcher.privileged-helper\"\n"
-        _script += "mainAppPath=\"Library/Application Support/Dortania/OpenCore-Patcher.app\"\n"
-        _script += "shimAppPath=\"Applications/OpenCore-Patcher.app\"\n"
+        _script += "mainAppPath=\"Library/Application Support/Dortania/OpenCore-Patcher-T2.app\"\n"
+        _script += "shimAppPath=\"Applications/OpenCore-Patcher-T2.app\"\n"
         if is_autopkg:
             _script += "executablePath=\"$mainAppPath/Contents/MacOS/OpenCore-Patcher\"\n"
 

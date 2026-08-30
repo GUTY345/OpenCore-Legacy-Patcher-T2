@@ -72,7 +72,7 @@ coll = COLLECT(exe,
                name='OpenCore-Patcher')
 
 app = BUNDLE(coll,
-             name='OpenCore-Patcher.app',
+             name='OpenCore-Patcher-T2.app',
              icon=str(SPEC_DIR / "payloads/Resources/AppIcons/OC-Patcher.icns"), # Fix: Use the corrected SPEC_DIR variable and Resources path
              bundle_identifier="com.dortania.opencore-legacy-patcher",
              info_plist={
