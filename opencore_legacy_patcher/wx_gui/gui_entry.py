@@ -22,6 +22,7 @@ from ..wx_gui import (
     gui_support,
     gui_update,
     gui_mode_selector,
+    gui_settings, # <- Settings-Import fehlt, bin ich nicht sicher, ob das benötigt ist
 )
 
 
@@ -125,14 +126,20 @@ class EntryPoint:
             # Bypass Mode Selector entirely.
             # If Developer Mode is OFF -> Albert mode (Standard)
             # If Developer Mode is ON -> Matteo mode (T1 Experimental)
-            if not self.constants.Developer_Mode:
-                logging.info(f"Developer Mode is OFF, bypassing Mode Selector → Standard UI")
-                self.constants.app_mode = "albert"
-                entry = gui_main_menu.MainFrame
-            else:
-                logging.info(f"Developer Mode is ON, bypassing Mode Selector → Experimental UI")
-                self.constants.app_mode = "matteo"
-                entry = gui_main_menu.MainFrame
+            try:
+                if not self.constants.Developer_Mode:
+                    logging.info(f"Developer Mode is OFF, bypassing Mode Selector → Standard UI")
+                    self.constants.app_mode = "albert"
+                    entry = gui_main_menu.MainFrame
+                else:
+                    logging.info(f"Developer Mode is ON, bypassing Mode Selector → Experimental UI")
+                    self.constants.app_mode = "matteo"
+                    entry = gui_main_menu.MainFrame
+            except Exception as e:
+                logging.error("We couldn't enter or exit Developer Mode due to an error:")
+                logging.exception("Stack Trace:")
+                logging.info("Please report this issue.")
+                logging.info("In the meanwhile, Developer Mode will be turned back off")
 
         logging.info(f"Entry point set: {entry.__name__}")
 
