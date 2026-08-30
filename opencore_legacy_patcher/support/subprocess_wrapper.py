@@ -8,6 +8,7 @@ import stat
 import shlex
 import logging
 import subprocess
+import os
 
 from pathlib import Path
 from typing import Callable, Optional
@@ -104,6 +105,10 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
     # Check if first argument exists
     if not Path(args[0][0]).exists():
         raise FileNotFoundError(f"File not found: {args[0][0]}")
+
+    # If we are already running as root (e.g. launched via sudo), bypass the Helper Tool
+    if os.geteuid() == 0:
+        return subprocess.run(args[0], **kwargs)
 
     if Path(OCLP_PRIVILEGED_HELPER).exists():
         return subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
