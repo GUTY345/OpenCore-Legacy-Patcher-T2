@@ -3,6 +3,7 @@ defaults.py: Generate default data for host/target
 """
 
 import logging
+import os
 import plistlib
 import subprocess
 
@@ -142,7 +143,7 @@ class GenerateDefaults:
         if not analytics_handler.ANALYTICS_SERVER and analytics_handler.SITE_KEY == "":
             logging.info("Analytics data was not embeded.")
             global_settings.GlobalEnviromentSettings().write_property("EnableCrashAndAnalyticsReporting", False)
-        if Path("~/.dortania_developer").expanduser().exists():
+        if os.environ.get("OCLP_DEV_MODE") == "1":
             self.constants.Developer_Mode = True
         else:
             self.constants.Developer_Mode = False

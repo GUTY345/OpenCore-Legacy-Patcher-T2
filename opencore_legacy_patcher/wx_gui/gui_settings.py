@@ -5,6 +5,8 @@ gui_settings.py: Settings Frame for the GUI
 import wx
 import pprint
 import logging
+import os
+import sys
 from pathlib import Path
 from .. import constants
 
@@ -423,13 +425,21 @@ Hardware Information:
 
     def on_enable_dev_mode(self, variable: str, value: bool, constants_variable: str) -> None:
         is_enabled = value
-        dev_file = Path("~/.dortania_developer").expanduser()
         if is_enabled:
             logging.info("Turning on Developer Mode")
-            dev_file.touch()
+            os.environ["OCLP_DEV_MODE"] = "1"
             self.constants.Developer_Mode = True
         else:
             logging.info("Turning off Developer Mode")
-            if dev_file.exists():
-                dev_file.unlink()
+            os.environ["OCLP_DEV_MODE"] = "0"
             self.constants.Developer_Mode = False
+            
+        dlg = wx.MessageDialog(
+            None,
+            "The application needs to restart to apply Developer Mode changes.\n\nWould you like to restart now?",
+            "Restart Required",
+            wx.YES_NO | wx.ICON_INFORMATION
+        )
+        if dlg.ShowModal() == wx.ID_YES:
+            logging.info("Restarting application to apply Developer Mode changes...")
+            os.execl(sys.executable, sys.executable, *sys.argv)

@@ -80,6 +80,7 @@ class ModeSelectorFrame(wx.Frame):
         app = wx.GetApp()
         if hasattr(app, 'frame'):
             app.frame = frame
+            app.SetTopWindow(frame)
             frame.Bind(wx.EVT_CLOSE, app.OnCloseFrame)
             
         self.Hide()

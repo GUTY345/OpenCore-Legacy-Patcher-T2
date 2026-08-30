@@ -113,9 +113,15 @@ class BuildFrame(wx.Frame):
             
             self.radio_testc = wx.RadioButton(frame, label="TEST-C (GPU + No-Compat + VBootArgs)", pos=(-1, next_y))
             self.radio_testc.Centre(wx.HORIZONTAL)
+            next_y += 30
+            
+            self.radio_testd = wx.RadioButton(frame, label="TEST-D (GPU + BootArgs + XPC)", pos=(-1, next_y))
+            self.radio_testd.Centre(wx.HORIZONTAL)
             next_y += 40
             
-            if self.constants.build_profile == "test_c":
+            if self.constants.build_profile == "test_d":
+                self.radio_testd.SetValue(True)
+            elif self.constants.build_profile == "test_c":
                 self.radio_testc.SetValue(True)
             elif self.constants.build_profile == "test_b":
                 self.radio_testb.SetValue(True)
@@ -128,6 +134,7 @@ class BuildFrame(wx.Frame):
             self.radio_testa = None
             self.radio_testb = None
             self.radio_testc = None
+            self.radio_testd = None
 
         if self.constants.Developer_Mode:
             # Button: Build OpenCore (Only in Developer Mode to allow selection)
@@ -220,6 +227,8 @@ class BuildFrame(wx.Frame):
             profile_name = "TEST-B GPU"
         elif self.constants.build_profile == "test_c":
             profile_name = "TEST-C TAHOE / ALBERT"
+        elif self.constants.build_profile == "test_d":
+            profile_name = "TEST-D (GPU + BootArgs + XPC)"
         elif self.constants.build_profile == "test_c_spoofed":
             profile_name = "TEST-C SPOOFED / ALBERT"
         else:
@@ -279,10 +288,22 @@ class BuildFrame(wx.Frame):
     def on_build_click(self, event: wx.Event) -> None:
         self.build_button.Disable()
         if getattr(self, "radio_standard", None):
+            if self.radio_testd.GetValue():
+                self.constants.build_profile = "test_d"
+            elif self.radio_testc.GetValue():
+                self.constants.build_profile = "test_c"
+            elif self.radio_testb.GetValue():
+                self.constants.build_profile = "test_b"
+            elif self.radio_testa.GetValue():
+                self.constants.build_profile = "test_a"
+            else:
+                self.constants.build_profile = "standard"
+
             self.radio_standard.Disable()
             self.radio_testa.Disable()
             self.radio_testb.Disable()
             self.radio_testc.Disable()
+            self.radio_testd.Disable()
         if hasattr(self, "return_button"):
             self.return_button.Disable()
         self._invoke_build()

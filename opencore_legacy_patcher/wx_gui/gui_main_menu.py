@@ -141,9 +141,9 @@ class MainFrame(wx.Frame):
                     "description": ["Prepares provided drive to be", "able to boot unsupported OSes."],
                     "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
                 },
-                "Settings": {
+                "App Settings": {
                     "function": self.on_settings,
-                    "description": ["Settings, resources and tools", "for OpenCore Legacy Patcher."],
+                    "description": ["App settings, reporting and", "Developer/Experimental Mode."],
                     "icon": str(self.constants.icns_resource_path / "OC-Patcher.icns"),
                 },
                 "Help": {
@@ -158,22 +158,25 @@ class MainFrame(wx.Frame):
                     "function": self.on_build_and_install_standard,
                     "description": ["Build OpenCore and install", "it to your internal or external drive."],
                     "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                    "info_tab": 0,
                 },
                 "Post-Install Root Patch": {
                     "function": self.on_root_patches,
                     "description": ["Install hardware drivers and", "patches for your system."],
                     "icon": str(self.constants.patch_icon_path),
-                    "info_tab": 2,
                 },
                 "Create macOS Installer": {
                     "function": self.on_create_macos_installer,
                     "description": ["Download and flash a macOS", "Installer for your system."],
                     "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
                 },
-                "Settings": {
+                "OpenCore Settings": {
+                    "function": self.on_oc_settings,
+                    "description": ["Settings, drivers and", "patches for your system."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Settings.icns"),
+                },
+                "App Settings": {
                     "function": self.on_settings,
-                    "description": ["Settings, resources and tools", "for OpenCore Legacy Patcher."],
+                    "description": ["App settings, reporting and", "Developer/Experimental Mode."],
                     "icon": str(self.constants.icns_resource_path / "OC-Patcher.icns"),
                 },
                 "Help": {
@@ -225,14 +228,6 @@ class MainFrame(wx.Frame):
             if index == rollover:
                 button_x = 360
                 button_y = self.model_button.GetPosition()[1] + 30
-
-        # --- RETURN TO MODE SELECTOR ---
-        if is_matteo:
-            return_btn = wx.Button(self, label="🔄 Go back to Mode Selector", pos=(-1, max_height + 20), size=(220, 30))
-            return_btn.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_BOLD))
-            return_btn.Centre(wx.HORIZONTAL)
-            return_btn.Bind(wx.EVT_BUTTON, self.on_return_to_mode_selector)
-            max_height = return_btn.GetPosition()[1] + 20
 
         # --- COPYRIGHT ---
         copy_label = wx.StaticText(self, label=self.constants.copyright_date, pos=(-1, max_height + 25))

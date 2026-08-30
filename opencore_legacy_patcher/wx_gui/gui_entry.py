@@ -122,11 +122,16 @@ class EntryPoint:
             entry = gui_sys_patch_start.SysPatchStartFrame
             patches = HardwarePatchsetDetection(constants=self.constants).device_properties
         elif entry is gui_mode_selector.ModeSelectorFrame:
-            # Skip Mode Selector if Developer Mode is not explicitly enabled.
-            # (The dual-mode UI is experimental and targeted at developers/testers)
+            # Bypass Mode Selector entirely.
+            # If Developer Mode is OFF -> Albert mode (Standard)
+            # If Developer Mode is ON -> Matteo mode (T1 Experimental)
             if not self.constants.Developer_Mode:
                 logging.info(f"Developer Mode is OFF, bypassing Mode Selector → Standard UI")
                 self.constants.app_mode = "albert"
+                entry = gui_main_menu.MainFrame
+            else:
+                logging.info(f"Developer Mode is ON, bypassing Mode Selector → Experimental UI")
+                self.constants.app_mode = "matteo"
                 entry = gui_main_menu.MainFrame
 
         logging.info(f"Entry point set: {entry.__name__}")
