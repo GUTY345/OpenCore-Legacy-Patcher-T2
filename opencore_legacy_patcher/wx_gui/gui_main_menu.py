@@ -112,13 +112,16 @@ class MainFrame(wx.Frame):
         self.model_button = model_Button
 
         # Main Feature Buttons
-        if self.constants.Developer_Mode:
-            menu_buttons = {
-                "Build OpenCore": {
-                    "function": self.on_build_and_install,
-                    "description": ["Build OpenCore and install", "it to your internal or external drive."],
+        menu_buttons = {
+                "OpenCore": {
+                    "function": self.on_oc_settings,
+                    "description": ["Settings to prepares provided drives to be", "able to boot unsupported macOSes."],
                     "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                    "info_tab": 0,
+                },
+                "App Settings": {
+                    "function": self.on_settings,
+                    "description": ["App settings"],
+                    "icon": str(self.constants.icns_resource_path / "SystemSettings.icns"),
                 },
                 "Create macOS Installer": {
                     "function": self.on_create_macos_installer,
@@ -130,50 +133,12 @@ class MainFrame(wx.Frame):
                     "description": ["Settings, drivers and", "patches for your system."],
                     "icon": str(self.constants.patch_icon_path),
                 },
-                "OpenCore": {
-                    "function": self.on_oc_settings,
-                    "description": ["Prepares provided drive to be", "able to boot unsupported OSes."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                },
-                "App Settings": {
-                    "function": self.on_settings,
-                    "description": ["App settings, reporting and", "Developer/Experimental Mode."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Patcher.icns"),
-                },
                 "Help": {
                     "function": self.on_help,
                     "description": ["Resources for OpenCore Legacy", "Patcher."],
                     "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
                 }
-            }
-        else:
-            menu_buttons = {
-                "Build and Install OpenCore": {
-                    "function": self.on_build_and_install_standard,
-                    "description": ["Build OpenCore and install", "it to your internal or external drive."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                },
-                "Create macOS Installer": {
-                    "function": self.on_create_macos_installer,
-                    "description": ["Download and flash a macOS", "Installer for your system."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
-                },
-                "OpenCore": {
-                    "function": self.on_oc_settings,
-                    "description": ["Settings, drivers and", "patches for your system."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Settings.icns"),
-                },
-                "App Settings": {
-                    "function": self.on_settings,
-                    "description": ["App settings, reporting and", "Developer/Experimental Mode."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Patcher.icns"),
-                },
-                "Help": {
-                    "function": self.on_help,
-                    "description": ["Resources for OpenCore Legacy", "Patcher T2, including Ask Gemini."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
-                }
-            }
+        }
 
         button_x = 25
         button_y = self.model_button.GetPosition()[1] + 30
@@ -184,14 +149,14 @@ class MainFrame(wx.Frame):
         for button_name, button_function in menu_buttons.items():
             if "icon" in button_function:
                 icon = wx.StaticBitmap(self, bitmap=wx.Bitmap(button_function["icon"], wx.BITMAP_TYPE_ICON), pos=(button_x - 5, button_y), size=(64, 64))
-                if "Build OpenCore" in button_name or "EXPERIMENTAL" in button_name:
+                if "OpenCore" in button_name or "EXPERIMENTAL" in button_name:
                     icon.SetSize((68, 68))
             
             button = wx.Button(self, label=button_name, pos=(button_x + 68, button_y), size=(205, 30))
             button.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_NORMAL))
             button.Bind(wx.EVT_BUTTON, lambda event, f=button_function["function"]: f(event))
 
-            if "Build OpenCore" in button_name or "EXPERIMENTAL" in button_name:
+            if "OpenCore" in button_name or "EXPERIMENTAL" in button_name:
                 self.build_button = button
                 if not gui_support.CheckProperties(self.constants).host_can_build():
                     button.Disable()
@@ -276,7 +241,7 @@ class MainFrame(wx.Frame):
             self.constants.has_checked_updates = True
             pop_up = wx.MessageDialog(
                 self,
-                f"{self.constants.patcher_name} has been updated to the latest version: {self.constants.patcher_version_label}\n\nWould you like to update OpenCore and your root volume patches?",
+                f"{self.constants.patcher_name} has been updated to the latest available version: {self.constants.patcher_version_label}\n\nWould you like to update OpenCore and your root volume patches?",
                 "Update successful!",
                 style=wx.YES_NO | wx.YES_DEFAULT | wx.ICON_INFORMATION
             )

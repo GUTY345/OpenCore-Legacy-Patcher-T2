@@ -71,6 +71,13 @@ class MacosConfigFrame(wx.Frame):
         sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 10)
 
 
+        # Add root patch frame button
+        root_patch_button = wx.Button(frame, label="Root Patching", pos=(-1, -1), size=(120, 30))
+        root_patch_button.Bind(wx.EVT_BUTTON, self.on_root_patch)
+        root_patch_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+        if (gui_support.CheckProperties(self.constants).host_can_build() is False) or (self.constants.detected_os < os_data.os_data.big_sur):
+            root_patch_button.Disable()
+        sizer.Add(root_patch_button, 0, wx.ALIGN_CENTER | wx.ALL, 0)
 
         # Add return button
         return_button = wx.Button(frame, label="Return", pos=(-1, -1), size=(100, 30))
@@ -238,6 +245,7 @@ class MacosConfigFrame(wx.Frame):
                         "optimizations for macOS Tahoe",
                         "to improve rendering performance.",
                     ],
+                    "condition": self.constants.Developer_Mode,
                 },
                 "TeraScale 2 Acceleration": {
                     "type": "checkbox",
@@ -460,6 +468,14 @@ class MacosConfigFrame(wx.Frame):
     def on_return(self, event):
         self.frame_modal.Destroy()
 
+    def on_root_patch(self, event):
+        self.frame_modal.Destroy()
+        gui_sys_patch_display.SysPatchDisplayFrame(
+            parent=self.parent,
+            title=self.title,
+            global_constants=self.constants,
+            screen_location=self.parent.GetPosition()
+        )
 
     def on_nightly(self, event: wx.Event) -> None:
         # Ask prompt for which branch

@@ -57,7 +57,9 @@ class SettingsFrame(wx.Frame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.AddSpacer(10)
 
-        tabs = ["App", "Developer", "Statistics"]
+        tabs = list(self.settings.keys())
+        if not self.constants.Developer_Mode:
+            tabs.remove("Developer")
         for tab in tabs:
             panel = wx.ScrolledWindow(notebook)
             panel.SetScrollRate(0, 20)
