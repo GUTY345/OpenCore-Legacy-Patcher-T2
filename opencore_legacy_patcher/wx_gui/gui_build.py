@@ -27,9 +27,12 @@ class BuildFrame(wx.Frame):
     Create a frame for building OpenCore
     Uses a Modal Dialog for smoother transition from other frames
     """
-    def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None, save: bool = False, install: bool = False) -> None:
+    def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None, **kwargs) -> None:
         logging.info("Initializing Build Frame")
         super(BuildFrame, self).__init__(parent, title=title, size=(350, 200), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
+        
+        self.install = kwargs.get("install", False)
+        self.save = kwargs.get("save", False)
         gui_support.GenerateMenubar(self, global_constants).generate()
 
         self.build_successful: bool = False
@@ -40,8 +43,6 @@ class BuildFrame(wx.Frame):
 
         self.constants: constants.Constants = global_constants
         self.title: str = title
-        self.install = install
-        self.save = save
         self.stock_output = logging.getLogger().handlers[0].stream
 
         self.frame_modal = wx.Dialog(self, title=title, size=(400, 200))
@@ -54,76 +55,20 @@ class BuildFrame(wx.Frame):
         self.Centre()
         self.frame_modal.ShowWindowModal()
 
-        self._invoke_build()
+        if not self.constants.Developer_Mode:
+            self._invoke_build()
 
 
     def on_build_failure(self) -> None:
         """
-        Custom error dialog that provides a direct 'Ask Gemini' bridge 
-        for debugging complex build errors.
+        Standard error dialog for build failure.
         """
-        dlg = wx.Dialog(self, title="Build Error", size=(450, 250))
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Build error explanation
-        msg = wx.StaticText(dlg, label="An error occurred while building OpenCore.\n\n"
-                                       "If you are unsure how to fix this, you can ask \n"
-                                       "Gemini for a technical analysis of your build log.")
-        sizer.Add(msg, 0, wx.ALL | wx.CENTER, 20)
-
-        # Button Row: Ask Gemini | View Log | Close
-        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        
-        gemini_btn = wx.Button(dlg, label="Ask Gemini")
-        gemini_btn.Bind(wx.EVT_BUTTON, lambda e: self.on_ask_gemini())
-        
-        close_btn = wx.Button(dlg, wx.ID_CANCEL, label="Close")
-        
-        btn_sizer.Add(gemini_btn, 0, wx.ALL, 5)
-        btn_sizer.Add(close_btn, 0, wx.ALL, 5)
-        
-        sizer.Add(btn_sizer, 0, wx.CENTER)
-        dlg.SetSizer(sizer)
-        dlg.ShowModal()
-        dlg.Destroy()
-
-    def copy_to_clipboard(self):
-        # 1. Get the error log
-        log_content = self.text_box.GetValue().splitlines()[-15:]
-        error_text = "Analyze this OpenCore build error: " + " ".join(log_content)
-        """Copies the error to the clipboard and opens Gemini for the user."""
-        # 1. Capture the log
-        log_content = self.text_box.GetValue().splitlines()[-15:]
-        error_text = "\n".join(log_content)
-        
-        # 2. Copy to system clipboard
-        if wx.TheClipboard.Open():
-            wx.TheClipboard.SetData(wx.TextDataObject(error_text))
-            wx.TheClipboard.Close()
-            
-        # 3. Inform the user what just happened
-        wx.MessageBox(
-            "The error log has been copied to your clipboard.\n\n"
-            "1. Gemini will now open in a new window.\n"
-            "2. Simply paste (Cmd+V) your error log into the chat box.",
-            "Ask Gemini", 
-            wx.OK | wx.ICON_INFORMATION
+        dlg = wx.MessageDialog(
+            self,
+            "An error occurred while building OpenCore.\n\nPlease check the logs in the text box for more information.",
+            "Build Error",
+            style=wx.OK | wx.ICON_ERROR
         )
-        
-    def on_ask_gemini(self) -> None:
-        self.copy_to_clipboard()
-        dlg = wx.Dialog(self, title="Ask Gemini Analysis", size=(800, 600))
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        
-        webview = wx.html2.WebView.New(dlg)
-        
-        # REMOVE OR COMMENT OUT THIS LINE:
-        # webview.Bind(wx.html2.EVT_WEBVIEW_LOADED, on_load)
-        
-        webview.LoadURL("https://gemini.google.com/")
-        
-        sizer.Add(webview, 1, wx.EXPAND)
-        dlg.SetSizer(sizer)
         dlg.ShowModal()
         dlg.Destroy()
     
@@ -134,6 +79,7 @@ class BuildFrame(wx.Frame):
         Format:
             - Title label:        Build and Install OpenCore
             - Text:               Model: {Build or Host Model}
+            - Profile selection:  Radio buttons (MBP14,3 only)
             - Button:             Install OpenCore
             - Read-only text box: {empty}
             - Button:             Return to Main Menu
@@ -148,21 +94,81 @@ class BuildFrame(wx.Frame):
         model_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         model_label.Centre(wx.HORIZONTAL)
 
+        next_y = model_label.GetPosition()[1] + model_label.GetSize()[1] + 5
+
+        # Profile selection for MacBookPro14,3
+        target_model = self.constants.custom_model or self.constants.computer.real_model
+        if target_model == "MacBookPro14,3":
+            self.radio_standard = wx.RadioButton(frame, label="STANDARD / SAFE", pos=(-1, next_y), style=wx.RB_GROUP)
+            self.radio_standard.Centre(wx.HORIZONTAL)
+            next_y += 30
+
+            self.radio_testa = wx.RadioButton(frame, label="TEST-A (GPU)", pos=(-1, next_y))
+            self.radio_testa.Centre(wx.HORIZONTAL)
+            next_y += 30
+
+            self.radio_testb = wx.RadioButton(frame, label="TEST-B (GPU + No-Compat)", pos=(-1, next_y))
+            self.radio_testb.Centre(wx.HORIZONTAL)
+            next_y += 30
+            
+            self.radio_testc = wx.RadioButton(frame, label="TEST-C (GPU + No-Compat + VBootArgs)", pos=(-1, next_y))
+            self.radio_testc.Centre(wx.HORIZONTAL)
+            next_y += 30
+            
+            self.radio_testd = wx.RadioButton(frame, label="TEST-D (GPU + BootArgs + XPC)", pos=(-1, next_y))
+            self.radio_testd.Centre(wx.HORIZONTAL)
+            next_y += 40
+            
+            if self.constants.build_profile == "test_d":
+                self.radio_testd.SetValue(True)
+            elif self.constants.build_profile == "test_c":
+                self.radio_testc.SetValue(True)
+            elif self.constants.build_profile == "test_b":
+                self.radio_testb.SetValue(True)
+            elif self.constants.build_profile == "test_a":
+                self.radio_testa.SetValue(True)
+            else:
+                self.radio_standard.SetValue(True)
+        else:
+            self.radio_standard = None
+            self.radio_testa = None
+            self.radio_testb = None
+            self.radio_testc = None
+            self.radio_testd = None
+
+        if self.constants.Developer_Mode:
+            # Button: Build OpenCore (Only in Developer Mode to allow selection)
+            build_button = wx.Button(frame, label="🔨 Build OpenCore", pos=(-1, next_y), size=(150, 30))
+            build_button.Bind(wx.EVT_BUTTON, self.on_build_click)
+            build_button.Centre(wx.HORIZONTAL)
+            self.build_button = build_button
+            next_y += 35
+
+        # Button: Install OpenCore
+        install_button = wx.Button(frame, label="🔩 Install OpenCore", pos=(-1, next_y), size=(150, 30))
+        install_button.Bind(wx.EVT_BUTTON, self.on_install)
+        install_button.Centre(wx.HORIZONTAL)
+        install_button.Disable()
+        self.install_button = install_button
+
         # Read-only text box: {empty}
-        text_box = wx.TextCtrl(frame, value="", pos=(-1, model_label.GetPosition()[1] + model_label.GetSize()[1] + 10), size=(380, 350), style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_RICH2)
+        text_box = wx.TextCtrl(frame, value="", pos=(-1, install_button.GetPosition()[1] + install_button.GetSize()[1] + 10), size=(380, 350), style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_RICH2)
         text_box.Centre(wx.HORIZONTAL)
         self.text_box = text_box
 
         # Button: Return to Main Menu
-        return_button = wx.Button(frame, label="Return to Main Menu", pos=(-1, text_box.GetPosition()[1] + text_box.GetSize()[1] + 5), size=(150, 30))
+        return_button = wx.Button(frame, label="Return to Main Menu", pos=(-1, text_box.GetPosition()[1] + text_box.GetSize()[1] + 10), size=(150, 30))
         return_button.Bind(wx.EVT_BUTTON, self.on_return_to_main_menu)
         return_button.Centre(wx.HORIZONTAL)
-        return_button.Disable()
+        
+        # Disable by default if standard mode (since it builds automatically)
+        if not self.constants.Developer_Mode:
+            return_button.Disable()
+            
         self.return_button = return_button
 
         # Adjust window size to fit all elements
         frame.SetSize((-1, return_button.GetPosition()[1] + return_button.GetSize()[1] + 40))
-
 
 
     def _invoke_build(self) -> None:
@@ -178,29 +184,35 @@ class BuildFrame(wx.Frame):
 
         gui_support.wait_for_thread(thread)
 
+        self.return_button.Enable()
+
+        # Check if config.plist was built
         if self.build_successful is False:
             self.on_build_failure()
-            self.return_button.Enable()
             return
-        if self.save:
-            index = 1
-            number_lines = self.text_box.GetNumberOfLines()
-            lines = []
-            while index != number_lines:
-                lines.append(f"{self.text_box.GetLineText(index)}\n")
-                index += 1
-            with open(self.constants.oc_build_path / "Build.log", "w") as f:
-                f.writelines(lines)
-            dialog = wx.MessageDialog(
-                parent=self,
-                message=f"OpenCore was built and placed at {self.constants.oc_build_path}",
-                caption="Done Building",
-                style=wx.OK | wx.ICON_INFORMATION
-            )
-            dialog.ShowModal()
-            self.on_return_to_main_menu()
-        elif self.install:
-            self.on_install()
+        else:
+            if getattr(self, "install", False):
+                self.on_install()
+            elif getattr(self, "save", False):
+                dialog = wx.MessageDialog(
+                    parent=self,
+                    message=f"OpenCore has been built and saved to:\n{self.constants.oc_build_path}",
+                    caption="Save Successful",
+                    style=wx.OK | wx.ICON_INFORMATION
+                )
+                dialog.ShowModal()
+                self.frame_modal.Destroy()
+            else:
+                dialog = wx.MessageDialog(
+                    parent=self,
+                    message=f"Would you like to install OpenCore now?",
+                    caption="Finished building your OpenCore configuration!",
+                    style=wx.YES_NO | wx.ICON_QUESTION
+                )
+                dialog.SetYesNoLabels("Install to disk", "View build log")
+                
+                self.on_install() if dialog.ShowModal() == wx.ID_YES else self.install_button.Enable()
+
 
     def _build(self) -> None:
         """
@@ -209,6 +221,36 @@ class BuildFrame(wx.Frame):
         logger = logging.getLogger()
         handler = gui_support.ThreadHandler(self.text_box) # Keep a reference
         logger.addHandler(handler)
+
+
+        if self.constants.build_profile == "test_b":
+            profile_name = "TEST-B GPU"
+        elif self.constants.build_profile == "test_c":
+            profile_name = "TEST-C TAHOE / ALBERT"
+        elif self.constants.build_profile == "test_d":
+            profile_name = "TEST-D (GPU + BootArgs + XPC)"
+        elif self.constants.build_profile == "test_c_spoofed":
+            profile_name = "TEST-C SPOOFED / ALBERT"
+        else:
+            profile_name = "STANDARD / SAFE"
+        target_model = self.constants.custom_model or self.constants.computer.real_model
+
+        logging.info("=========================================")
+        logging.info("          BUILD CONFIGURATION            ")
+        logging.info("=========================================")
+        logging.info(f"Target Model: {target_model}")
+        logging.info(f"Profile: {profile_name}")
+
+        if target_model == "MacBookPro14,3":
+            t1_status = "DETECTED" if getattr(self.constants.computer, 't1_chip', False) else "ENABLED (MBP14,3)"
+            wifi_status = f"{self.constants.computer.wifi.vendor_id:04X}:{self.constants.computer.wifi.device_id:04X}" if getattr(self.constants.computer, 'wifi', None) else "14E4:43BA"
+            logging.info(f"T1 Security:  {t1_status}")
+            logging.info(f"Wi-Fi Module: {wifi_status}")
+
+        logging.info("=========================================")
+        logging.info("")
+
+
         try:
             build.BuildOpenCore(self.constants.custom_model or self.constants.computer.real_model, self.constants)
             self.build_successful = True
@@ -232,7 +274,7 @@ class BuildFrame(wx.Frame):
         """
         Return to main menu
         """
-        self.frame_modal.Hide()
+        self.frame_modal.Close()
         main_menu_frame = gui_main_menu.MainFrame(
             None,
             title=self.title,
@@ -242,7 +284,29 @@ class BuildFrame(wx.Frame):
         main_menu_frame.Show()
         self.frame_modal.Destroy()
         self.Destroy()
+        
+    def on_build_click(self, event: wx.Event) -> None:
+        self.build_button.Disable()
+        if getattr(self, "radio_standard", None):
+            if self.radio_testd.GetValue():
+                self.constants.build_profile = "test_d"
+            elif self.radio_testc.GetValue():
+                self.constants.build_profile = "test_c"
+            elif self.radio_testb.GetValue():
+                self.constants.build_profile = "test_b"
+            elif self.radio_testa.GetValue():
+                self.constants.build_profile = "test_a"
+            else:
+                self.constants.build_profile = "standard"
 
+            self.radio_standard.Disable()
+            self.radio_testa.Disable()
+            self.radio_testb.Disable()
+            self.radio_testc.Disable()
+            self.radio_testd.Disable()
+        if hasattr(self, "return_button"):
+            self.return_button.Disable()
+        self._invoke_build()
 
     def on_install(self, event: wx.Event = None) -> None:
         """
@@ -264,3 +328,5 @@ class BuildFrame(wx.Frame):
             screen_location=self.GetScreenPosition()
         )
         install_oc_frame.Show()
+
+

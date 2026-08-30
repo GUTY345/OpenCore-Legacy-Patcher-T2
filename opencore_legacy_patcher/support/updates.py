@@ -17,7 +17,7 @@ from . import subprocess_wrapper
 from .. import constants
 
 
-REPO_LATEST_RELEASE_URL: str = "https://api.github.com/repos/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/latest"
+# REPO_LATEST_RELEASE_URL is now dynamically generated from constants.repo_link
 
 
 class CheckBinaryUpdates:
@@ -152,15 +152,18 @@ class CheckBinaryUpdates:
             # We already checked
             return self.latest_details
 
-        if not network_handler.NetworkUtilities(REPO_LATEST_RELEASE_URL).verify_network_connection():
+        # Dynamically generate the API URL from constants.repo_link
+        repo_api_url = self.constants.repo_link.replace("https://github.com/", "https://api.github.com/repos/").strip("/")
+        repo_latest_release_url = f"{repo_api_url}/releases/latest"
+
+        if not network_handler.NetworkUtilities(repo_latest_release_url).verify_network_connection():
             logging.error("It failed to connect with the GitHub page")
             logging.info("Please check if your computer is connected to the internet.")
             logging.exception("Stack Trace:")
-            logging.info("If your computer is connected to the internet, it may be due to invalid syntax.")
             logging.info("If so, report this issue immediately")
             return None
             
-        response = network_handler.NetworkUtilities().get(REPO_LATEST_RELEASE_URL)
+        response = network_handler.NetworkUtilities().get(repo_latest_release_url)
         data_set = response.json()
 
         if "tag_name" not in data_set:

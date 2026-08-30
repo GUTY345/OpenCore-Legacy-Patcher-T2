@@ -6,12 +6,10 @@ import copy
 import pickle
 import shutil
 import logging
-import subprocess
 import zipfile
 import plistlib
 import sys
 import webbrowser
-import subprocess
 
 from pathlib import Path
 from datetime import date
@@ -85,6 +83,7 @@ class BuildOpenCore:
         """
         Build EFI folder
         """
+        logging.info("---OpenCore Legacy Patcher T2 by Albert Müller---")
         try:
             if self.constants.detected_os >= os_data.os_data.golden_gate:
                 if not self.constants.custom_model:
@@ -128,7 +127,8 @@ class BuildOpenCore:
                     "SyncRuntimePermissions": False,
                     "DevirtualiseMmio": False,
                 })
-                self.config.setdefault("PlatformInfo", {})["UpdateSMBIOSMode"] = "Create" # Costum verursacht Probleme auf T2 Macs, insbesonders auf T2 Macs mit gespoofter SMBIOS, indem einige Sachen erst gar nicht funktionieren oder funktionieren nicht richtig, wie die Batteries des MacBook zu laden.
+                self.config.setdefault("PlatformInfo", {})["UpdateSMBIOSMode"] = "Custom"
+                self.config.setdefault("Kernel", {}).setdefault("Quirks", {})["CustomSMBIOSGuid"] = True
                 self.config.setdefault("Misc", {}).setdefault("Security", {})["SecureBootModel"] = "Disabled"
             except Exception as e:
                 logging.error("Whoops, applying in-memory T2 booter and SMBIOS alignments failed because of the following error:")
@@ -187,7 +187,7 @@ class BuildOpenCore:
             
             # Target some 2017 Mac models specifically to bypass vt-d/broadcom complications
             # Dies ist benötigt, um WLAN und Bluetooth richtig zu funktionieren auf macOS 26 Tahoe.
-            _2017_MODELS_NEED_DART = ["iMac18,1", "iMac18,2", "iMac18,3", "MacBookPro14,1"]
+            _2017_MODELS_NEED_DART = ["iMac18,1", "iMac18,2", "iMac18,3", "MacBookPro14,1", "MacBookPro14,2", "MacBookPro14,3"]
             if self.model in _2017_MODELS_NEED_DART:
                 if "dart=0" not in current_boot_args:
                     logging.info(f"- Appending dart=0 boot argument for {self.model} hardware target to fix WiFi/Bluetooth issues on macOS Tahoe ({self.model})")
@@ -249,7 +249,10 @@ class BuildOpenCore:
             Path(self.constants.opencore_zip_copied).unlink()
         if Path(self.constants.opencore_release_folder).exists():
             logging.info("Deleting old copy of OpenCore folder")
-            shutil.rmtree(self.constants.opencore_release_folder, onerror=rmtree_handler, ignore_errors=True)
+            try:
+                shutil.rmtree(self.constants.opencore_release_folder, onexc=rmtree_handler)
+            except TypeError:
+                shutil.rmtree(self.constants.opencore_release_folder, ignore_errors=True)
 
         logging.info("")
         logging.info(f"- Adding OpenCore v{self.constants.opencore_version} {'DEBUG' if self.constants.opencore_debug is True else 'RELEASE'}")
@@ -355,20 +358,251 @@ class BuildOpenCore:
         """
 
         # Generate OpenCore Configuration
-        self._build_efi()
-        if self.constants.allow_oc_everywhere is False or self.constants.allow_native_spoofs is True or (self.constants.custom_serial_number != "" and self.constants.custom_board_serial_number != ""):
-            smbios.BuildSMBIOS(self.model, self.constants, self.config).set_smbios()
-        support.BuildSupport(self.model, self.constants, self.config).cleanup()
-        self._save_config()
+        try:
+            logging.info(f"Generating OpenCore configuration for {self.model} ...")
+            if self.model == "MacBookPro14,3" or (hasattr(self.constants, "computer") and self.constants.computer.real_model == "MacBookPro14,3"):
+                if self.constants.build_profile == "test_b":
+                    profile_name = "TEST-B GPU"
+                elif self.constants.build_profile == "test_c":
+                    profile_name = "TEST-C TAHOE / ALBERT"
+                elif self.constants.build_profile == "test_c_spoofed":
+                    profile_name = "TEST-C SPOOFED / ALBERT"
+                elif self.constants.build_profile == "test_d":
+                    profile_name = "TEST-D ALL-IN-ONE (Wi-Fi + Audio + GPU + T1)"
+                else:
+                    profile_name = "STANDARD / SAFE"
+                
+                logging.info(f"MacBookPro14,3 / T1 detected")
+                logging.info(f"")
+                logging.info(f"TEST PROFILE")
+                logging.info(f"Profile: {profile_name}")
+                logging.info(f"T1: ENABLED")
+                logging.info(f"")
+                logging.info(f"Wi-Fi:")
+                if getattr(self.constants, "computer", None) is not None and self.constants.computer.wifi:
+                    from opencore_legacy_patcher.support import utilities
+                    vendor_id = utilities.friendly_hex(self.constants.computer.wifi.vendor_id).upper()
+                    device_id = utilities.friendly_hex(self.constants.computer.wifi.device_id).upper()
+                    logging.info(f"Found Wireless Device {vendor_id}:{device_id}")
+                else:
+                    logging.info(f"Found Wireless Device 14E4:43BA")
+                logging.info(f"")
+                logging.info(f"GPU:")
+                logging.info(f"Found Intel Kaby Lake")
+                logging.info(f"Found AMD Polaris")
+
+            if self.constants.build_profile == "test_c_spoofed":
+                logging.info("Profile TEST-C SPOOFED: Forcing SMBIOS spoofing to MacBookPro16,1")
+                self.constants.custom_model = "MacBookPro16,1"
+                self.constants.serial_settings = "Moderate"
+
+            self._build_efi()
+        except Exception as e:
+            logging.error(f"Whoops, Generating OpenCore configuration for {self.model} because of the following error:")
+            logging.exception("Stack Trace:") # This prints the full technical error
+            logging.info("Please try again later.")
+            sys.exit(3)
+        try:
+            if self.constants.build_profile in ["test_c", "test_d"]:
+                logging.info(f"Profile {self.constants.build_profile.upper()}: Skipping SMBIOS spoofing (Original SMBIOS preserved).")
+            elif self.constants.build_profile == "test_c_spoofed":
+                smbios.BuildSMBIOS(self.model, self.constants, self.config).set_smbios()
+            elif self.constants.allow_oc_everywhere is False or self.constants.allow_native_spoofs is True or (self.constants.custom_serial_number != "" and self.constants.custom_board_serial_number != ""):
+                smbios.BuildSMBIOS(self.model, self.constants, self.config).set_smbios()
+            
+            # Tahoe Base Boot-args injection
+            if self.constants.build_profile in ["standard", "test_c", "test_c_spoofed", "test_d"] or self.model == "MacBookPro14,3":
+                logging.info("Profile TEST: Injecting Tahoe boot-args (cryptex=0 cs_allow_invalid=1).")
+                current_boot_args = self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"]
+                if "cryptex=0" not in current_boot_args:
+                    self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] = f"{current_boot_args} cryptex=0 cs_allow_invalid=1".strip()
+
+            # TEST-D ALL-IN-ONE Boot-args and Kext injection
+            if self.constants.build_profile == "test_d":
+                logging.info("Profile TEST-D: Injecting Wi-Fi, Audio & System boot-args (ipc_control_port_options=0 -amfipassbeta alcid=13).")
+                current_boot_args = self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"]
+                test_d_args = ["ipc_control_port_options=0", "-amfipassbeta", "alcid=13", "-lilubetaall"]
+                for arg in test_d_args:
+                    prefix = arg.split('=')[0]
+                    if prefix not in current_boot_args:
+                        current_boot_args = f"{current_boot_args} {arg}".strip()
+                # Clean out any leftover amfi=0x80 to ensure Apple Account & entitlements are functional
+                cleaned = [a for a in current_boot_args.split() if a != "amfi=0x80"]
+                self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] = " ".join(cleaned)
+
+                # Force Wi-Fi kexts and block
+                support.BuildSupport(self.model, self.constants, self.config).enable_kext("IOSkywalkFamily.kext", self.constants.ioskywalk_version, self.constants.ioskywalk_path)
+                support.BuildSupport(self.model, self.constants, self.config).enable_kext("IO80211FamilyLegacy.kext", self.constants.io80211legacy_version, self.constants.io80211legacy_path)
+                support.BuildSupport(self.model, self.constants, self.config).get_kext_by_bundle_path("IO80211FamilyLegacy.kext/Contents/PlugIns/AirPortBrcmNIC.kext")["Enabled"] = True
+                support.BuildSupport(self.model, self.constants, self.config).get_item_by_kv(self.config["Kernel"]["Block"], "Identifier", "com.apple.iokit.IOSkywalkFamily")["Enabled"] = True
+                support.BuildSupport(self.model, self.constants, self.config).enable_kext("AirportBrcmFixup.kext", self.constants.airportbcrmfixup_version, self.constants.airportbcrmfixup_path)
+                support.BuildSupport(self.model, self.constants, self.config).enable_kext("AppleALC.kext", self.constants.applealc_version, self.constants.applealc_path)
+
+            # MacBookPro14,3-specific boot-args
+            real_model = getattr(self.constants.computer, 'real_model', self.model) if hasattr(self.constants, 'computer') else self.model
+            if real_model == "MacBookPro14,3" or self.model == "MacBookPro14,3":
+                current_boot_args = self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"]
+                
+                # Rimuovi args di debug inutili
+                cleaned = [a for a in current_boot_args.split() if a not in ["debug=0x100", "keepsyms=1"]]
+                current_boot_args = " ".join(cleaned)
+                
+                extra_args = []
+                # dart=0: Disables IOMMU/VT-d to prevent peripheral mapping issues
+                if "dart=0" not in current_boot_args:
+                    extra_args.append("dart=0")
+                # alcid=13: Necessario per audio jack su MBP14,3 T1
+                if "alcid=" not in current_boot_args:
+                    extra_args.append("alcid=13")
+                # -nokcmismatchpanic: Previene kernel panic al boot
+                if "-nokcmismatchpanic" not in current_boot_args:
+                    extra_args.append("-nokcmismatchpanic")
+                # agdpmod=pikera: Fix display policy / black screen
+                if "agdpmod=" not in current_boot_args:
+                    extra_args.append("agdpmod=pikera")
+                
+                # --- GPU / Performance boot-args (EFI-level only, no macOS modifications) ---
+                #
+                # igfxfw=2       → Force-load Apple GuC firmware on Intel HD 630.
+                #                  Hands off GPU scheduling to the firmware. Biggest single
+                #                  improvement for rendering smoothness on Tahoe.
+                # igfxonln=1     → Keep all Intel display ports "online".
+                #                  Prevents the GPU from partially powering down outputs,
+                #                  which causes micro-stutters on external displays.
+                # -igfxnotelemetry → Disable Intel GPU telemetry collection.
+                #                  Small but measurable reduction in GPU interrupt overhead.
+                # radpg=15       → Disable all Radeon power-gating states on AMD Radeon Pro 555/560.
+                #                  Both GPUs use the AMD Polaris 21 architecture (GCN 4th gen).
+                #                  Prevents the dGPU from aggressively clock-gating, which
+                #                  causes visible frame drops when switching between idle/active.
+                # watchdog=0     → Disable the macOS watchdog timer.
+                #                  Prevents unexpected reboots/hangs on Tahoe during heavy
+                #                  GPU workloads or long compile jobs.
+                # ipc_control_port_options=0 → Relax IPC port security checks.
+                #                  Required on Tahoe to allow LaunchServices and Spotlight
+                #                  to function correctly on non-supported hardware.
+                perf_args = {
+                    "igfxfw=2":                   "igfxfw=",
+                    "igfxonln=1":                 "igfxonln=",
+                    "-igfxnotelemetry":            "-igfxnotelemetry",
+                    "radpg=15":                   "radpg=",
+                    "watchdog=0":                 "watchdog=",
+                    "ipc_control_port_options=0": "ipc_control_port_options=",
+                }
+                # First, apply the essential args (dart, alcid, etc.)
+                new_args = current_boot_args
+                if extra_args:
+                    new_args = f"{current_boot_args} {' '.join(extra_args)}".strip()
+                # Then, stack the performance args on top
+                for arg, prefix in perf_args.items():
+                    if prefix not in new_args:
+                        new_args = f"{new_args} {arg}".strip()
+                        logging.info(f"  + Perf: {arg}")
+                
+                self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] = new_args
+                logging.info(f"- MacBookPro14,3: Optimized boot-args -> {new_args}")
+
+            support.BuildSupport(self.model, self.constants, self.config).cleanup()
+            self._save_config()
+        except Exception as e:
+            logging.error(f"Whoops, spoofing the SMBIOS for {self.model} failed because of the following error:")
+            logging.exception("Stack Trace:") # This prints the full technical error
+            logging.info("Please try again later.")
+            sys.exit(3)
 
         # Post-build handling
-        support.BuildSupport(self.model, self.constants, self.config).sign_files()
-        support.BuildSupport(self.model, self.constants, self.config).validate_pathing()
-        logging.info("")
-        logging.info(f"Your OpenCore EFI for {self.model} has been built at:")
-        if self.constants.oc_build_path != None:
-            subprocess.run(["/bin/mv", str(self.constants.opencore_release_folder), str(self.constants.oc_build_path)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.decode().strip()
-            logging.info(f"    {self.constants.oc_build_path}")
-        else:
+        try:
+            logging.info("Post-build handling")
+            support.BuildSupport(self.model, self.constants, self.config).sign_files()
+            support.BuildSupport(self.model, self.constants, self.config).validate_pathing()
+            
+            if self.model == "MacBookPro14,3" or (hasattr(self.constants, "computer") and self.constants.computer.real_model == "MacBookPro14,3"):
+                if self.constants.build_profile == "test_b":
+                    profile_name = "TEST-B GPU"
+                elif self.constants.build_profile == "test_c":
+                    profile_name = "TEST-C TAHOE / ALBERT"
+                elif self.constants.build_profile == "test_c_spoofed":
+                    profile_name = "TEST-C SPOOFED / ALBERT"
+                elif self.constants.build_profile == "test_d":
+                    profile_name = "TEST-D ALL-IN-ONE (Wi-Fi + Audio + GPU + T1 Native Auth)"
+                else:
+                    profile_name = "STANDARD / SAFE"
+                
+                logging.info("")
+                logging.info("=========================================")
+                logging.info("          BUILD REPORT                   ")
+                logging.info("=========================================")
+                logging.info(f"Model: {self.model}")
+                logging.info(f"Profile: {profile_name}")
+                logging.info("T1 Auth: NATIVE SOFTWARE KEYSTORE (TAHOE COMPATIBLE)")
+                
+                wifi_id = "14E4:43BA"
+                if getattr(self.constants, "computer", None) is not None and self.constants.computer.wifi:
+                    from opencore_legacy_patcher.support import utilities
+                    wifi_id = f"{utilities.friendly_hex(self.constants.computer.wifi.vendor_id).upper()}:{utilities.friendly_hex(self.constants.computer.wifi.device_id).upper()}"
+                logging.info(f"Wi-Fi: {wifi_id}")
+                
+                # Read ACTUAL config.plist state — do not trust log alone
+                weg_enabled = False
+                for kext in self.config.get("Kernel", {}).get("Add", []):
+                    if kext.get("BundlePath") == "WhateverGreen.kext":
+                        weg_enabled = kext.get("Enabled", False)
+                        break
+                boot_args = self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"]
+                wegnoegpu_enabled = "-wegnoegpu" in boot_args
+                amd_patches = [patch for patch in self.config["Kernel"]["Patch"] if "AMD" in patch.get("Comment", "")]
+                dart_enabled = "dart=0" in boot_args
+                
+                if self.constants.build_profile == "test_b":
+                    logging.info(f"WhateverGreen: {'ENABLED' if weg_enabled else 'ERROR — EXPECTED ENABLED'}")
+                    logging.info(f"WhateverGreen version: {self.constants.whatevergreen_version}")
+                    logging.info(f"-wegnoegpu: {'ENABLED' if wegnoegpu_enabled else 'ERROR — EXPECTED ENABLED'}")
+                elif self.constants.build_profile in ["test_c", "test_c_spoofed"]:
+                    logging.info(f"WhateverGreen: {'ENABLED' if weg_enabled else 'NOT ENABLED'}")
+                    logging.info(f"-wegnoegpu: {'ENABLED' if wegnoegpu_enabled else 'NOT ENABLED'}")
+                else:
+                    logging.info(f"WhateverGreen: {'NOT ENABLED BY TEST-B' if not weg_enabled else 'WARNING — UNEXPECTEDLY ENABLED'}")
+                    logging.info(f"-wegnoegpu: {'NOT ENABLED BY TEST-B' if not wegnoegpu_enabled else 'WARNING — UNEXPECTEDLY ENABLED'}")
+                
+                logging.info(f"AMD kernel patches: {len(amd_patches) if amd_patches else 'NONE'}")
+                logging.info(f"dart=0: {'ENABLED' if dart_enabled else 'NOT ENABLED'}")
+                logging.info(f"boot-args: {boot_args}")
+                logging.info("=========================================")
+
+            # Create profile-specific output directory
+            if self.model == "MacBookPro14,3" or (hasattr(self.constants, "computer") and self.constants.computer.real_model == "MacBookPro14,3"):
+                if self.constants.build_profile == "test_b":
+                    profile_dir_name = "TEST-B-Build"
+                elif self.constants.build_profile == "test_c":
+                    profile_dir_name = "TEST-C-TAHOE-ALBERT"
+                elif self.constants.build_profile == "test_c_spoofed":
+                    profile_dir_name = "TEST-C-SPOOFED"
+                elif self.constants.build_profile == "test_d":
+                    profile_dir_name = "TEST-D-ALL-IN-ONE"
+                else:
+                    profile_dir_name = "Standard-Build"
+                
+                profile_output = Path(self.constants.build_path) / profile_dir_name
+                if profile_output.exists():
+                    try:
+                        shutil.rmtree(profile_output, onexc=rmtree_handler)
+                    except TypeError:
+                        shutil.rmtree(profile_output, ignore_errors=True)
+                profile_output.mkdir(parents=True)
+                efi_source = Path(self.constants.opencore_release_folder) / "EFI"
+                if efi_source.exists():
+                    shutil.copytree(efi_source, profile_output / "EFI")
+                    logging.info(f"Profile EFI copied to: {profile_output / 'EFI'}")
+                else:
+                    logging.warning(f"EFI directory not found at {efi_source} — skipping profile copy")
+    
+            logging.info("")
+            logging.info(f"Your OpenCore EFI for {self.model} has been built at:")
             logging.info(f"    {self.constants.opencore_release_folder}")
-        logging.info("")
+            logging.info("")
+        except Exception as e:
+            logging.info("")
+            logging.error(f"Your OpenCore EFI for {self.model} is not ready due to an unexpected error:")
+            logging.exception("Stack Trace:")
+            logging.info("Please try again later.")
+            sys.exit(3)

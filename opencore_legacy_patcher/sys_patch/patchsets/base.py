@@ -2,9 +2,12 @@
 base.py: Base class for all patch sets
 """
 
-from enum import StrEnum
-
-
+try:
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+    class StrEnum(str, Enum):
+        pass
 class PatchType(StrEnum):
     """
     Type of patch

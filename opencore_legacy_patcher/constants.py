@@ -16,17 +16,15 @@ class Constants:
     def __init__(self) -> None:
         # Patcher Versioning
         # Wenn eine Version mit s endet, es heißt, dass sie noch nicht fertig ist.
-        self.patcher_version:                 str = "4.0.0.17002.3"  # OpenCore-Legacy-Patcher
+        self.patcher_version:                 str = "5.0.0"  # OpenCore-Legacy-Patcher
         self.patcher_version_label=self.patcher_version
         self.patcher_support_pkg_version:     str = "2.0.0"  # PatcherSupportPkg
         self.copyright_date:                  str = "Copyright © 2020-2026 Dortania"
-        self.patcher_name:                    str = "OpenCore Legacy Patcher T2"
-        self.patcher_full_name:               str = f"{self.patcher_name} version {self.patcher_version_label}"
 
         # URLs
         self.url_patcher_support_pkg:         str = "https://github.com/YBronst/PatcherSupportPkg/download/"
         self.guide_link:                      str = "https://dortania.github.io/OpenCore-Legacy-Patcher/"
-        self.repo_link:                       str = "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"
+        self.repo_link:                       str = "https://github.com/matteoiaccarino/OpenCore-Legacy-Patcher-T1/"
         self.installer_pkg_url:               str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
 
         # OpenCore Versioning
@@ -143,6 +141,10 @@ class Constants:
         self.cli_mode:                  bool = True  #  Determine if running in CLI mode
         self.validate:                  bool = False  # Enable validation testing for CI
         self.recovery_status:           bool = False  # Detect if booted into RecoveryOS
+        self.ignore_updates:            bool = False  # Follow custom fork updates
+        self.build_profile:             str = "standard"  # "standard" or "test_b" — gates TEST-B GPU modifications
+        self.app_mode:                  str = "albert"    # "albert" or "matteo"
+        self.experimental_version:      str = "4.9.0"     # Matteo's version string
         self.wxpython_variant:          bool = False  # Determine if using wxPython variant
         self.has_checked_updates:       bool = False  # Determine if check for updates has been run
         self.root_patcher_succeeded:    bool = False  # Determine if root patcher succeeded
@@ -216,6 +218,7 @@ class Constants:
         self.xhci_boot:     bool = False  # Allow UEFI XHCI Boot
 
         ## Graphics Settings
+        self.tahoe_ui_render:             bool = False # Experimental macOS Tahoe UI Fixes
         self.allow_ts2_accel:             bool = True  #  Set TeraScale 2 Acceleration support
         self.drm_support:                 bool = False  # Set iMac14,x DRM support
         self.force_nv_web:                bool = False  # Force Nvidia Web Drivers on Tesla and Kepler
@@ -909,3 +912,13 @@ class Constants:
         "Mac-94245AF5819B141B",  # AppleInternal MacBookPro8,3
         "Mac-942B5B3A40C91381",  # AppleInternal iMac12,2
     ]
+
+    @property
+    def patcher_name(self) -> str:
+        if getattr(self, "Developer_Mode", False):
+            return "OpenCore Legacy Patcher T1"
+        return "OpenCore Legacy Patcher T2"
+
+    @property
+    def patcher_full_name(self) -> str:
+        return f"{self.patcher_name} version {self.patcher_version_label}"

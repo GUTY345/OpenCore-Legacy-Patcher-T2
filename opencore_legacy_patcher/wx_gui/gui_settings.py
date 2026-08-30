@@ -5,7 +5,9 @@ gui_settings.py: Settings Frame for the GUI
 import wx
 import pprint
 import logging
-
+import os
+import sys
+from pathlib import Path
 from .. import constants
 
 
@@ -55,11 +57,10 @@ class SettingsFrame(wx.Frame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.AddSpacer(10)
 
-        tabs = list(self.settings.keys())
-        if not self.constants.Developer_Mode:
-            tabs.remove("Developer")
+        tabs = ["App", "Build", "Security", "Developer"]
         for tab in tabs:
-            panel = wx.Panel(notebook)
+            panel = wx.ScrolledWindow(notebook)
+            panel.SetScrollRate(0, 20)
             notebook.AddPage(panel, tab)
 
         sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 10)
@@ -254,6 +255,16 @@ class SettingsFrame(wx.Frame):
                     ],
                     "override_function": self._update_global_settings,
                 },
+                "Developer / Experimental Mode": {
+                    "type": "checkbox",
+                    "override_function": self.on_enable_dev_mode,
+                    "variable": "Developer_Mode",
+                    "value": self.constants.Developer_Mode,
+                    "description": [
+                        "Turns on Developer/Experimental Mode.",
+                        "Requires restarting the app to take effect."
+                    ],
+                },
             },
             "Statistics": {
                 "Statistics": {
@@ -266,14 +277,6 @@ class SettingsFrame(wx.Frame):
                 },
             },
             "Developer": {
-                "Disable Developer Mode": {
-                    "type": "checkbox",
-                    "override_function": self.on_disable_dev_mode,
-                    "variable": "",
-                    "description": [
-                        "Turns off Ddeveloper Mode for this app instance.",
-                    ],
-                },
                 "Validation": {
                     "type": "title",
                 },
@@ -420,22 +423,23 @@ Hardware Information:
             tmp_value = "PYTHON_NONE_VALUE"
         global_settings.GlobalEnviromentSettings().write_property(f"GUI:{variable}", tmp_value)
 
-    def on_disable_dev_mode(self, event: wx.Event, variable: str, constants: constants.Constants) -> None:
-        logging.info("Turning off Developer Mode")
-        # model_text: wx.StaticText = None
-        # dev_mode_text: wx.StaticText = None
-        # version_text: wx.StaticText = None
-
-        # for child in self.Parent.GetChildren():
-            # if isinstance(child, wx.StaticText):
-                # if child.GetLabel() == "Developer Mode is ON":
-                    # dev_mode_text = child
-                # elif child.GetLabel() == f"Model: {self.constants.custom_model or self.constants.computer.real_model}":
-                    # model_text = child
-                # elif child.GetLabel() == f"Version {self.constants.patcher_version}":
-                    # version_text = child
+    def on_enable_dev_mode(self, variable: str, value: bool, constants_variable: str) -> None:
+        is_enabled = value
+        if is_enabled:
+            logging.info("Turning on Developer Mode")
+            os.environ["OCLP_DEV_MODE"] = "1"
+            self.constants.Developer_Mode = True
+        else:
+            logging.info("Turning off Developer Mode")
+            os.environ["OCLP_DEV_MODE"] = "0"
+            self.constants.Developer_Mode = False
             
-        self.constants.Developer_Mode = False
-        # dev_mode_text.Destroy()
-        # model_text.SetPosition(-1, version_text.GetPosition()[1] + 30)
-        self.frame_modal.Destroy()
+        dlg = wx.MessageDialog(
+            None,
+            "The application needs to restart to apply Developer Mode changes.\n\nWould you like to restart now?",
+            "Restart Required",
+            wx.YES_NO | wx.ICON_INFORMATION
+        )
+        if dlg.ShowModal() == wx.ID_YES:
+            logging.info("Restarting application to apply Developer Mode changes...")
+            os.execl(sys.executable, sys.executable, *sys.argv)

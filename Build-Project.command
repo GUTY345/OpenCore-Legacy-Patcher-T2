@@ -103,7 +103,7 @@ def main() -> None:
             print("--- Build packages ---")
             package.GeneratePackage().generate()
             
-            for pkg in ["OpenCore-Patcher.pkg", "OpenCore-Patcher-Uninstaller.pkg"]:
+            for pkg in ["OpenCore-Legacy-Patcher-T1-MBP14,3.pkg", "OpenCore-Patcher-Uninstaller.pkg"]:
                 pkg_path = Path(f"dist/{pkg}")
                 check_file_exists(pkg_path)
                 print(f"--- Signiere {pkg} ---")

@@ -10,6 +10,8 @@ from Cocoa import NSApp, NSApplication
 
 from .. import constants
 from ..sys_patch.patchsets import HardwarePatchsetDetection
+from ..efi_builder.misc import _T2_MODELS # benötigt für T2 Macs
+
 
 from ..wx_gui import (
     gui_cache_os_update,
@@ -19,6 +21,7 @@ from ..wx_gui import (
     gui_sys_patch_start,
     gui_support,
     gui_update,
+    gui_mode_selector,
 )
 
 
@@ -27,6 +30,7 @@ class SupportedEntryPoints:
     Enum for supported entry points
     """
     MAIN_MENU  = gui_main_menu.MainFrame
+    MODE_SELECT = gui_mode_selector.ModeSelectorFrame
     BUILD_OC   = gui_build.BuildFrame
     INSTALL_OC = gui_install_oc.InstallOCFrame
     SYS_PATCH  = gui_sys_patch_start.SysPatchStartFrame
@@ -104,7 +108,7 @@ class EntryPoint:
         NSApp().activateIgnoringOtherApps_(True)
 
 
-    def start(self, entry: SupportedEntryPoints = gui_main_menu.MainFrame, start_patching: bool = False) -> None:
+    def start(self, entry: SupportedEntryPoints = gui_mode_selector.ModeSelectorFrame, start_patching: bool = False) -> None:
         """
         Launches entry point for the wxPython GUI
         """
@@ -117,6 +121,18 @@ class EntryPoint:
         if is_patching_mode:
             entry = gui_sys_patch_start.SysPatchStartFrame
             patches = HardwarePatchsetDetection(constants=self.constants).device_properties
+        elif entry is gui_mode_selector.ModeSelectorFrame:
+            # Bypass Mode Selector entirely.
+            # If Developer Mode is OFF -> Albert mode (Standard)
+            # If Developer Mode is ON -> Matteo mode (T1 Experimental)
+            if not self.constants.Developer_Mode:
+                logging.info(f"Developer Mode is OFF, bypassing Mode Selector → Standard UI")
+                self.constants.app_mode = "albert"
+                entry = gui_main_menu.MainFrame
+            else:
+                logging.info(f"Developer Mode is ON, bypassing Mode Selector → Experimental UI")
+                self.constants.app_mode = "matteo"
+                entry = gui_main_menu.MainFrame
 
         logging.info(f"Entry point set: {entry.__name__}")
 
@@ -147,23 +163,8 @@ class EntryPoint:
         """
         Closes the wxPython GUI safely using wxWidgets native event lifecycle
         """
-        if not self.frame:
-            if event:
-                event.Skip()
-            return
-
-        logging.info("Cleaning up wxPython GUI")
-
-        self.frame.SetTransparent(0)
-        wx.Yield()
-
-        self.frame.DestroyChildren()
-        self.frame.Destroy()
-        
-        # Sicherstellen, dass die MainLoop sauber beendet wird
-        if self.app:
-            self.app.ExitMainLoop()
-            
-        # Erlaubt dem System, das Event final zu verarbeiten, falls vorhanden
+        logging.info("Closing wxPython GUI")
         if event:
             event.Skip()
+        elif self.frame:
+            self.frame.Destroy()

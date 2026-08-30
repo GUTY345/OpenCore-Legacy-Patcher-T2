@@ -64,21 +64,14 @@ class MacosConfigFrame(wx.Frame):
         if not self.constants.Developer_Mode:
             tabs.remove("Developer")
         for tab in tabs:
-            panel = wx.Panel(notebook)
+            panel = wx.ScrolledWindow(notebook)
+            panel.SetScrollRate(0, 20)
             notebook.AddPage(panel, tab)
 
         sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 10)
 
 
-        # Add root patch frame button
-        root_patch_button = wx.Button(frame, label="Root Patching", pos=(-1, -1), size=(120, 30))
-        root_patch_button.Bind(wx.EVT_BUTTON, self.on_root_patch)
-        root_patch_button.SetToolTip("Install Drivers and Kernel Extentions to restore functionality and proformance")
-        root_patch_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-        if gui_support.CheckProperties(self.constants).host_can_build() is False:
-            root_patch_button.Disable()
-        sizer.Add(root_patch_button, 0, wx.ALIGN_CENTER | wx.ALL, 0)
-       
+
         # Add return button
         return_button = wx.Button(frame, label="Return", pos=(-1, -1), size=(100, 30))
         return_button.Bind(wx.EVT_BUTTON, self.on_return)
@@ -235,6 +228,17 @@ class MacosConfigFrame(wx.Frame):
         """
         settings = {
         "Graphics": {
+                "Tahoe UI Render Optimization": {
+                    "type": "checkbox",
+                    "value": global_settings.GlobalEnviromentSettings().read_property("Tahoe_UI_Render") or getattr(self.constants, "tahoe_ui_render", False),
+                    "variable": "Tahoe_UI_Render",
+                    "constants_variable": "tahoe_ui_render",
+                    "description": [
+                        "Enable experimental graphics",
+                        "optimizations for macOS Tahoe",
+                        "to improve rendering performance.",
+                    ],
+                },
                 "TeraScale 2 Acceleration": {
                     "type": "checkbox",
                     "value": global_settings.GlobalEnviromentSettings().read_property("MacBookPro_TeraScale_2_Accel") or self.constants.allow_ts2_accel,
@@ -455,15 +459,6 @@ class MacosConfigFrame(wx.Frame):
 
     def on_return(self, event):
         self.frame_modal.Destroy()
-
-    def on_root_patch(self, event):
-        self.frame_modal.Destroy()
-        gui_sys_patch_display.SysPatchDisplayFrame(
-            parent=self.parent,
-            title=self.title,
-            global_constants=self.constants,
-            screen_location=self.parent.GetPosition()
-        )
 
 
     def on_nightly(self, event: wx.Event) -> None:

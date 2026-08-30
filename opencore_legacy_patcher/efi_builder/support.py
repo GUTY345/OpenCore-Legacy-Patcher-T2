@@ -96,16 +96,23 @@ class BuildSupport:
         payload_source_dir = self.constants.payload_kexts_path if hasattr(self.constants, 'payload_kexts_path') else kext_path
 
         # 2. Check for and extract ZIP if needed
-        zip_pattern = f"**/{kext_name.replace('.kext', '')}*.zip"
-        potential_zips = list(payload_source_dir.glob(zip_pattern))
-
-        if potential_zips:
+        if kext_path and kext_path.exists() and kext_path.name.endswith('.zip'):
             try:
-                with zipfile.ZipFile(potential_zips[0], 'r') as zip_ref:
-                    # Extract directly into the payload folder so we can find it
+                with zipfile.ZipFile(kext_path, 'r') as zip_ref:
                     zip_ref.extractall(payload_source_dir)
             except Exception as e:
-                logging.info(f"- Failed to extract {potential_zips[0].name}: {e}")
+                logging.info(f"- Failed to extract {kext_path.name}: {e}")
+        else:
+            zip_pattern = f"**/{kext_name.replace('.kext', '')}*.zip"
+            potential_zips = list(payload_source_dir.glob(zip_pattern))
+    
+            if potential_zips:
+                try:
+                    with zipfile.ZipFile(potential_zips[0], 'r') as zip_ref:
+                        # Extract directly into the payload folder so we can find it
+                        zip_ref.extractall(payload_source_dir)
+                except Exception as e:
+                    logging.info(f"- Failed to extract {potential_zips[0].name}: {e}")
 
         # 3. Locate the .kext source (searching recursively)
         source_path = payload_source_dir / kext_name
@@ -216,7 +223,7 @@ class BuildSupport:
         self._validate_malformed_kexts(self.constants.opencore_release_folder / Path("EFI/OC/Kexts"))
 
 
-    def _validate_malformed_kexts(self, directory: str | Path) -> None:
+    def _validate_malformed_kexts(self, directory: typing.Union[str, Path]) -> None:
         """
         Validate Info.plist and executable pathing for kexts
         """
