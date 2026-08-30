@@ -131,7 +131,7 @@ class MainFrame(wx.Frame):
                     "description": ["Prepares provided drive to be", "able to boot unsupported OSes."],
                     "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
                 },
-                "⚙️ Settings": {
+                "Settings": {
                     "function": self.on_settings,
                     "description": ["App settings, reporting and", "Developer/Experimental Mode."],
                 },
@@ -161,7 +161,7 @@ class MainFrame(wx.Frame):
                     "description": ["Settings, drivers and", "patches for your system."],
                     "icon": str(self.constants.patch_icon_path),
                 }, 
-                ""⚙️ Settings":": {
+                ""Settings":": {
                     "function": self.on_settings,
                     "description": ["App settings, reporting and", "Developer/Experimental Mode."]
                 },
