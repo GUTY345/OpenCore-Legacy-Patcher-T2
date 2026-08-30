@@ -345,19 +345,93 @@ class MainFrame(wx.Frame):
 
         logging.info(f"Newer version detected: {remote_version_str}")
         
-        # Dynamically generate changelog URL from constants.repo_link
-        repo_api_url = self.constants.repo_link.replace("https://github.com/", "https://api.github.com/repos/").strip("/")
-        changelog_api_url = f"{repo_api_url}/releases/latest"
+        url = "https://api.github.com/repos/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/latest"
         changelog = """## Unable to fetch changelog\n\nPlease check the Github page for more information."""
         try:
-            response = requests.get(changelog_api_url, headers={"User-Agent": self.constants.patcher_name}, timeout=10).json()
+            response = requests.get(url, headers={"User-Agent": "OpenCore-Legacy-Patcher-T2"}, timeout=10).json()
             if "body" in response:
                 changelog = response["body"].split("## Asset Information")[0]
         except Exception as e:
             logging.error(f"Failed to fetch changelog text: {e}")
+            logging.error(f"Es hat fehlgeschlagen, den Changelog-Text anzuzeigen: {e}")
 
         if not getattr(self, 'exiting_app', False) and not gui_support.is_app_exiting():
             wx.CallAfter(self.on_update, update_dict["Link"], remote_version_str, update_dict["Github Link"], changelog)
+        
+    def on_update(self, oclp_url: str, oclp_version: str, oclp_github_url: str, changelog_text: str):
+        if not self or gui_support.is_app_exiting():
+            return
+
+        ID_GITHUB = wx.NewIdRef() if hasattr(wx, "NewIdRef") else wx.NewId()
+        ID_UPDATE = wx.NewIdRef() if hasattr(wx, "NewIdRef") else wx.NewId()
+
+        html_markdown = markdown2.markdown(changelog_text, extras=["tables"])
+        html_css = css_data.updater_css
+        
+        # Parent auf self gesetzt zur sauberen Speicherhierarchie
+        frame = wx.Dialog(self, -1, title="", size=(650, 500))
+        frame.SetMinSize((650, 500))
+        frame.SetWindowStyle(wx.STAY_ON_TOP)
+        panel = wx.Panel(frame)
+        
+        self.title_text = wx.StaticText(panel, label=f"A new version of {self.constants.patcher_name} is available!")
+        self.description = wx.StaticText(panel, label=f"{self.constants.patcher_name} {oclp_version} is now available - You have {self.constants.patcher_version_label}. Would you like to update?")
+        self.title_text.SetFont(gui_support.font_factory(19, wx.FONTWEIGHT_BOLD))
+        self.description.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+        
+        self.web_view = wx.html2.WebView.New(panel, style=wx.BORDER_SUNKEN)
+        html_code = f'''
+<html>
+    <head>
+        <style>
+            {html_css}
+        </style>
+    </head>
+    <body class="markdown-body">
+        {html_markdown.replace("<a href=", "<a target='_blank' href=")}
+    </body>
+</html>
+'''
+        self.web_view.SetPage(html_code, "")
+        self.web_view.Bind(wx.html2.EVT_WEBVIEW_NEWWINDOW, self._onWebviewNav)
+        self.web_view.EnableContextMenu(False)
+        
+        self.close_button = wx.Button(panel, label="Dismiss")
+        self.close_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(wx.ID_CANCEL))
+        self.view_button = wx.Button(panel, ID_GITHUB, label="View on GitHub")
+        self.view_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(ID_GITHUB))
+        self.install_button = wx.Button(panel, label="Download and Install")
+        self.install_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(ID_UPDATE))
+        self.install_button.SetDefault()
+
+        buttonsizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonsizer.Add(self.close_button, 0, wx.ALIGN_CENTRE | wx.RIGHT, 5)
+        buttonsizer.Add(self.view_button, 0, wx.ALIGN_CENTRE | wx.LEFT|wx.RIGHT, 5)
+        buttonsizer.Add(self.install_button, 0, wx.ALIGN_CENTRE | wx.LEFT, 5)
+        
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.title_text, 0, wx.ALIGN_CENTRE | wx.TOP, 20)
+        sizer.Add(self.description, 0, wx.ALIGN_CENTRE | wx.BOTTOM, 20)
+        sizer.Add(self.web_view, 1, wx.EXPAND | wx.LEFT|wx.RIGHT, 10)
+        sizer.Add(buttonsizer, 0, wx.ALIGN_RIGHT | wx.ALL, 20)
+        panel.SetSizer(sizer)
+        frame.Centre()
+
+        result = frame.ShowModal()
+
+        if result == ID_GITHUB:
+            webbrowser.open(oclp_github_url)
+        elif result == ID_UPDATE:
+            gui_update.UpdateFrame(
+                parent=self,
+                title=self.title,
+                global_constants=self.constants,
+                screen_location=self.GetPosition(),
+                url=oclp_url,
+                version_label=oclp_version
+            )
+
+        frame.Destroy()
         
     def on_update(self, oclp_url: str, oclp_version: str, oclp_github_url: str, changelog_text: str):
         if not self or gui_support.is_app_exiting():
