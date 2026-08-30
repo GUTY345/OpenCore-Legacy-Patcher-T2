@@ -113,13 +113,14 @@ class MainFrame(wx.Frame):
 
         # Main Feature Buttons
         if self.constants.Developer_Mode:
+            # hier gab es einen Fehler, die zu IndentationError: unexpected indent führt, behoben
             menu_buttons = {
                 ## "Build OpenCore": {
                     ## "function": self.on_build_and_install,
                     ## "description": ["Build OpenCore and install", "it to your internal or external drive."],
                     ## "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
                     ## "info_tab": 0,
-                ## },
+                ##,
                 # dieses Button ist nicht nötig, es ist schon ein Duplikat von was unter OpenCore Settings (OpenCore) gibt, Es wird einfach Benutzer verwirren.
                 "Create macOS Installer": {
                     "function": self.on_create_macos_installer,
@@ -148,9 +149,8 @@ class MainFrame(wx.Frame):
                 }
             }
         else:
+            # hier gab es einen Fehler, die zu IndentationError: unexpected indent führt, behoben
             menu_buttons = {
-                
-                },
                 # sollte auf erstes Platz sein - bevor, es war unter Create macOS installer.
                 "OpenCore": {
                     "function": self.on_oc_settings,
