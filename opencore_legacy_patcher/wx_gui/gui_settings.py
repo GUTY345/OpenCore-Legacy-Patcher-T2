@@ -452,4 +452,16 @@ Hardware Information:
         )
         if dlg.ShowModal() == wx.ID_YES:
             logging.info("Restarting application to apply Developer Mode changes...")
-            os.execl(sys.executable, sys.executable, *sys.argv)
+            # BUGFIX: previously re-exec'd via sys.executable + this process's *current*
+            # sys.argv. That argv isn't always a valid script path - eg. when running
+            # from source and the app was started interactively (bare `python3` REPL,
+            # where sys.argv is ['']), the reconstructed exec had nothing usable after
+            # the interpreter path, so the "restart" collapsed into a plain interactive
+            # Python shell instead of relaunching the app (reproduced: this is exactly
+            # what the screenshot showed). launcher_binary/launcher_script are resolved
+            # once at genuine startup (application_entry.py) from __file__, not from
+            # argv, so they stay correct regardless of how this process was invoked.
+            if self.constants.launcher_script:
+                os.execl(self.constants.launcher_binary, self.constants.launcher_binary, self.constants.launcher_script)
+            else:
+                os.execl(self.constants.launcher_binary, self.constants.launcher_binary)
