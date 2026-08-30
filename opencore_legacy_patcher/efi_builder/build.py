@@ -169,7 +169,7 @@ class BuildOpenCore:
                 self.config["Kernel"]["Quirks"]["DisableIoMapper"] = True
 
             except Exception as e:
-                logging.error("Whoops, the app failed to inject the required kexts because of the following error:")
+                logging.error("Whoops, the app failed to inject the required OpenCore configuration because of the following error:")
                 logging.exception("Stack Trace:")
                 logging.info("Please try again later.")
                 sys.exit(3)
