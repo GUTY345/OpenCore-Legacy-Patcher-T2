@@ -528,7 +528,6 @@ class MainFrame(wx.Frame):
         except Exception as e:
             logging.error(f"We failed to call the function on_edit_model: {e}")
             logging.exception("Stack Trace:")
-            return
 
     def on_oc_settings(self, event: wx.Event = None):
         try:
