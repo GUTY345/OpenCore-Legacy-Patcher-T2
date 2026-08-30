@@ -57,7 +57,7 @@ class SettingsFrame(wx.Frame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.AddSpacer(10)
 
-        tabs = ["App", "Build", "Security", "Developer"]
+        tabs = ["App", "Developer"] # Build und Security sind beide leer, also diese sind nicht benötigt
         for tab in tabs:
             panel = wx.ScrolledWindow(notebook)
             panel.SetScrollRate(0, 20)
