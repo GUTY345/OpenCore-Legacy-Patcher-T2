@@ -16,7 +16,7 @@ class Constants:
     def __init__(self) -> None:
         # Patcher Versioning
         # Wenn eine Version mit s endet, es heißt, dass sie noch nicht fertig ist.
-        self.patcher_version:                 str = "5.0.0"  # OpenCore-Legacy-Patcher
+        self.patcher_version:                 str = "4.0.0.17003"  # OpenCore-Legacy-Patcher
         self.patcher_version_label=self.patcher_version
         self.patcher_support_pkg_version:     str = "2.0.0"  # PatcherSupportPkg
         self.copyright_date:                  str = "Copyright © 2020-2026 Dortania"
@@ -24,7 +24,7 @@ class Constants:
         # URLs
         self.url_patcher_support_pkg:         str = "https://github.com/YBronst/PatcherSupportPkg/download/"
         self.guide_link:                      str = "https://dortania.github.io/OpenCore-Legacy-Patcher/"
-        self.repo_link:                       str = "https://github.com/matteoiaccarino/OpenCore-Legacy-Patcher-T1/"
+        self.repo_link:                       str = "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"
         self.installer_pkg_url:               str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
 
         # OpenCore Versioning
