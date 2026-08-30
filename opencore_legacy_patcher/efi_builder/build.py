@@ -503,7 +503,7 @@ class BuildOpenCore:
             self._save_config()
         except Exception as e:
             logging.error(f"Whoops, spoofing the SMBIOS for {self.model} failed because of the following error:")
-            logging.exception("Stack Trace:") # This prints the full technical error
+            logging.exception("Stack Trace:")
             logging.info("Please try again later.")
             sys.exit(3)
 
@@ -514,6 +514,7 @@ class BuildOpenCore:
             support.BuildSupport(self.model, self.constants, self.config).validate_pathing()
             
             if self.model == "MacBookPro14,3" or (hasattr(self.constants, "computer") and self.constants.computer.real_model == "MacBookPro14,3"):
+                T1_OpenCore_Konfiguration_abgeschlossen=False
                 if self.constants.build_profile == "test_b":
                     profile_name = "TEST-B GPU"
                 elif self.constants.build_profile == "test_c":
@@ -585,14 +586,20 @@ class BuildOpenCore:
                         shutil.rmtree(profile_output, onexc=rmtree_handler)
                     except TypeError:
                         shutil.rmtree(profile_output, ignore_errors=True)
+                    # behebt eine Sicherheitslücke, die beim Löschen des Verzeichnisses, beim einen unerwarteter Fehler (z.B einen Angreifer versucht, nicht autorisierte Verzeichnisse zu löschen), DoS-Angriffe zu starten
+                    except Exception as e:
+                        logging.error("While deleting a directory, an error occured.")
+                        logging.exception("Stack Trace:")
+                        logging.info("This could be because an attacker may have tried to delete an unauthorized directory. Please check the full Stack Trace and ensure the application hasn't been tampered with malware.")
                 profile_output.mkdir(parents=True)
                 efi_source = Path(self.constants.opencore_release_folder) / "EFI"
                 if efi_source.exists():
                     shutil.copytree(efi_source, profile_output / "EFI")
                     logging.info(f"Profile EFI copied to: {profile_output / 'EFI'}")
+                    T1_OpenCore_Konfiguration_abgeschlossen=True
                 else:
-                    logging.warning(f"EFI directory not found at {efi_source} — skipping profile copy")
-    
+                    logging.error(f"EFI directory not found at {efi_source} — skipping profile copy") # <- es sollte nicht logging.warning sein. Dann es loggt einfach nicht als Fehler, sondern als Warnung, und das ist auch eine Sicherheitsrisiko. Angreifern können davon ausnutzen, um ClickFix-Angriffen zu starten.
+                    # es ist ein erwartetes Fehler, also kein Stack Trace zu drucken ist nötig - es würde einfach NoneType None drucken und es bringt nichts.
             logging.info("")
             logging.info(f"Your OpenCore EFI for {self.model} has been built at:")
             logging.info(f"    {self.constants.opencore_release_folder}")
