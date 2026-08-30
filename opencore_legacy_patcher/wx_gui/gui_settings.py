@@ -278,6 +278,22 @@ class SettingsFrame(wx.Frame):
                     "description": [
                     ],
                 },
+                "Misc": {
+                    "type": "title",
+                },
+                "Default OpenCore Build": {
+                    "type": "choice",
+                    "choices": [
+                        "💬 Ask Each Time",
+                        "🟢 Standard / Safe Build",
+                        "🧪 [LEVEL-B] Experimental GPU",
+                        "🧪 [LEVEL-C] Experimental Tahoe (Native SMBIOS)",
+                        "🧪 [LEVEL-C] Experimental Spoof T2 (MacBookPro16,1)",
+                        "🧪 [LEVEL-D] All-In-One Tahoe (Wi-Fi + Audio + GPU + T1)"
+                    ],
+
+                    # TODO: Add a populate function @gandolf243 will do this.
+                },
                 "wrap_around 1": {
                     "type": "wrap_around",
                 },
