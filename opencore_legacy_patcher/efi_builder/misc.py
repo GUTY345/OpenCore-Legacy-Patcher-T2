@@ -654,7 +654,7 @@ class BuildMiscellaneous:
                     logging.info("Please try again later.")
                     sys.exit(3)
                 # dieses Patch bringt dazu, dass T2 Macs den Fehler nach 29 Minuten verbleibend weiter mit die Installation fährt statt einen Fehler zu zeigen
-                 try:
+                try:
                     logging.info("- Disabling UEFI updates for T2 Macs to prevent errors after 29 minutes remaining")
                     logging.info("This patch will block UEFI updates on T2 Macs. To update the UEFI on T2 Macs while running unsupported macOS versions, if you care about your UEFI being up to date, you'll need to update it via exiting OpenCore and entering DFU mode using another Mac.")
                     self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-oas_skip_attestation")
