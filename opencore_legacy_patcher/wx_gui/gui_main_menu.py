@@ -125,18 +125,12 @@ class MainFrame(wx.Frame):
                     "description": ["Download and flash a macOS", "Installer for your system."],
                     "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
                 },
-                "Install drivers and patches": {
-                    "function": self.on_root_patches,
-                    "description": ["Installs hardware drivers and", "patches for your system after", "installing a new version of macOS."],
-                    "icon": str(self.constants.patch_icon_path),
-                    "info_tab": 2,
-                },
                 "macOS Configuration": {
                     "function": self.on_macos_config,
                     "description": ["Settings, drivers and", "patches for your system."],
                     "icon": str(self.constants.patch_icon_path),
                 },
-                "OpenCore Settings": {
+                "OpenCore": {
                     "function": self.on_oc_settings,
                     "description": ["Prepares provided drive to be", "able to boot unsupported OSes."],
                     "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
@@ -159,17 +153,12 @@ class MainFrame(wx.Frame):
                     "description": ["Build OpenCore and install", "it to your internal or external drive."],
                     "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
                 },
-                "Post-Install Root Patch": {
-                    "function": self.on_root_patches,
-                    "description": ["Install hardware drivers and", "patches for your system."],
-                    "icon": str(self.constants.patch_icon_path),
-                },
                 "Create macOS Installer": {
                     "function": self.on_create_macos_installer,
                     "description": ["Download and flash a macOS", "Installer for your system."],
                     "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
                 },
-                "OpenCore Settings": {
+                "OpenCore": {
                     "function": self.on_oc_settings,
                     "description": ["Settings, drivers and", "patches for your system."],
                     "icon": str(self.constants.icns_resource_path / "OC-Settings.icns"),
@@ -312,13 +301,6 @@ class MainFrame(wx.Frame):
     def _check_for_updates(self):
         if self.constants.has_checked_updates is True:
             return
-    
-        ignore_updates = global_settings.GlobalEnviromentSettings().read_property("IgnoreAppUpdates")
-        if ignore_updates is True:
-            self.constants.ignore_updates = True
-            return
-    
-        self.constants.ignore_updates = False
         self.constants.has_checked_updates = True
         
         update_dict = updates.CheckBinaryUpdates(self.constants).check_binary_updates()
@@ -337,6 +319,7 @@ class MainFrame(wx.Frame):
                 return
     
         except version.InvalidVersion:
+            logging.info("The version is invalid, you'll not receive any further updates.")
             if remote_version_str == local_version_str:
                 return
     
@@ -345,16 +328,16 @@ class MainFrame(wx.Frame):
 
         logging.info(f"Newer version detected: {remote_version_str}")
         
-        # Dynamically generate changelog URL from constants.repo_link
-        repo_api_url = self.constants.repo_link.replace("https://github.com/", "https://api.github.com/repos/").strip("/")
-        changelog_api_url = f"{repo_api_url}/releases/latest"
+        url = "https://api.github.com/repos/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/latest"
         changelog = """## Unable to fetch changelog\n\nPlease check the Github page for more information."""
+        # User-Agent auf Edge gesetzt statt einfach OpenCore-Legacy-Patcher-T2, um die API sicher zu laden und MitM-Angriffe zu vermeiden
         try:
-            response = requests.get(changelog_api_url, headers={"User-Agent": self.constants.patcher_name}, timeout=10).json()
+            response = requests.get(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/152.0.4191.53/OpenCoreLegacyPatcherT2"}, timeout=10).json()
             if "body" in response:
                 changelog = response["body"].split("## Asset Information")[0]
         except Exception as e:
             logging.error(f"Failed to fetch changelog text: {e}")
+            logging.error(f"Es hat fehlgeschlagen, den Changelog-Text anzuzeigen: {e}")
 
         if not getattr(self, 'exiting_app', False) and not gui_support.is_app_exiting():
             wx.CallAfter(self.on_update, update_dict["Link"], remote_version_str, update_dict["Github Link"], changelog)
@@ -369,6 +352,7 @@ class MainFrame(wx.Frame):
         html_markdown = markdown2.markdown(changelog_text, extras=["tables"])
         html_css = css_data.updater_css
         
+        # Parent auf self gesetzt zur sauberen Speicherhierarchie
         frame = wx.Dialog(self, -1, title="", size=(650, 500))
         frame.SetMinSize((650, 500))
         frame.SetWindowStyle(wx.STAY_ON_TOP)

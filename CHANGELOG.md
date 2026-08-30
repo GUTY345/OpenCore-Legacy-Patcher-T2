@@ -1,4 +1,86 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.17002.3 - 4.0.0 alpha 17.2.3
+This release fixes a bug where on unsupported or spoofed T2 Macs when installing macOS 26 Tahoe may cause to throw an error after 29 minutes remaining because it was trying to fetch a UEFI update for a mismatched Mac computer, especially if the SMBIOS is spoofed. Also, it causes CPU throttling down to 800MHz under certain circumstances, making macOS 26 Tahoe absolutely unusable on T2 Macs. Furthermore, when checking for macOS updates, it bundled a mismatched UEFI update that could brick T2 Macs.
+There are no changes affecting non-T2 Macs between the previous version and this one.
+
+Dieses Update behebt einen Fehler, der bei der Installation von macOS 26 Tahoe auf nicht unterstützten oder manipulierten T2-Macs nach 29 Minuten Restzeit zu einem Fehler führen konnte. Grund dafür war der Versuch, ein UEFI-Update für einen nicht kompatiblen Mac abzurufen, insbesondere bei manipuliertem SMBIOS. Außerdem führte der Fehler unter bestimmten Umständen zu einer Drosselung der CPU-Frequenz auf 800 MHz, wodurch macOS 26 Tahoe auf T2-Macs unbrauchbar wurde. Darüber hinaus wurde beim Suchen nach macOS-Updates ein nicht kompatibles UEFI-Update mitinstalliert, das T2-Macs beschädigen konnte. Für andere Macs gibt es keine Änderungen gegenüber der vorherigen Version.
+
+## 4.0.0.17002.2 - 4.0.0 alpha 17.2.2
+This release:
+- on T2 Macs, due to instability issues, DisableWatchdog is no longer set to True
+- on non-T2 Macs, a bug that unconditionally opens a tutorial for T2 Macs is fixed. An irritated user may disable SIP and set csrutil authenticated-root to disabled on a non-T2 Mac. The outcome is a non-bootable non-T2 Mac. An attacker could abuse this to spread propaganda or misinformation to launch DoS attacks or lower the security of their non-T2 Macs to run a malicious application.
+- increases the minimum requirements to macOS 11.7.10 when running prebuilt instead from source - temporarily. If you're running the app from source, you can run the app on versions as old as High Sierra, but because the oldest version I've tested is Big Sur, I want to ensure there are no broken buttons on the supported releases.
+
+Diese Version:
+
+- Auf T2-Macs ist DisableWatchdog aufgrund von Stabilitätsproblemen nicht mehr auf „True“ gesetzt.
+
+- Auf Nicht-T2-Macs wurde ein Fehler behoben, der dazu führte, dass ein Tutorial für T2-Macs unkontrolliert geöffnet wurde. Ein verirrter Benutzer könnte SIP deaktivieren und csrutil authenticated-root auf einem Nicht-T2-Mac deaktivieren. Dies hätte zur Folge, dass der Nicht-T2-Mac nicht mehr bootfähig wäre. Ein Angreifer könnte dies ausnutzen, um Propaganda oder Misinformation zu verbreiten, DoS-Angriffe zu starten oder die Sicherheit seiner Nicht-T2-Macs zu verringern, um eine Anwendung auszuführen, die Schadsoftware ausführt.
+
+- Die Mindestanforderungen für die Ausführung der vorkompilierten Version anstelle der Quellcode-Version wurden vorübergehend auf macOS 11.7.10 erhöht. Wenn Sie die App aus dem Quellcode ausführen, können Sie sie auf Versionen bis einschließlich High Sierra verwenden. Da die älteste von mir getestete Version jedoch Big Sur ist, möchte ich sicherstellen, dass auf den unterstützten Versionen keine Schaltflächen defekt sind.
+
+## 4.0.0.17002.1 - 4.0.0 alpha 17.2.1
+This release:
+- fixes UI bugs - 4.0.0.17002 was full of UI bugs and everything was all over the place:
+<img width="712" height="797" alt="Bildschirmfoto 2026-08-29 um 08 14 09" src="https://github.com/user-attachments/assets/1826591a-a96a-446e-81eb-6fc0cc9f7e22" />
+<img width="712" height="797" alt="Bildschirmfoto 2026-08-29 um 08 14 19" src="https://github.com/user-attachments/assets/dfbc31c5-fd1b-4546-9404-befc39f59c32" />
+
+Now this is fixed:
+<img width="712" height="797" alt="Bildschirmfoto 2026-08-29 um 08 15 15" src="https://github.com/user-attachments/assets/a44cf330-c3c1-41fd-a53c-63cecd7c32f7" />
+<img width="712" height="797" alt="Bildschirmfoto 2026-08-29 um 08 15 25" src="https://github.com/user-attachments/assets/eb859ba8-9a11-4336-842c-391b3f93dff7" />
+
+- Sets for T2 Macs DisableWatchdog now to True
+
+## 4.0.0.17002 - 4.0.0 alpha 17.2
+This release:
+- updates OpenCore to 2.0.2
+- fixes a bug where when building OpenCore, it opens a seperate window, which can cause increased RAM usage
+- improves legacy macOS version compatability with this patcher by moving building the application from macOS 26 VM to macOS 11 VM to ensure compatability with older versions of macOS
+- updates Python to 3.13.15
+- fixes USB1.1 compatability with macOS Sequoia and Tahoe, thanks @stephandeutsch
+- raises temporarily the minimum requirements for this patcher to macOS 10.15.8
+- fixes a bug where logging.handler fails to display the error if the app crashes
+- fixes a vulnerability where an attacker could supply a malformed EFI partition while showing OpenCore Transfer Complete to launch a DoS attack:
+
+      try:
+                  if self._determine_sd_card(sd_type) is True:
+                      logging.info("Adding SD Card icon")
+                      subprocess_wrapper.run_as_root(["/bin/cp", str(self.constants.icon_path_sd), str(mount_path)])
+                  elif ssd_type is True:
+                      logging.info("Adding SSD icon")
+                      subprocess_wrapper.run_as_root(["/bin/cp", str(self.constants.icon_path_ssd), str(mount_path)])
+                  elif disk_type == "USB":
+                      logging.info("Adding USB stick icon")
+                      subprocess_wrapper.run_as_root(["/bin/cp", str(self.constants.icon_path_external), str(mount_path)])
+                  else:
+                      logging.info("Adding internal hard disk icon")
+                      subprocess_wrapper.run_as_root(["/bin/cp", str(self.constants.icon_path_internal), str(mount_path)])
+              except Exception as icon_error:
+                  logging.warning(f"Copying the icons failed (not critical): {icon_error}")
+      
+              # Bereinigung & Unmount
+              logging.info("Cleaning up installation site")
+              if not self.constants.recovery_status:
+                  logging.info("Unmounting the EFI partition")
+                  # FIX 4: Auch unmount als Root ausführen, da wir es als Root gemountet haben
+                  subprocess_wrapper.run_as_root(["/usr/sbin/diskutil", "umount", mount_path])
+              # <- here's the vulnerability - it shows unconditionally OpenCore Transfer complete, even if behind the scenes an error has occured
+              # FIX 5: Die Erfolgsmeldung wird NUR ausgegeben, wenn wir bis hierhin nicht abgebrochen haben!
+              logging.info("OpenCore Transfer complete")
+              return True
+
+Impact: an attacker could abuse the bug where OpenCore Transfer complete is shown unconditionally and unconditionally returns true to place a malformed EFI to launch a DoS attack at the EFI level. This is fixed by adding a variable that is switched to True only if OpenCore is added successfully. If the variable isn't set to True, it will show an error instead to inform the user properly that their OpenCore EFI is not built at all instead.
+
+## 4.0.0.17001.1 - 4.0.0 alpha 17.1.1
+This release:
+
+Metal 3802 and non-Metal patches are not working and known very well to cause yellow screen and kernel panics on macOS 26. To prevent this, I'll put safety guards to prevent these patches from getting injected into macOS 26 while @gandolf243 is working on it to ifx these patches on Tahoe, while the already known to be working patches or ones that are going to be tested yet, only those are going to be injected.
+For unsupported T2 Macs, I found this bug: https://github.com/acidanthera/OpenCorePkg/pull/620 . I'm working closely with Accidanthera to get this OpenCorePkg bug fixed.
+Diese Version:
+
+Metal 3802 und Nicht-Metal-Patches funktionieren nicht und sind dafür bekannt, unter macOS 26 zu Yellow Screens und Kernel-Panics zu führen. Um dies zu verhindern, werden Sicherheitsvorkehrungen getroffen, damit diese Patches nicht in macOS 26 eingespielt werden, während @gandolf243 daran arbeitet, sie per ifx auf Tahoe zu integrieren. Nur bereits bekannte, funktionierende oder noch zu testende Patches werden eingespielt.
+Für nicht unterstützte T2-Macs habe ich diesen Bug gefunden: https://github.com/acidanthera/OpenCorePkg/pull/620. Ich arbeite eng mit Accidanthera zusammen, um diesen OpenCorePkg-Bug zu beheben.
+
 ## 4.0.0.17001.1 - 4.0.0 alpha 17.1.1
 This release:
 

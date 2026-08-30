@@ -458,80 +458,68 @@ class BuildMiscellaneous:
             logging.error(f"{self.model} is not a T2 Mac.")
             return
         else:
-            enable_experimental_patches = False # Nur auf True setzen wenn der Benutzer manuell selbst bearbeitet und wechselt enable_experimental_patches von False auf True
-            logging.info("If you want to enable optional patches that haven't been tested yet, you should download go to releases")
-            logging.info(", then download the zip file, extract it, and then, open up misc.py.")
-            logging.info("And afterwards, you need manually to set enable_experimental_patches from False to True")
-            builder = support.BuildSupport(self.model, self.constants, self.config)
-            self.config.setdefault("Kernel", {}).setdefault("Patch", [])
-    
-            if enable_experimental_patches==False:
-                logging.info("Injecting optional patches are not enabled. That's the standard behavior.")
-            elif enable_experimental_patches==True:
-                logging.info("ATTENTION! Injecting optional patches are enabled. These patches haven't been tested yet and may have bugs, which could lead to for example kernel panics.")
+            UnsupportedT2Macs = [
+                "MacBookAir8,1",
+                "MacBookAir8,2",
+                "MacBookAir9,1",
+                "MacBookPro15,1",
+                "MacBookPro15,2",
+                "MacBookPro15,3",
+                "MacBookPro15,4",
+                "MacBookPro16,3",
+                "MacBookPro16,4",
+                "Macmini8,1",
+                "iMacPro1,1",
+            ]
+            logging.info(f"{self.model} is a T2 Mac.")
+            if self.constants.serial_settings in ["None"] and self.model in UnsupportedT2Macs:
+                logging.error("There are instability issues when trying to boot macOS 26 Tahoe on unsupported T2 Macs when not spoofing the SMBIOS. Some Macs barely reach the Language selection screen and when clicking ->, WindowServer fails to render the request properly.")
+                logging.info("To avoid any issues, we'll abort the build OpenCore process.")
+                logging.info("To fix this error, go back, then click on OpenCore and don't click on Install OpenCore or Save OpenCore yet - go to SMBIOS and change SMBIOS Spoof Level from None to anything else, like Minimal, Moderate or Advanced.")
+                sys.exit(3)
             else:
-                logging.error("We couldn't verify if injecting optional patcges are enabled or not, but they must be disabled if the variable is not set to True.")
-    
-            if getattr(self.constants, "build_profile", "") in ["test_c", "test_c_spoofed"]:
-                logging.info("Bypassing T2 build abort because TEST-C/TEST-C SPOOFED profile is active.")
-            else:
-                logging.error("With alpha 16, T2 Macs will always face a Needs authenticator (81) panic and will be fixed in alpha 17. And it ended up that it is mostly OpenCorePkg bug.")
-                logging.info("Since standard OpenCorePkg for T2 Macs works only inside the installer of macOS 26 Tahoe, but to boot to the desktop, it ended up requiring a seperate OpenCorePkg fork.")
-                logging.info("Since the new OpenCorePkg fork is only used in pre-alpha 17 and later, we'll need to abort building OpenCore for your T2 Mac.")
-                logging.info("Check for available updates. If there are no available updates at this moment, consider upgrading to pre-alpha 1 for alpha 17 or later manually.")
-                logging.info("This will appear unconditionally with any new alpha 16 release from now onwards to prevent broken T2 Macs, so you don't end up with broken partitions.")
-                logging.info("Aborting softly inside the application to prevent further issues.")
-                logging.info("To upgrade manually to the pre-alpha 17, you need to go to OpenCore Legacy Patcher T2's repository, go to Releases and download the pre-alpha.")
-                logging.info("Any new fixes to fix the Needs authenticator (81) are available only in pre-alpha 17 or later. This release from now on will only receive security updates and bug fixes (including ones for non-T2 systems).")
-                sys.exit(3)
-            # Prerequisite kext checks
-            for kext, ver, path in [
-                ("WhateverGreen.kext", self.constants.whatevergreen_version, self.constants.whatevergreen_path),
-                ("CryptexFixup.kext", "1.0.5", self.constants.kexts_path),
-                ("AMFIPass.kext", "1.4.1", self.constants.kexts_path)
-            ]:
-                obj = builder.get_kext_by_bundle_path(kext)
-                if not obj or obj.get("Enabled") is not True:
-                    logging.info(f"- Enabling {kext}")
-                    builder.enable_kext(kext, ver, path)
-    
-            # Handle explicit performance/timeout panics on specific MacBook lines
-            # Der Grund warum MinKernel auf 24.0.0 (Sequoias Version von Darwin) stattdessen von 25.x.x eingestellt ist, ist es die Installationsprogramm läuft auf Darwin 24 noch, auch die von 26 Tahoe.
-            if self.model in ["MacBookAir8,1", "MacBookAir8,2", "MacBookAir9,1", "MacBookPro16,3"]:
-                logging.info(f"- {self.model}: Applying Unsupported Mantissa Speed kernel panic patches")
+                logging.info("On to the continuing of building OpenCore process on T2 Macs...")
+                builder = support.BuildSupport(self.model, self.constants, self.config)
+                self.config.setdefault("Kernel", {}).setdefault("Patch", [])
+        
+                # Prerequisite kext checks
+                for kext, ver, path in [
+                    ("WhateverGreen.kext", self.constants.whatevergreen_version, self.constants.whatevergreen_path),
+                    ("CryptexFixup.kext", "1.0.5", self.constants.kexts_path),
+                    ("AMFIPass.kext", "1.4.1", self.constants.kexts_path)
+                ]:
+                    obj = builder.get_kext_by_bundle_path(kext)
+                    if not obj or obj.get("Enabled") is not True:
+                        logging.info(f"- Enabling {kext}")
+                        builder.enable_kext(kext, ver, path)
+        
+                # Handle explicit performance/timeout panics on specific MacBook lines
+                # Der Grund warum MinKernel auf 24.0.0 (Sequoias Version von Darwin) stattdessen von 25.x.x eingestellt ist, ist es die Installationsprogramm läuft auf Darwin 24 noch, auch die von 26 Tahoe.
+                if self.model in ["MacBookAir8,1", "MacBookAir8,2", "MacBookAir9,1", "MacBookPro16,3"]:
+                    logging.info(f"- {self.model}: Applying Unsupported Mantissa Speed kernel panic patches")
+                    try:
+                        logging.info(f"- {self.model}: Disabling USB-Map.kext and USB-Map-Tahoe.kext if any is there")
+                        m1 = builder.get_kext_by_bundle_path("USB-Map.kext")
+                        m2 = builder.get_kext_by_bundle_path("USB-Map-Tahoe.kext")
+                        if m1: m1["Enabled"] = False
+                        if m2: m2["Enabled"] = False
+                    except Exception as e:
+                        logging.info(f"- {self.model}: Great news! We tried disabling USB-Map.kext and USB-Map-Tahoe.kext but we didn't find them.")
+                        logging.info("You don't have to worry about this message.")
                 try:
-                    logging.info(f"- {self.model}: Disabling USB-Map.kext and USB-Map-Tahoe.kext if any is there")
-                    m1 = builder.get_kext_by_bundle_path("USB-Map.kext")
-                    m2 = builder.get_kext_by_bundle_path("USB-Map-Tahoe.kext")
-                    if m1: m1["Enabled"] = False
-                    if m2: m2["Enabled"] = False
+                    APPLE_NVRAM_UUID = "7C436110-AB2A-4BBB-A880-FE41995C9F82"
+                    logging.info("- Defining NVRAM variable APPLE_NVRAM_UUID")
                 except Exception as e:
-                    logging.info(f"- {self.model}: Great news! We tried disabling USB-Map.kext and USB-Map-Tahoe.kext but we didn't find them.")
-                    logging.info("You don't have to worry about this message.")
-            try:
-                APPLE_NVRAM_UUID = "7C436110-AB2A-4BBB-A880-FE41995C9F82"
-                logging.info("- Defining NVRAM variable APPLE_NVRAM_UUID")
-            except Exception as e:
-                logging.error("We failed to define APPLE_NVRAM_UUID. It failed to do so because of the following error:")
-                logging.exception("Stack Trace:")
-                logging.info("Please try again later.")
-                sys.exit(3)
-    
-            try:
-                logging.info("- Adding T2-specific boot arguments for macOS 15/26")
-                self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-v rddelay=5 igfxfw=2 igfxonln=1 -disable_ext_panics -no_compat_check")
-            except Exception as e:
-                logging.error("Injecting T2 specific boot arguments failed due to the following error:")
-                logging.exception("Stack Trace:")
-                logging.info("Please try again later.")
-                sys.exit(3)
-            
-            if self.model in ["MacBookAir8,1", "MacBookAir8,2"]:
+                    logging.error("We failed to define APPLE_NVRAM_UUID. It failed to do so because of the following error:")
+                    logging.exception("Stack Trace:")
+                    logging.info("Please try again later.")
+                    sys.exit(3)
+        
                 try:
-                    logging.info("Applying patches for MacBookAir8,1 or 8,2 to fix CPU topology / thread pooling panic layouts")
-                    self.config["Kernel"]["Quirks"]["ProvideCurrentCpuInfo"] = True
+                    logging.info("- Adding T2-specific boot arguments for macOS 15/26")
+                    self._update_nvram_string(APPLE_NVRAM_UUID, "boot-args", "-v rddelay=5 igfxfw=2 igfxonln=1 -disable_ext_panics -no_compat_check")
                 except Exception as e:
-                    logging.error("Applying patches to fix this specific kernel panic failed due to the following error:")
+                    logging.error("Injecting T2 specific boot arguments failed due to the following error:")
                     logging.exception("Stack Trace:")
                     logging.info("Please try again later.")
                     sys.exit(3)
