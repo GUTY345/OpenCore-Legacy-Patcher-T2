@@ -916,7 +916,7 @@ class Constants:
     @property
     def patcher_name(self) -> str:
         if getattr(self, "Developer_Mode", False):
-            return "OpenCore Legacy Patcher T1"
+            return "OpenCore Legacy Patcher T2" # behebt einen Fehler, indem beim Developer Mode OpenCore Legacy Patcher T1 returnt statt T2
         return "OpenCore Legacy Patcher T2"
 
     @property
