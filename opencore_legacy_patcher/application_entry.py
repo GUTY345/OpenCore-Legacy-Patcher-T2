@@ -122,10 +122,15 @@ class OpenCoreLegacyPatcher:
         launcher_script = None
         launcher_binary = sys.executable
         if "python" in launcher_binary:
-            # We're running from source
-            launcher_script = __file__
-            if "main.py" in launcher_script:
-                launcher_script = launcher_script.replace("/resources/main.py", "/OpenCore-Patcher-GUI.command")
+            # We're running from source.
+            # BUGFIX: __file__ here is this module's own path (application_entry.py),
+            # which never contains "main.py", so the replace() below never fired -
+            # launcher_script silently ended up pointing at application_entry.py
+            # itself (a module with no __main__ guard, so re-executing it does
+            # nothing). Resolve the real from-source entry point deterministically
+            # instead of relying on a substring match against a path that can't
+            # contain it.
+            launcher_script = str(Path(__file__).resolve().parent.parent / "OpenCore-Patcher-GUI.command")
         self.constants.launcher_binary = launcher_binary
         self.constants.launcher_script = launcher_script
 
