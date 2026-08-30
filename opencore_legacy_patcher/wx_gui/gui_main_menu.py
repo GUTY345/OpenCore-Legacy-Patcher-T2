@@ -465,10 +465,6 @@ class MainFrame(wx.Frame):
                 self.constants.build_profile = "test_c_spoofed"
             elif selection == 4:
                 self.constants.build_profile = "test_d"
-            # behebt eine Sicherheitslücke, die erlaubt Angreifern, selection zu manipulieren und beispielsweise zu behaupten, es wäre Option 5 ausgewählt, die erst gar nicht existiert, um die Anwendung zum Absturz zu bringen.
-            else:
-                logging.error("You haven't selected a valid testing OpenCore option.")
-                logging.info("Please try again later.")
             
             self.on_build_and_install(event)
         
