@@ -442,4 +442,4 @@ Hardware Information:
         )
         if dlg.ShowModal() == wx.ID_YES:
             logging.info("Restarting application to apply Developer Mode changes...")
-            os.execl(sys.executable, sys.executable, *sys.argv)
+            os.execl(sys.executable, sys.executable, *sys.argv[1:])
