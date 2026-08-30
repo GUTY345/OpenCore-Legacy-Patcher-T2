@@ -37,6 +37,7 @@ class OCSettingsFrame(wx.Frame):
 
     def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None):
         logging.info("Initializing Settings Frame")
+        super().__init__(parent, title=title)
         self.constants: constants.Constants = global_constants
         self.title: str = title
         self.parent: wx.Frame = parent
@@ -92,10 +93,14 @@ class OCSettingsFrame(wx.Frame):
 
         bot_sizer.AddSpacer(20)
 
-        # Add Build and Install OpenCore Button
-        build_oc_button = wx.Button(frame, label="Build and Install OpenCore", pos=(-1, -1), size=(200, 30))
-        build_oc_button.Bind(wx.EVT_BUTTON, self.on_build_and_install)
-        build_oc_button.SetToolTip("Builds and Installs OpenCore to your disk")
+        # Add Build OpenCore Button
+        build_oc_button = wx.Button(frame, label="Install OpenCore", pos=(-1, -1), size=(120, 30))
+        if self.constants.Developer_Mode:
+            build_oc_button.Bind(wx.EVT_BUTTON, self.on_build_opencore_menu)
+        else:
+            build_oc_button.Bind(wx.EVT_BUTTON, self.on_build_and_install_standard)
+        build_oc_button.SetDefault()
+        build_oc_button.SetToolTip("Installs OpenCore to your disk")
         build_oc_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         if gui_support.CheckProperties(self.constants).host_can_build() is False:
             build_oc_button.Disable()
@@ -1162,6 +1167,57 @@ class OCSettingsFrame(wx.Frame):
 
             index += 1
             self.sip_checkbox.Bind(wx.EVT_CHECKBOX, self.on_sip_value)
+
+
+
+    def on_build_and_install_standard(self, event: wx.Event = None):
+        self.constants.build_profile = "standard"
+        self.on_build_and_install(event)
+
+    def on_build_opencore_menu(self, event: wx.Event = None):
+        choices = [
+            "🟢 Standard / Safe Build",
+            "🧪 [LEVEL-B] Experimental GPU",
+            "🧪 [LEVEL-C] Experimental Tahoe (Native SMBIOS)",
+            "🧪 [LEVEL-C] Experimental Spoof T2 (MacBookPro16,1)",
+            "🧪 [LEVEL-D] All-In-One Tahoe (Wi-Fi + Audio + GPU + T1)"
+        ]
+        dialog = wx.SingleChoiceDialog(
+            self,
+            "Select the OpenCore build profile you wish to generate:",
+            "Build OpenCore",
+            choices
+        )
+        
+        if dialog.ShowModal() == wx.ID_OK:
+            selection = dialog.GetSelection()
+            if selection == 0:
+                self.constants.build_profile = "standard"
+            elif selection == 1:
+                self.constants.build_profile = "test_b"
+            elif selection == 2:
+                self.constants.build_profile = "test_c"
+            elif selection == 3:
+                self.constants.build_profile = "test_c_spoofed"
+            elif selection == 4:
+                self.constants.build_profile = "test_d"
+            
+            self.on_build_and_install(event)
+        
+        dialog.Destroy()
+
+    def on_build_and_install_testd(self, event: wx.Event = None):
+        self.constants.build_profile = "test_d"
+        self.on_build_and_install(event)
+
+    def on_build_and_install(self, event: wx.Event = None):
+        try:
+            self.Hide()
+            gui_build.BuildFrame(parent=None, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+            wx.CallAfter(self.Destroy)
+        except Exception as e:
+            logging.error(f"We failed to open up Build and Install OpenCore: {e}")
+            logging.exception("Stack Trace:")
 
     def _populate_serial_spoofing_settings(self, panel: wx.Frame) -> None:
         title: wx.StaticText = None
