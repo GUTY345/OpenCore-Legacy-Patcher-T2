@@ -5,7 +5,7 @@ gui_settings.py: Settings Frame for the GUI
 import wx
 import pprint
 import logging
-
+from pathlib import Path
 from .. import constants
 
 
