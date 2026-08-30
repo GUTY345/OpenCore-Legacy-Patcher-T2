@@ -10,7 +10,6 @@ from Cocoa import NSApp, NSApplication
 
 from .. import constants
 from ..sys_patch.patchsets import HardwarePatchsetDetection
-from ..efi_builder.misc import _T2_MODELS # benötigt für T2 Macs
 
 
 from ..wx_gui import (
@@ -22,7 +21,6 @@ from ..wx_gui import (
     gui_support,
     gui_update,
     gui_mode_selector,
-    gui_settings, # <- Settings-Import fehlt, bin ich nicht sicher, ob das benötigt ist
 )
 
 
@@ -139,7 +137,7 @@ class EntryPoint:
                 logging.error("We couldn't enter or exit Developer Mode due to an error:")
                 logging.exception("Stack Trace:")
                 logging.info("Please report this issue.")
-                logging.info("In the meanwhile, Developer Mode will be turned back off")
+                logging.info("In the meanwhile, Developer Mode may be switched off or the app may crash.")
 
         logging.info(f"Entry point set: {entry.__name__}")
 
