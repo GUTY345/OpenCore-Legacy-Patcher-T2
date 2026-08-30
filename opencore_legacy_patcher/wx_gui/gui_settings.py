@@ -433,7 +433,17 @@ Hardware Information:
             logging.info("Turning off Developer Mode")
             os.environ["OCLP_DEV_MODE"] = "0"
             self.constants.Developer_Mode = False
-            
+
+        # BUGFIX: previously only the in-process OCLP_DEV_MODE env var was set, which
+        # only survives the immediate os.execl() restart below (exec inherits the
+        # current process environment). A real relaunch (Cmd+Q, quitting/reopening
+        # the app, or a reboot) starts a brand new process with no such variable,
+        # so Developer Mode silently fell back to off every time - it never actually
+        # "stuck". Persist it the same way every other checkbox setting does, so
+        # defaults.py's _load_gui_defaults() restores it correctly on every future
+        # launch, not just the one immediately after toggling it.
+        global_settings.GlobalEnviromentSettings().write_property(f"GUI:{variable}", self.constants.Developer_Mode)
+
         dlg = wx.MessageDialog(
             None,
             "The application needs to restart to apply Developer Mode changes.\n\nWould you like to restart now?",
