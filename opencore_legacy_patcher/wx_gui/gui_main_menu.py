@@ -134,6 +134,7 @@ class MainFrame(wx.Frame):
                 "Settings": {
                     "function": self.on_settings,
                     "description": ["App settings, reporting and", "Developer/Experimental Mode."],
+                    "icon": str(self.constants.icns_resource_path / "Settings.icns")
                 },
                 "Help": {
                     "function": self.on_help,
@@ -164,6 +165,7 @@ class MainFrame(wx.Frame):
                 "Settings": {
                     "function": self.on_settings,
                     "description": ["App settings, reporting and", "Developer/Experimental Mode."]
+                    "icon": str(self.constants.icns_resource_path / "Settings.icns")
                 },
                 "Help": {
                     "function": self.on_help,
