@@ -264,6 +264,7 @@ class SettingsFrame(wx.Frame):
                         "Turns on Developer/Experimental Mode.",
                         "Requires restarting the app to take effect."
                     ],
+                    "condition": not self.constants.Developer_Mode
                 },
             },
             "Statistics": {
@@ -429,10 +430,16 @@ Hardware Information:
             logging.info("Turning on Developer Mode")
             os.environ["OCLP_DEV_MODE"] = "1"
             self.constants.Developer_Mode = True
+            lines = [
+                "This files is used to store the Developer Mode setting for OpenCore Legacy Patcher.\n",
+            ]
+            with open(os.path.expanduser("~/.dortania_developer"), "w") as f:
+                f.writelines(lines)
         else:
             logging.info("Turning off Developer Mode")
             os.environ["OCLP_DEV_MODE"] = "0"
             self.constants.Developer_Mode = False
+            Path(os.path.expanduser("~/.dortania_developer")).unlink(missing_ok=True)
 
         # BUGFIX: previously only the in-process OCLP_DEV_MODE env var was set, which
         # only survives the immediate os.execl() restart below (exec inherits the
@@ -442,8 +449,6 @@ Hardware Information:
         # "stuck". Persist it the same way every other checkbox setting does, so
         # defaults.py's _load_gui_defaults() restores it correctly on every future
         # launch, not just the one immediately after toggling it.
-        global_settings.GlobalEnviromentSettings().write_property(f"GUI:{variable}", self.constants.Developer_Mode)
-
         dlg = wx.MessageDialog(
             None,
             "The application needs to restart to apply Developer Mode changes.\n\nWould you like to restart now?",
