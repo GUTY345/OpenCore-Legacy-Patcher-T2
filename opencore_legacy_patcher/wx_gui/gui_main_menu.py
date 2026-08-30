@@ -161,7 +161,7 @@ class MainFrame(wx.Frame):
                     "description": ["Settings, drivers and", "patches for your system."],
                     "icon": str(self.constants.patch_icon_path),
                 }, 
-                ""Settings":": {
+                "Settings":": {
                     "function": self.on_settings,
                     "description": ["App settings, reporting and", "Developer/Experimental Mode."]
                 },
