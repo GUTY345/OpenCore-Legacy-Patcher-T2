@@ -153,12 +153,17 @@ class MainFrame(wx.Frame):
                     "description": ["Build OpenCore and install", "it to your internal or external drive."],
                     "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
                 },
+                "Post-Install Root Patch": {
+                    "function": self.on_root_patches,
+                    "description": ["Install hardware drivers and", "patches for your system."],
+                    "icon": str(self.constants.patch_icon_path),
+                },
                 "Create macOS Installer": {
                     "function": self.on_create_macos_installer,
                     "description": ["Download and flash a macOS", "Installer for your system."],
                     "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
                 },
-                "OpenCore": {
+                "OpenCore Settings": {
                     "function": self.on_oc_settings,
                     "description": ["Settings, drivers and", "patches for your system."],
                     "icon": str(self.constants.icns_resource_path / "OC-Settings.icns"),
