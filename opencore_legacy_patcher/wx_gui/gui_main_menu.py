@@ -114,29 +114,24 @@ class MainFrame(wx.Frame):
         # Main Feature Buttons
         if self.constants.Developer_Mode:
             menu_buttons = {
-                "Build OpenCore": {
-                    "function": self.on_build_and_install,
-                    "description": ["Build OpenCore and install", "it to your internal or external drive."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
-                    "info_tab": 0,
-                },
+                ## "Build OpenCore": {
+                    ## "function": self.on_build_and_install,
+                    ## "description": ["Build OpenCore and install", "it to your internal or external drive."],
+                    ## "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                    ## "info_tab": 0,
+                ## },
+                # dieses Button ist nicht nötig, es ist schon ein Duplikat von was unter OpenCore Settings (OpenCore) gibt, Es wird einfach Benutzer verwirren.
                 "Create macOS Installer": {
                     "function": self.on_create_macos_installer,
                     "description": ["Download and flash a macOS", "Installer for your system."],
                     "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
-                },
-                "Install drivers and patches": {
-                    "function": self.on_root_patches,
-                    "description": ["Installs hardware drivers and", "patches for your system after", "installing a new version of macOS."],
-                    "icon": str(self.constants.patch_icon_path),
-                    "info_tab": 2,
                 },
                 "macOS Configuration": {
                     "function": self.on_macos_config,
                     "description": ["Settings, drivers and", "patches for your system."],
                     "icon": str(self.constants.patch_icon_path),
                 },
-                "OpenCore Settings": {
+                "OpenCore": {
                     "function": self.on_oc_settings,
                     "description": ["Prepares provided drive to be", "able to boot unsupported OSes."],
                     "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
@@ -148,32 +143,31 @@ class MainFrame(wx.Frame):
                 },
                 "Help": {
                     "function": self.on_help,
-                    "description": ["Resources for OpenCore Legacy", "Patcher."],
+                    "description": ["Resources for OpenCore Legacy", "Patcher, including Ask Gemini."],
                     "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
                 }
             }
         else:
             menu_buttons = {
-                "Build and Install OpenCore": {
-                    "function": self.on_build_and_install_standard,
-                    "description": ["Build OpenCore and install", "it to your internal or external drive."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
+                
                 },
-                "Post-Install Root Patch": {
-                    "function": self.on_root_patches,
-                    "description": ["Install hardware drivers and", "patches for your system."],
-                    "icon": str(self.constants.patch_icon_path),
+                # sollte auf erstes Platz sein - bevor, es war unter Create macOS installer.
+                "OpenCore": {
+                    "function": self.on_oc_settings,
+                    "description": ["Settings, drivers and", "patches for your system."],
+                    "icon": str(self.constants.icns_resource_path / "OC-Settings.icns"),
                 },
                 "Create macOS Installer": {
                     "function": self.on_create_macos_installer,
                     "description": ["Download and flash a macOS", "Installer for your system."],
                     "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
                 },
-                "OpenCore Settings": {
-                    "function": self.on_oc_settings,
+                # macOS Configuration war nicht da und es verursachte, dass Benutzer keine Root Patches mehr sehen könnten
+                "macOS Configuration": {
+                    "function": self.on_macos_config,
                     "description": ["Settings, drivers and", "patches for your system."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Settings.icns"),
-                },
+                    "icon": str(self.constants.patch_icon_path),
+                }, 
                 "App Settings": {
                     "function": self.on_settings,
                     "description": ["App settings, reporting and", "Developer/Experimental Mode."],
