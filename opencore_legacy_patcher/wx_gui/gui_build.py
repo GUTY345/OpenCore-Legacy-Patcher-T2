@@ -55,7 +55,8 @@ class BuildFrame(wx.Frame):
         self.Centre()
         self.frame_modal.ShowWindowModal()
 
-        self._invoke_build()
+        if not self.constants.Developer_Mode:
+            self._invoke_build()
 
 
     def on_build_failure(self) -> None:
@@ -128,6 +129,14 @@ class BuildFrame(wx.Frame):
             self.radio_testb = None
             self.radio_testc = None
 
+        if self.constants.Developer_Mode:
+            # Button: Build OpenCore (Only in Developer Mode to allow selection)
+            build_button = wx.Button(frame, label="🔨 Build OpenCore", pos=(-1, next_y), size=(150, 30))
+            build_button.Bind(wx.EVT_BUTTON, self.on_build_click)
+            build_button.Centre(wx.HORIZONTAL)
+            self.build_button = build_button
+            next_y += 35
+
         # Button: Install OpenCore
         install_button = wx.Button(frame, label="🔩 Install OpenCore", pos=(-1, next_y), size=(150, 30))
         install_button.Bind(wx.EVT_BUTTON, self.on_install)
@@ -141,10 +150,14 @@ class BuildFrame(wx.Frame):
         self.text_box = text_box
 
         # Button: Return to Main Menu
-        return_button = wx.Button(frame, label="Return to Main Menu", pos=(-1, text_box.GetPosition()[1] + text_box.GetSize()[1] + 5), size=(150, 30))
+        return_button = wx.Button(frame, label="Return to Main Menu", pos=(-1, text_box.GetPosition()[1] + text_box.GetSize()[1] + 10), size=(150, 30))
         return_button.Bind(wx.EVT_BUTTON, self.on_return_to_main_menu)
         return_button.Centre(wx.HORIZONTAL)
-        return_button.Disable()
+        
+        # Disable by default if standard mode (since it builds automatically)
+        if not self.constants.Developer_Mode:
+            return_button.Disable()
+            
         self.return_button = return_button
 
         # Adjust window size to fit all elements
@@ -252,7 +265,7 @@ class BuildFrame(wx.Frame):
         """
         Return to main menu
         """
-        self.frame_modal.Hide()
+        self.frame_modal.Close()
         main_menu_frame = gui_main_menu.MainFrame(
             None,
             title=self.title,
@@ -262,7 +275,17 @@ class BuildFrame(wx.Frame):
         main_menu_frame.Show()
         self.frame_modal.Destroy()
         self.Destroy()
-
+        
+    def on_build_click(self, event: wx.Event) -> None:
+        self.build_button.Disable()
+        if getattr(self, "radio_standard", None):
+            self.radio_standard.Disable()
+            self.radio_testa.Disable()
+            self.radio_testb.Disable()
+            self.radio_testc.Disable()
+        if hasattr(self, "return_button"):
+            self.return_button.Disable()
+        self._invoke_build()
 
     def on_install(self, event: wx.Event = None) -> None:
         """
