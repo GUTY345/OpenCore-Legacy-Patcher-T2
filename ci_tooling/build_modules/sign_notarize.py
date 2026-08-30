@@ -32,9 +32,8 @@ class SignAndNotarize:
         """
         Sign and Notarize with explicit verification constraints
         """
-        if not all([self._signing_identity, self._notarization_apple_id, self._notarization_password, self._notarization_team_id]):
-            logger.warning("Die Angaben zur Unterzeichnung und Beglaubigung sind unvollständig. Die Sicherheitsprüfung wird übersprungen.")
-            logger.warning("Signing and Notarization details not completely provided. Skipping security validation pipeline.")
+        if not self._signing_identity:
+            logger.warning("Signing identity not provided. Skipping signing pipeline.")
             return
 
         if not self._path.exists():
@@ -62,21 +61,24 @@ class SignAndNotarize:
             # Prevent cascade into un-signed asset submission
             raise RuntimeError(f"Cryptographic signature step critically failed: {e}")
 
-        print(f"Notarisierung von {self._path.name} über die Apple Developer API...")
-        print(f"Notarizing {self._path.name} via Apple Developer API...")
-        
-        try:
-            # Underlying wrapper invokes Apple's notarytool binary or API
-            notarizer = mac_signing_buddy.Notarize(
-                apple_id=self._notarization_apple_id,
-                password=self._notarization_password,
-                team_id=self._notarization_team_id,
-                file=self._path,
-            )
-            notarizer.sign()
-        except Exception as e:
-            raise RuntimeError(f"Apple Notarization dispatch layer failed: {e}")
-            sys.exit(3)
+        if all([self._notarization_apple_id, self._notarization_password, self._notarization_team_id]):
+            print(f"Notarisierung von {self._path.name} über die Apple Developer API...")
+            print(f"Notarizing {self._path.name} via Apple Developer API...")
+            
+            try:
+                # Underlying wrapper invokes Apple's notarytool binary or API
+                notarizer = mac_signing_buddy.Notarize(
+                    apple_id=self._notarization_apple_id,
+                    password=self._notarization_password,
+                    team_id=self._notarization_team_id,
+                    file=self._path,
+                )
+                notarizer.sign()
+            except Exception as e:
+                raise RuntimeError(f"Apple Notarization dispatch layer failed: {e}")
+                sys.exit(3)
+        else:
+            logger.warning("Notarization credentials not completely provided. Skipping notarization.")
 
         print(f"Erfolgreich sicher gemacht und verifiziert {self._path.name}")
         print(f"Successfully secured and verified {self._path.name}")
