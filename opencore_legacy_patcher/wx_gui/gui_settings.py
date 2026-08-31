@@ -57,7 +57,9 @@ class SettingsFrame(wx.Frame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.AddSpacer(10)
 
-        tabs = ["App", "Developer"] # Build und Security sind beide leer, also diese sind nicht benötigt
+        tabs = list(self.settings.keys())
+        if not self.constants.Developer_Mode:
+            tabs.remove("Developer")
         for tab in tabs:
             panel = wx.ScrolledWindow(notebook)
             panel.SetScrollRate(0, 20)
@@ -255,16 +257,6 @@ class SettingsFrame(wx.Frame):
                     ],
                     "override_function": self._update_global_settings,
                 },
-                "Developer / Experimental Mode": {
-                    "type": "checkbox",
-                    "override_function": self.on_enable_dev_mode,
-                    "variable": "Developer_Mode",
-                    "value": self.constants.Developer_Mode,
-                    "description": [
-                        "Turns on Developer/Experimental Mode.",
-                        "Requires restarting the app to take effect."
-                    ],
-                },
             },
             "Statistics": {
                 "Statistics": {
@@ -286,6 +278,22 @@ class SettingsFrame(wx.Frame):
                     "description": [
                         "Intentionally crash the app to test whether a report comes up" # beschreibung hinzufügen was genau macht
                     ],
+                },
+                "Misc": {
+                    "type": "title",
+                },
+                "Default OpenCore Build": {
+                    "type": "choice",
+                    "choices": [
+                        "💬 Ask Each Time",
+                        "🟢 Standard / Safe Build",
+                        "🧪 [LEVEL-B] Experimental GPU",
+                        "🧪 [LEVEL-C] Experimental Tahoe (Native SMBIOS)",
+                        "🧪 [LEVEL-C] Experimental Spoof T2 (MacBookPro16,1)",
+                        "🧪 [LEVEL-D] All-In-One Tahoe (Wi-Fi + Audio + GPU + T1)"
+                    ],
+
+                    # TODO: Add a populate function @gandolf243 will do this.
                 },
                 "wrap_around 1": {
                     "type": "wrap_around",
@@ -423,47 +431,3 @@ Hardware Information:
         if tmp_value is None:
             tmp_value = "PYTHON_NONE_VALUE"
         global_settings.GlobalEnviromentSettings().write_property(f"GUI:{variable}", tmp_value)
-
-    def on_enable_dev_mode(self, variable: str, value: bool, constants_variable: str) -> None:
-        is_enabled = value
-        if is_enabled:
-            logging.info("Turning on Developer Mode")
-            os.environ["OCLP_DEV_MODE"] = "1"
-            self.constants.Developer_Mode = True
-        else:
-            logging.info("Turning off Developer Mode")
-            os.environ["OCLP_DEV_MODE"] = "0"
-            self.constants.Developer_Mode = False
-
-        # BUGFIX: previously only the in-process OCLP_DEV_MODE env var was set, which
-        # only survives the immediate os.execl() restart below (exec inherits the
-        # current process environment). A real relaunch (Cmd+Q, quitting/reopening
-        # the app, or a reboot) starts a brand new process with no such variable,
-        # so Developer Mode silently fell back to off every time - it never actually
-        # "stuck". Persist it the same way every other checkbox setting does, so
-        # defaults.py's _load_gui_defaults() restores it correctly on every future
-        # launch, not just the one immediately after toggling it.
-        global_settings.GlobalEnviromentSettings().write_property(f"GUI:{variable}", self.constants.Developer_Mode)
-
-        dlg = wx.MessageDialog(
-            None,
-            "The application needs to restart to apply Developer Mode changes.\n\nWould you like to restart now?",
-            "Restart Required",
-            wx.YES_NO | wx.ICON_INFORMATION
-        )
-        if dlg.ShowModal() == wx.ID_YES:
-            logging.info("Restarting application to apply Developer Mode changes...")
-            os.execl(sys.executable, sys.executable, *sys.argv)
-            # BUGFIX: previously re-exec'd via sys.executable + this process's *current*
-            # sys.argv. That argv isn't always a valid script path - eg. when running
-            # from source and the app was started interactively (bare `python3` REPL,
-            # where sys.argv is ['']), the reconstructed exec had nothing usable after
-            # the interpreter path, so the "restart" collapsed into a plain interactive
-            # Python shell instead of relaunching the app (reproduced: this is exactly
-            # what the screenshot showed). launcher_binary/launcher_script are resolved
-            # once at genuine startup (application_entry.py) from __file__, not from
-            # argv, so they stay correct regardless of how this process was invoked.
-            if self.constants.launcher_script:
-                os.execl(self.constants.launcher_binary, self.constants.launcher_binary, self.constants.launcher_script)
-            else:
-                os.execl(self.constants.launcher_binary, self.constants.launcher_binary)
