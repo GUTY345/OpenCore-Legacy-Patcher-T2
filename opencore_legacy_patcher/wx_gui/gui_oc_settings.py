@@ -96,7 +96,10 @@ class OCSettingsFrame(wx.Frame):
         # Add Build OpenCore Button
         build_oc_button = wx.Button(frame, label="Install OpenCore", pos=(-1, -1), size=(120, 30))
         if self.constants.Developer_Mode:
-            build_oc_button.Bind(wx.EVT_BUTTON, self.on_build_opencore_menu)
+            if self.constants.build_profile == None or self.constants.build_profile == "":
+                build_oc_button.Bind(wx.EVT_BUTTON, self.on_build_opencore_menu)
+            else:
+                 build_oc_button.Bind(wx.EVT_BUTTON, self.on_build_and_install)
         else:
             build_oc_button.Bind(wx.EVT_BUTTON, self.on_build_and_install_standard)
         build_oc_button.SetDefault()
@@ -1012,6 +1015,37 @@ class OCSettingsFrame(wx.Frame):
 
         
     def on_save(self, event):
+        if self.constants.build_profile is None or self.constants.build_profile == "":
+            user_had_prompt_set = True
+            choices = [
+                "🟢 Standard / Safe Build",
+                "🧪 [LEVEL-B] Experimental GPU",
+                "🧪 [LEVEL-C] Experimental Tahoe (Native SMBIOS)",
+                "🧪 [LEVEL-C] Experimental Spoof T2 (MacBookPro16,1)",
+                "🧪 [LEVEL-D] All-In-One Tahoe (Wi-Fi + Audio + GPU + T1)"
+            ]
+            dialog = wx.SingleChoiceDialog(
+                self,
+                "Select the OpenCore build profile you wish to generate:",
+                "Build OpenCore",
+                choices
+            )
+                    
+            if dialog.ShowModal() == wx.ID_OK:
+                selection = dialog.GetSelection()
+                if selection == 0:
+                    self.constants.build_profile = "standard"
+                elif selection == 1:
+                    self.constants.build_profile = "test_b"
+                elif selection == 2:
+                    self.constants.build_profile = "test_c"
+                elif selection == 3:
+                    self.constants.build_profile = "test_c_spoofed"
+                elif selection == 4:
+                    self.constants.build_profile = "test_d"
+                dialog.Close()
+            else: #We asume that the user doesn't want to save OpenCore so we stop.
+                return
         # Throw pop up to get save location
         with wx.FileDialog(self.parent, wildcard="All files (*.*)|*.*", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT, defaultFile=f"OpenCore-Build-{self.constants.custom_model or self.constants.computer.real_model}", name="Save OpenCore Build") as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -1029,20 +1063,8 @@ class OCSettingsFrame(wx.Frame):
                 save=True
             )
             wx.CallAfter(self.parent.Destroy)
-
-    def on_build_and_install(self, event):
-        self.frame_modal.Destroy()
-        self.parent.Hide()
-        logging.info("Updating OpenCore and root volume patches...")
-        self.constants.update_stage = gui_support.AutoUpdateStages.CHECKING
-        gui_build.BuildFrame(
-            parent=None,
-            title=self.title,
-            global_constants=self.constants,
-            screen_location=self.parent.GetPosition(),
-            install=True
-        )
-        wx.CallAfter(self.parent.Destroy)
+            if user_had_prompt_set:
+                self.constants.build_profile = ""
 
     def _update_setting(self, variable, value):
         logging.info(f"Updating Local Setting: {variable} = {value}")
@@ -1175,6 +1197,10 @@ class OCSettingsFrame(wx.Frame):
         self.on_build_and_install(event)
 
     def on_build_opencore_menu(self, event: wx.Event = None):
+        if self.constants.build_profile is None or self.constants.build_profile == "":
+            user_had_prompt_set = True
+        else:
+            user_had_prompt_set = False
         choices = [
             "🟢 Standard / Safe Build",
             "🧪 [LEVEL-B] Experimental GPU",
@@ -1201,19 +1227,16 @@ class OCSettingsFrame(wx.Frame):
                 self.constants.build_profile = "test_c_spoofed"
             elif selection == 4:
                 self.constants.build_profile = "test_d"
-            
             self.on_build_and_install(event)
-        
+            if user_had_prompt_set:
+                self.constants.build_profile = ""
         dialog.Destroy()
-
-    def on_build_and_install_testd(self, event: wx.Event = None):
-        self.constants.build_profile = "test_d"
-        self.on_build_and_install(event)
 
     def on_build_and_install(self, event: wx.Event = None):
         try:
-            self.Hide()
-            gui_build.BuildFrame(parent=None, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+            self.frame_modal.Destroy()
+            self.parent.Hide()
+            gui_build.BuildFrame(parent=None, title=self.title, global_constants=self.constants, screen_location=self.GetPosition(), install=True)
             wx.CallAfter(self.Destroy)
         except Exception as e:
             logging.error(f"We failed to open up Build and Install OpenCore: {e}")

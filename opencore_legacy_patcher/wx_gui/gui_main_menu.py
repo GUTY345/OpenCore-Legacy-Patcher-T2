@@ -231,7 +231,14 @@ class MainFrame(wx.Frame):
                     style=wx.OK | wx.ICON_EXCLAMATION
                 )
                 pop_up.ShowModal()
-                self.on_build_and_install()
+                self.Hide()
+                gui_build.BuildFrame(
+                    self,
+                    self.title,
+                    self.constants,
+                    self.GetPosition(),
+                    install=True,
+                )
                 return
 
         except Exception as e:
@@ -263,7 +270,8 @@ class MainFrame(wx.Frame):
                 parent=None,
                 title=self.title,
                 global_constants=self.constants,
-                screen_location=pos
+                screen_location=pos,
+                install=True
             )
             wx.CallAfter(self.Destroy)
 
