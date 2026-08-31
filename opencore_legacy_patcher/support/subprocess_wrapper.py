@@ -184,10 +184,20 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
 
     if Path(OCLP_PRIVILEGED_HELPER).exists():
         result = subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
-        # anstatt Fehler zu drucken und blind auf osascript zurückzugreifen, ist einen richtiges Fehlerbehebung benötigt. Es könnte auch passieren, dass der Priveleged Helper Tool signiert sein und trotzdem Fehler zu bekommen. Fehler zu drucken und blind auf osascript zurückzugreifen ist sinnlos. 
+        # Any of our own PrivilegedHelperErrorCodes sentinel values (160-170) means the helper
+        # tool itself couldn't do its job - an escalation failure (eg. missing/invalid setuid bit)
+        # or another internal precondition (signing/certificates/command validation) - as opposed
+        # to the wrapped command failing on its own merits with an ordinary low exit code, which is
+        # just returned as-is: retrying that via osascript wouldn't fix a genuine command failure,
+        # and would only cost an extra administrator-password prompt for nothing.
+        _helper_error = __resolve_privileged_helper_errors(result.returncode)
+        if _helper_error is not None:
+            logging.error(f"Privileged Helper Tool failed ({_helper_error}). Falling back to osascript.")
+            return osascript(args[0], **kwargs)
+        return result
     else:
-        logging.error(f"Privileged Helper Tool not found at {OCLP_PRIVILEGED_HELPER}. Falling back to osascript.")
-        osascript()
+        logging.warning(f"Privileged Helper Tool not found at {OCLP_PRIVILEGED_HELPER}. Falling back to osascript.")
+        return osascript(args[0], **kwargs)
 
 # behebt eine Sicherheitslücke, indem osascript ohne Bedingung angerufen geworden. Einen Angreifer könnte dazu erzwingen, osascript abzurufen, um beliebiges Code auszuführen und Priveleged Helper Tool umzugehen
 def osascript(cmd_args, **kwargs): # <- behebt einen Fehler, die zu Fehler NameError: name 'args' is not defined verursacht, die nur ins Repository https://github.com/Medelcartelinc/OpenCore-Legacy-Patcher-T2 existierte
