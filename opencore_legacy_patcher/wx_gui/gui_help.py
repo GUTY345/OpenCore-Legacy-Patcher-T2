@@ -90,20 +90,12 @@ class HelpFrame(wx.Frame):
 
 
     def on_gemini_help(self, event: wx.Event):
-            import webview # Import here to avoid slowing down OCLP startup
-            
-            logging.info("- Launching Gemini AI Assistant (pywebview)")
-            
-            # Create a sleek, floating window
-            window = webview.create_window(
-                title='Gemini AI Assistant',
-                url='https://gemini.google.com',
-                width=500,
-                height=850,
-                confirm_close=False,
-                background_color='#ffffff'
-            )
-            
-            # start() is blocking by default, but in a wxPython app, 
-            # it usually needs to run in its own flow.
-            webview.start()
+            logger.info("- Launching Gemini AI Assistant (wx.html2 WebView)")
+
+            # Uses gui_support.GeminiWebView (wx.html2.WebView) instead of
+            # the third-party 'pywebview' package: pywebview's Cocoa
+            # backend crashes the navigation delegate on macOS hosts
+            # older than 11.3 (e.g. 10.13 High Sierra), see GeminiWebView
+            # docstring for details.
+            window = gui_support.GeminiWebView(self.dialog, size=(500, 850))
+            window.Show()
