@@ -102,17 +102,27 @@ def repair_privileged_helper_permissions() -> bool:
                 0
             ),
         )
+        prompt = b"OpenCore Legacy Patcher needs administrator permission to repair the permissions of its privileged helper tool."
+
+        environment = (
+            Security.AuthorizationItem(
+                Security.kAuthorizationEnvironmentPrompt,
+                len(prompt),
+                prompt,
+                0
+            ),
+        )
 
         status, authorized_rights = Security.AuthorizationCopyRights(
             auth_ref,
             rights,
-            Security.kAuthorizationEmptyEnvironment,
+            environment,
             (
                 Security.kAuthorizationFlagInteractionAllowed
-                | Security.kAuthorizationFlagExtendRights
+        |       Security.kAuthorizationFlagExtendRights
             ),
             None
-            )
+        )
 
         if status != Security.errAuthorizationSuccess:
             raise RuntimeError(
