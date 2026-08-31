@@ -194,9 +194,9 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
         osascript()
 
 # behebt eine Sicherheitslücke, indem osascript ohne Bedingung angerufen geworden. Einen Angreifer könnte dazu erzwingen, osascript abzurufen, um beliebiges Code auszuführen und Priveleged Helper Tool umzugehen
-def osascript():
+def osascript(cmd_args, **kwargs): # <- behebt einen Fehler, die zu Fehler NameError: name 'args' is not defined verursacht, die nur ins Repository https://github.com/Medelcartelinc/OpenCore-Legacy-Patcher-T2 existierte
     import shlex
-    cmd_string = shlex.join(str(arg) for arg in args[0])
+    cmd_string = shlex.join(str(arg) for arg in cmd_args)
     as_safe_string = cmd_string.replace('\\', '\\\\').replace('"', '\\"')
     apple_script = f'do shell script "{as_safe_string}" with administrator privileges'
     return subprocess.run(["osascript", "-e", apple_script], **kwargs)
