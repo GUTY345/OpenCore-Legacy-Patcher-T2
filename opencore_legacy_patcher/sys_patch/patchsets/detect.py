@@ -205,12 +205,16 @@ class HardwarePatchsetDetection:
         """
         Determine if System Integrity Protection is enabled
         """
-        if getattr(self._constants, "host_is_vmware_vm", False) is True:
+        if getattr(self._constants, "host_is_vmware_vm", False) is True and getattr(self._constants, "allow_vmware_root_patching", False) is True:
             # Dev/test only: bypass the live SIP validation gate inside VMware VMs so the
             # root-patching command paths can be exercised without real T2 hardware.
             # host_is_vmware_vm is only ever set in application_entry.py when device_probe
             # reports a VMware SMBIOS model - this branch is never reachable on a real Mac.
-            logging.info("Bypassing SIP validation - host detected as VMware VM (test-only, see host_is_vmware_vm)")
+            # Also requires allow_vmware_root_patching (constants.py, no GUI control, hand-edit
+            # only): VM-detection alone must never be enough to trigger this bypass, mirroring
+            # the same two-flag gate gui_support.CheckProperties.host_can_build() uses for the
+            # Root Patching button - otherwise this bypass would fire independently of that gate.
+            logging.info("Bypassing SIP validation - host detected as VMware VM with allow_vmware_root_patching enabled (test-only, see host_is_vmware_vm)")
             return False
         return utilities.csr_decode(configs)
 
@@ -226,11 +230,11 @@ class HardwarePatchsetDetection:
         """
         Determine if AMFI is enabled
         """
-        if getattr(self._constants, "host_is_vmware_vm", False) is True:
+        if getattr(self._constants, "host_is_vmware_vm", False) is True and getattr(self._constants, "allow_vmware_root_patching", False) is True:
             # Dev/test only: bypass the live AMFI validation gate inside VMware VMs, mirroring
-            # the SIP bypass above. host_is_vmware_vm is only ever set in application_entry.py
-            # when device_probe reports a VMware SMBIOS model - never reachable on a real Mac.
-            logging.info("Bypassing AMFI validation - host detected as VMware VM (test-only, see host_is_vmware_vm)")
+            # the SIP bypass above (and its allow_vmware_root_patching requirement) - see the
+            # comment there for why VM-detection alone must not be sufficient.
+            logging.info("Bypassing AMFI validation - host detected as VMware VM with allow_vmware_root_patching enabled (test-only, see host_is_vmware_vm)")
             return False
         return not amfi_detect.AmfiConfigurationDetection().check_config(self._override_amfi_level(level))
 
