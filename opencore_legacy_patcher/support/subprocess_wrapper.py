@@ -180,14 +180,37 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
         raise FileNotFoundError(f"File not found: {args[0][0]}")
 
     if Path(OCLP_PRIVILEGED_HELPER).exists():
-        return subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
+        result = subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
+        # Any of our own PrivilegedHelperErrorCodes sentinel values (160-170) means the helper
+        # tool itself couldn't do its job - an escalation failure (eg. missing/invalid setuid bit)
+        # or another internal precondition (signing/certificates/command validation) - as opposed
+        # to the wrapped command failing on its own merits with an ordinary low exit code, which is
+        # just returned as-is: retrying that via osascript wouldn't fix a genuine command failure,
+        # and would only cost an extra administrator-password prompt for nothing.
+        _helper_error = __resolve_privileged_helper_errors(result.returncode)
+        if _helper_error is not None:
+            logging.error(f"Privileged Helper Tool failed ({_helper_error}). Falling back to osascript.")
+            return osascript(args[0], **kwargs)
+        return result
     else:
         logging.warning(f"Privileged Helper Tool not found at {OCLP_PRIVILEGED_HELPER}. Falling back to osascript.")
-        import shlex
-        cmd_string = shlex.join(str(arg) for arg in args[0])
-        as_safe_string = cmd_string.replace('\\', '\\\\').replace('"', '\\"')
-        apple_script = f'do shell script "{as_safe_string}" with administrator privileges'
-        return subprocess.run(["osascript", "-e", apple_script], **kwargs)
+        return osascript(args[0], **kwargs)
+
+
+def osascript(cmd_args, **kwargs) -> subprocess.CompletedProcess:
+    """
+    Fallback for run_as_root() when the Privileged Helper Tool is unavailable or reports
+    one of its own error codes. Elevates via a plain AppleScript 'do shell script ... with
+    administrator privileges' call (macOS's native admin-password prompt).
+
+    Note: osascript itself has no '-a' flag - its actual options are -l language, -i,
+    -s flags, and -e statement (see 'man osascript'). Administrator elevation here comes
+    from the AppleScript command text ('with administrator privileges'), not a CLI switch.
+    """
+    cmd_string = shlex.join(str(arg) for arg in cmd_args)
+    as_safe_string = cmd_string.replace('\\', '\\\\').replace('"', '\\"')
+    apple_script = f'do shell script "{as_safe_string}" with administrator privileges'
+    return subprocess.run(["osascript", "-e", apple_script], **kwargs)
 
 
 def mount_dmg(
