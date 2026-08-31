@@ -66,7 +66,10 @@ class PatcherApp(wx.App):
         # down underneath it -- the same autorelease pool corruption
         # trigger, just from a startup thread instead of a UI one. Give
         # each a bounded window to finish rather than hanging quit forever.
-        for thread_attr in ("unpack_thread", "analytics_thread"):
+        # update_thread (gui_main_menu's update check) already guards its
+        # own wx.CallAfter() calls with is_app_exiting(), but it wasn't
+        # actually joined here like the other two - closing that gap too.
+        for thread_attr in ("unpack_thread", "analytics_thread", "update_thread"):
             thread = getattr(self.constants, thread_attr, None)
             if thread and thread.is_alive():
                 thread.join(timeout=10)
