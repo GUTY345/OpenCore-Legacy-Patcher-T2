@@ -186,11 +186,15 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
         result = subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
         if result.returncode == PrivilegedHelperErrorCodes.OCLP_PHT_ERROR_INVALID_CERTIFICATES:
             logging.warning("Privileged Helper Tool failed due to invalid certificates (non-official build). Falling back to osascript.")
+            self.osascript()
         else:
             return result
     else:
         logging.warning(f"Privileged Helper Tool not found at {OCLP_PRIVILEGED_HELPER}. Falling back to osascript.")
-        
+        self.osascript()
+
+# behebt eine Sicherheitslücke, indem osascript ohne Bedingung angerufen geworden. Einen Angreifer könnte dazu erzwingen, osascript abzurufen, um beliebiges Code auszuführen und Priveleged Helper Tool umzugehen
+def osascript(self):
     import shlex
     cmd_string = shlex.join(str(arg) for arg in args[0])
     as_safe_string = cmd_string.replace('\\', '\\\\').replace('"', '\\"')
