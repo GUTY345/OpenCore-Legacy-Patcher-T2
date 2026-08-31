@@ -10,6 +10,7 @@ import webbrowser
 import wx.html2
 import platform
 import time
+import sys
 
 from .. import constants
 

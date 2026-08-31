@@ -227,7 +227,14 @@ class MainFrame(wx.Frame):
                     style=wx.OK | wx.ICON_EXCLAMATION
                 )
                 pop_up.ShowModal()
-                self.on_build_and_install()
+                self.Hide()
+                gui_build.BuildFrame(
+                    self,
+                    self.title,
+                    self.constants,
+                    self.GetPosition(),
+                    install=True,
+                )
                 return
 
         except Exception as e:
@@ -259,7 +266,8 @@ class MainFrame(wx.Frame):
                 parent=None,
                 title=self.title,
                 global_constants=self.constants,
-                screen_location=pos
+                screen_location=pos,
+                install=True
             )
             wx.CallAfter(self.Destroy)
 
@@ -393,55 +401,6 @@ class MainFrame(wx.Frame):
             dialog.Destroy()
         except Exception as e:
             logging.error(f"Failed to open Test Explanation dialog: {e}")
-            logging.exception("Stack Trace:")
-
-    def on_build_and_install_standard(self, event: wx.Event = None):
-        self.constants.build_profile = "standard"
-        self.on_build_and_install(event)
-
-    def on_build_opencore_menu(self, event: wx.Event = None):
-        choices = [
-            "🟢 Standard / Safe Build",
-            "🧪 [LEVEL-B] Experimental GPU",
-            "🧪 [LEVEL-C] Experimental Tahoe (Native SMBIOS)",
-            "🧪 [LEVEL-C] Experimental Spoof T2 (MacBookPro16,1)",
-            "🧪 [LEVEL-D] All-In-One Tahoe (Wi-Fi + Audio + GPU + T1)"
-        ]
-        dialog = wx.SingleChoiceDialog(
-            self,
-            "Select the OpenCore build profile you wish to generate:",
-            "Build OpenCore",
-            choices
-        )
-        
-        if dialog.ShowModal() == wx.ID_OK:
-            selection = dialog.GetSelection()
-            if selection == 0:
-                self.constants.build_profile = "standard"
-            elif selection == 1:
-                self.constants.build_profile = "test_b"
-            elif selection == 2:
-                self.constants.build_profile = "test_c"
-            elif selection == 3:
-                self.constants.build_profile = "test_c_spoofed"
-            elif selection == 4:
-                self.constants.build_profile = "test_d"
-            
-            self.on_build_and_install(event)
-        
-        dialog.Destroy()
-
-    def on_build_and_install_testd(self, event: wx.Event = None):
-        self.constants.build_profile = "test_d"
-        self.on_build_and_install(event)
-
-    def on_build_and_install(self, event: wx.Event = None):
-        try:
-            self.Hide()
-            gui_build.BuildFrame(parent=None, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
-            wx.CallAfter(self.Destroy)
-        except Exception as e:
-            logging.error(f"We failed to open up Build and Install OpenCore: {e}")
             logging.exception("Stack Trace:")
 
     def on_root_patches(self, event: wx.Event = None):

@@ -8,6 +8,8 @@ import stat
 import shlex
 import logging
 import subprocess
+import Security
+import objc
 
 from pathlib import Path
 from typing import Callable, Optional
@@ -63,28 +65,90 @@ def privileged_helper_needs_setuid_repair() -> bool:
     return True
 
 
-def repair_privileged_helper_permissions(admin_password: str) -> bool:
+def repair_privileged_helper_permissions() -> bool:
     """
-    Reset the Privileged Helper Tool back to 4755 using the supplied
-    administrator password.
+    Reset the Privileged Helper Tool back to 4755 using the Security framework,
+    which is supported on macOS 10.0+, that easily fits with 10.10!
 
     Note: Deliberately does NOT go through run_as_root() (i.e. the helper
     tool itself), since a helper tool missing its setuid bit can't elevate
     itself - that's precisely the problem being repaired here.
     """
-    process = subprocess.Popen(
-        ["/usr/bin/sudo", "-S", "/bin/chmod", oct(OCLP_PRIVILEGED_HELPER_EXPECTED_MODE)[2:], OCLP_PRIVILEGED_HELPER],
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    # Authorize the privileged operation using macOS Authorization Services.
+    # This causes macOS to present its native authorization UI rather than
+    # requiring OCLP to collect an administrator password.
+    # MARK: IMPORTANT
+
+    # If this doesn't work make sure that you have pyObjC 12.1, as that was version that has been tested.
+    status, auth_ref = Security.AuthorizationCreate(
+        None,
+        None,
+        Security.kAuthorizationFlagDefaults,
+        None
     )
-    stdout, _ = process.communicate(input=(admin_password + "\n").encode())
 
-    if process.returncode != 0:
-        logging.error("Failed to repair Privileged Helper Tool permissions")
-        logging.error(stdout.decode(errors="replace").strip())
-        return False
+    if status != Security.errAuthorizationSuccess:
+        raise RuntimeError(
+            f"AuthorizationCreate failed with status {status}"
+        )
 
-    logging.info("Privileged Helper Tool permissions repaired (4755)")
-    return True
+    try:
+        # Request the right to execute a privileged tool.
+        rights = (
+            Security.AuthorizationItem(
+                Security.kAuthorizationRightExecute,
+                0,
+                None,
+                0
+            ),
+        )
+
+        status, authorized_rights = Security.AuthorizationCopyRights(
+            auth_ref,
+            rights,
+            Security.kAuthorizationEmptyEnvironment,
+            (
+                Security.kAuthorizationFlagInteractionAllowed
+                | Security.kAuthorizationFlagExtendRights
+            ),
+            None
+            )
+
+        if status != Security.errAuthorizationSuccess:
+            raise RuntimeError(
+                f"AuthorizationCopyRights failed with status {status}"
+            )
+
+        # AuthorizationExecuteWithPrivileges runs the specified executable
+        # with root privileges.
+        #
+        # PyObjC expects the argument list as byte strings and automatically
+        # adds the terminating NULL.
+        chmod_arguments = (
+            oct(OCLP_PRIVILEGED_HELPER_EXPECTED_MODE)[2:].encode("utf-8"),
+            OCLP_PRIVILEGED_HELPER.encode("utf-8"),
+        )
+
+        status, _ = Security.AuthorizationExecuteWithPrivileges(
+            auth_ref,
+            b"/bin/chmod",
+            Security.kAuthorizationFlagDefaults,
+            chmod_arguments,
+            objc.NULL,
+        )
+
+        if status != Security.errAuthorizationSuccess:
+            raise RuntimeError(
+                f"AuthorizationExecuteWithPrivileges failed with status {status}"
+            )
+
+        logging.info("Privileged Helper Tool permissions repaired (4755)")
+        return True
+    finally:
+        Security.AuthorizationFree(
+           auth_ref,
+           Security.kAuthorizationFlagDefaults
+        )
 
 
 def run(*args, **kwargs) -> subprocess.CompletedProcess:
