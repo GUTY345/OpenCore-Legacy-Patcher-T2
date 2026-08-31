@@ -98,18 +98,18 @@ class HelpFrame(wx.Frame):
         # Automatically wrap structural layout scaling to avoid text truncation on varied OS platforms
         frame.SetSize((-1, return_button.GetPosition()[1] + return_button.GetSize()[1] + 45))
 
-
+    # es gab zu viel Platz frei (16 Symbole frei statt 8)
     def on_gemini_help(self, event: wx.Event):
-            logger.info("- Launching Gemini AI Assistant (wx.html2 WebView)")
+        logger.info("- Launching Gemini AI Assistant (wx.html2 WebView)")
 
-            # Uses gui_support.GeminiWebView (wx.html2.WebView) instead of
-            # the third-party 'pywebview' package: pywebview's Cocoa
-            # backend crashes the navigation delegate on macOS hosts
-            # older than 11.3 (e.g. 10.13 High Sierra), see GeminiWebView
-            # docstring for details.
-            #
-            # Parented to self.parent_frame (the real top-level app window),
-            # NOT self.dialog (the modal sheet this button lives in) - see
-            # the comment on self.parent_frame in __init__ for why.
-            window = gui_support.GeminiWebView(self.parent_frame, size=(500, 850))
-            window.Show()
+        # Uses gui_support.GeminiWebView (wx.html2.WebView) instead of
+        # the third-party 'pywebview' package: pywebview's Cocoa
+        # backend crashes the navigation delegate on macOS hosts
+        # older than 11.3 (e.g. 10.13 High Sierra), see GeminiWebView
+        # docstring for details.
+        #
+        # Parented to self.parent_frame (the real top-level app window),
+        # NOT self.dialog (the modal sheet this button lives in) - see
+        # the comment on self.parent_frame in __init__ for why.
+        window = gui_support.GeminiWebView(self.parent_frame, size=(500, 850))
+        window.Show()
