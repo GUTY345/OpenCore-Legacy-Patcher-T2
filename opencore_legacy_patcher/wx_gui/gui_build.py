@@ -7,6 +7,7 @@ import logging
 import threading
 import traceback
 import time
+import webbrowser
 
 from .. import constants
 
@@ -117,13 +118,58 @@ class BuildFrame(wx.Frame):
         gui_support.wait_for_thread(thread)
 
         if self.build_successful is False:
-            dialog = wx.MessageDialog(
-                parent=self,
-                message="An error occurred while building OpenCore",
-                caption="Error building OpenCore",
-                style=wx.OK | wx.ICON_ERROR
-            )
-            dialog.ShowModal()
+            # Mirrors the Report Issue / Ask Gemini / Close dialog used for OpenCore
+            # installation errors (gui_install_oc.py) instead of a plain OK-only alert,
+            # so build failures get the same reporting and AI-assist options.
+            try:
+                error_dialog = wx.Dialog(self, title="Build Error", size=(460, 200))
+
+                main_sizer = wx.BoxSizer(wx.VERTICAL)
+                button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+                error_msg = "An error occurred while building OpenCore.\n\nWould you like to report this issue or ask Gemini for help?"
+                msg_text = wx.StaticText(error_dialog, label=error_msg)
+                msg_text.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_NORMAL))
+
+                btn_report = wx.Button(error_dialog, id=wx.ID_OK, label="Report Issue")
+                btn_gemini = wx.Button(error_dialog, id=wx.ID_ANY, label="Ask Gemini")
+                btn_close  = wx.Button(error_dialog, id=wx.ID_CANCEL, label="Close")
+
+                # Define a custom return code identifier for Gemini tracking
+                GEMINI_CLICKED_ID = 10001
+
+                # Bind an event so clicking the button closes the dialog and returns our custom identifier
+                error_dialog.Bind(wx.EVT_BUTTON, lambda event: error_dialog.EndModal(GEMINI_CLICKED_ID), btn_gemini)
+
+                main_sizer.Add(msg_text, 1, wx.ALL | wx.EXPAND, 20)
+                button_sizer.Add(btn_report, 0, wx.RIGHT, 10)
+                button_sizer.Add(btn_gemini, 0, wx.RIGHT, 10)
+                button_sizer.Add(btn_close, 0)
+
+                main_sizer.Add(button_sizer, 0, wx.ALIGN_RIGHT | wx.BOTTOM | wx.RIGHT, 20)
+
+                error_dialog.SetSizer(main_sizer)
+                error_dialog.Layout()
+                error_dialog.Centre()
+
+                response = error_dialog.ShowModal()
+
+                if response == wx.ID_OK:
+                    webbrowser.open("https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues")
+                elif response == GEMINI_CLICKED_ID:
+                    gemini_window = gui_support.GeminiWebView(self, title="Gemini AI Assistant")
+                    gemini_window.Show()
+
+                error_dialog.Destroy()
+            except Exception as e:
+                logging.error(f"Failed to display build error dialog: {e}")
+                dialog = wx.MessageDialog(
+                    parent=self,
+                    message="An error occurred while building OpenCore",
+                    caption="Error building OpenCore",
+                    style=wx.OK | wx.ICON_ERROR
+                )
+                dialog.ShowModal()
             self.return_button.Enable()
             return
         if self.save:
