@@ -184,11 +184,7 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
 
     if Path(OCLP_PRIVILEGED_HELPER).exists():
         result = subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
-        if result.returncode == PrivilegedHelperErrorCodes.OCLP_PHT_ERROR_INVALID_CERTIFICATES:
-            logging.error("Privileged Helper Tool failed due to invalid certificates (non-official build). Falling back to osascript.") # <- logging.warning ist für Warnungen gedacht, nicht für Fehlern. Angreifern könnten davon ausnutzen, um ClickFix-Angriffe zu starten
-            osascript()
-        else:
-            return result
+        # anstatt Fehler zu drucken und blind auf osascript zurückzugreifen, ist einen richtiges Fehlerbehebung benötigt. Es könnte auch passieren, dass der Priveleged Helper Tool signiert sein und trotzdem Fehler zu bekommen. Fehler zu drucken und blind auf osascript zurückzugreifen ist sinnlos. 
     else:
         logging.error(f"Privileged Helper Tool not found at {OCLP_PRIVILEGED_HELPER}. Falling back to osascript.")
         osascript()
