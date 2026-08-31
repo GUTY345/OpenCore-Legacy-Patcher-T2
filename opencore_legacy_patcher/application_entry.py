@@ -96,22 +96,25 @@ class OpenCoreLegacyPatcher:
         if self.constants.computer.real_model and self.constants.computer.real_model.startswith("VMware"):
             self.constants.host_is_vmware_vm = True
             logging.warning("Host detected as a VMware virtual machine - SIP validation for root patching will be bypassed (test-only, see host_is_vmware_vm)")
-            logging.info("This warning is only for developers testing the syntax inside a virtual machine.")
-            logging.info("Another note: when testing the syntax in a virtual machine, when trying to mount some volumes it will throw an error - and that's expected, since in VMs it's nearly impossible to disable SIP and AMFI.")
-            logging.info("This can be done only if you are running the code from source.")
+            # Everything below is setup guidance for getting allow_vmware_root_patching turned on in
+            # the first place - once it's already True there's nothing left to instruct, so keep this
+            # block scoped to the "still disabled" case instead of repeating it on every single launch.
             if self.constants.allow_vmware_root_patching is False:
+                logging.info("This warning is only for developers testing the syntax inside a virtual machine.")
+                logging.info("Another note: when testing the syntax in a virtual machine, when trying to mount some volumes it will throw an error - and that's expected, since in VMs it's nearly impossible to disable SIP and AMFI.")
+                logging.info("This can be done only if you are running the code from source.")
                 logging.info("The Root Patching button will stay disabled until allow_vmware_root_patching is also set to True - this is a deliberate, GUI-inaccessible switch (constants.py) so this test-only bypass can't be flipped on by anyone just clicking around Settings.")
-            logging.info("To test the syntax for installing drivers and patches inside a virtual machine, you need to do the following:")
-            logging.info("1. Open model_array.py inside Visual Studio Code")
-            logging.info("2. command+F")
-            logging.info("3. Search for VMWare20,1 - this is the SMBIOS for VMWare VMs")
-            logging.info("4. Remove # in front of VMWare20,1")
-            logging.info("5. Open constants.py and set allow_vmware_root_patching to True")
-            logging.info("6. Save the changes and quit Visual Studio Code")
-            logging.info("7. Then open the Terminal")
-            logging.info("8. Run python3, followed by the directory where is located the Build-Project.command.")
-            logging.info("9. Once successfully builds the project, you'll get Build successful")
-            logging.info("10. Then open the dist foler and install OpenCore Legacy Patcher T2 with the newly done changes")
+                logging.info("To test the syntax for installing drivers and patches inside a virtual machine, you need to do the following:")
+                logging.info("1. Open model_array.py inside Visual Studio Code")
+                logging.info("2. command+F")
+                logging.info("3. Search for VMWare20,1 - this is the SMBIOS for VMWare VMs")
+                logging.info("4. Remove # in front of VMWare20,1")
+                logging.info("5. Open constants.py and set allow_vmware_root_patching to True")
+                logging.info("6. Save the changes and quit Visual Studio Code")
+                logging.info("7. Then open the Terminal")
+                logging.info("8. Run python3, followed by the directory where is located the Build-Project.command.")
+                logging.info("9. Once successfully builds the project, you'll get Build successful")
+                logging.info("10. Then open the dist foler and install OpenCore Legacy Patcher T2 with the newly done changes")
 
         # Generate environment data
         self.constants.recovery_status = utilities.check_recovery()
