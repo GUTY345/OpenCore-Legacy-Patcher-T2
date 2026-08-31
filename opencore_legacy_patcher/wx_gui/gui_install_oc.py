@@ -7,7 +7,6 @@ import logging
 import threading
 import traceback
 import webbrowser
-import wx.html2
 import platform
 import time
 import sys
@@ -22,20 +21,6 @@ from ..wx_gui import (
     gui_support,
     gui_sys_patch_display
 )
-
-class GeminiWebView(wx.Frame):
-    def __init__(self, parent, title, url="https://gemini.google.com"):
-        super().__init__(parent, title=title, size=(1000, 700))
-        
-        # Create the WebView
-        self.browser = wx.html2.WebView.New(self)
-        self.browser.LoadURL(url)
-        
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.Centre()
-
-    def OnClose(self, event):
-        self.Destroy()
 
 class InstallOCFrame(wx.Frame):
     """
@@ -368,7 +353,7 @@ class InstallOCFrame(wx.Frame):
                 
                 # Check directly for your custom event return hook code
                 elif response == GEMINI_CLICKED_ID:
-                    gemini_window = GeminiWebView(self, title="Gemini AI Assistant")
+                    gemini_window = gui_support.GeminiWebView(self, title="Gemini AI Assistant")
                     gemini_window.Show()
                     
                 error_dialog.Destroy()
