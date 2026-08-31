@@ -50,9 +50,29 @@ class GeminiWebView(wx.Frame):
          decisionHandler:] was not called"
     wx.html2.WebView never takes that code path, so it works
     consistently across all supported host OS versions.
+
+    The requested `size` is clamped to the current display's usable work
+    area (screen minus menu bar/Dock) before showing the WebView. A fixed
+    size (e.g. the 500x850 used by the Help menu's "Ask Gemini" button)
+    can be taller than the available screen height on a smaller display -
+    a VM's virtual display in particular - which otherwise makes the
+    window look like it's swallowing the whole screen with no visible
+    margin and nothing else reachable behind it.
     """
     def __init__(self, parent: wx.Frame, title: str = "Gemini AI Assistant", url: str = "https://gemini.google.com", size: tuple = (1000, 700)) -> None:
         super().__init__(parent, title=title, size=size)
+
+        display_index = wx.Display.GetFromWindow(self)
+        if display_index == wx.NOT_FOUND:
+            display_index = 0
+        work_area = wx.Display(display_index).GetClientArea()
+        margin = 40  # keep a visible gap around the window so it never touches the screen edges
+        clamped_size = (
+            min(size[0], work_area.GetWidth() - margin),
+            min(size[1], work_area.GetHeight() - margin),
+        )
+        if clamped_size != size:
+            self.SetSize(clamped_size)
 
         self.browser = wx.html2.WebView.New(self)
         self.browser.LoadURL(url)
