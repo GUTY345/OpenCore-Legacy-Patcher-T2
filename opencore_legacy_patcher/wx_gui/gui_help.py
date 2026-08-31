@@ -7,6 +7,7 @@ import logging
 import webbrowser
 
 from .. import constants
+from ..datasets import os_data
 from ..wx_gui import gui_support
 
 logger = logging.getLogger(__name__)
@@ -100,16 +101,38 @@ class HelpFrame(wx.Frame):
 
     # es gab zu viel Platz frei (16 Symbole frei statt 8)
     def on_gemini_help(self, event: wx.Event):
-        logger.info("- Launching Gemini AI Assistant (wx.html2 WebView)")
-
-        # Uses gui_support.GeminiWebView (wx.html2.WebView) instead of
-        # the third-party 'pywebview' package: pywebview's Cocoa
-        # backend crashes the navigation delegate on macOS hosts
-        # older than 11.3 (e.g. 10.13 High Sierra), see GeminiWebView
-        # docstring for details.
+        # Ask Gemini in an embedded WebView on macOS Big Sur (11.0) or
+        # newer; on anything older, open Gemini in the user's default web
+        # browser instead. GeminiWebView (wx.html2.WebView, itself a thin
+        # wrapper around the host's own system WebKit) already sidesteps
+        # the pywebview crash documented in its docstring, which only
+        # ever affected macOS < 11.3 - but the WebKit actually shipped
+        # with genuinely older releases (High Sierra/Mojave/Catalina) is
+        # too old to render Gemini's web app at all regardless of which
+        # embedding library is used, so those hosts are better served by
+        # their real, up-to-date default browser than a broken embedded
+        # view.
         #
-        # Parented to self.parent_frame (the real top-level app window),
-        # NOT self.dialog (the modal sheet this button lives in) - see
-        # the comment on self.parent_frame in __init__ for why.
-        window = gui_support.GeminiWebView(self.parent_frame, size=(500, 850))
-        window.Show()
+        # self.constants.detected_os is this codebase's own Darwin-major
+        # OS enum (see datasets/os_data.py) rather than platform.mac_ver(),
+        # which is what the rest of the app already uses for OS gating
+        # (see e.g. gui_support.py's host_is_non_metal()/host_is_solarium())
+        # - and it sidesteps mac_ver()'s well-known Big Sur "10.16"
+        # misreport quirk entirely.
+        if self.constants.detected_os >= os_data.os_data.big_sur:
+            logger.info("- Launching Gemini AI Assistant (wx.html2 WebView)")
+
+            # Uses gui_support.GeminiWebView (wx.html2.WebView) instead of
+            # the third-party 'pywebview' package: pywebview's Cocoa
+            # backend crashes the navigation delegate on macOS hosts
+            # older than 11.3 (e.g. 10.13 High Sierra), see GeminiWebView
+            # docstring for details.
+            #
+            # Parented to self.parent_frame (the real top-level app window),
+            # NOT self.dialog (the modal sheet this button lives in) - see
+            # the comment on self.parent_frame in __init__ for why.
+            window = gui_support.GeminiWebView(self.parent_frame, size=(500, 850))
+            window.Show()
+        else:
+            logger.info("- Launching Gemini AI Assistant (default web browser, host predates Big Sur)")
+            webbrowser.open("https://gemini.google.com")
