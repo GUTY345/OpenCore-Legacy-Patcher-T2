@@ -22,6 +22,16 @@ class HelpFrame(wx.Frame):
         # INCREASED BASE SIZE: Changed vertical boundary constraint from 200 to 300 to accommodate more buttons cleanly
         self.dialog = wx.Dialog(parent, title=title, size=(300, 320))
 
+        # Kept separately from self.dialog: self.dialog is shown as a modal
+        # macOS sheet (ShowWindowModal below), so it isn't a suitable parent
+        # for any *further* top-level window we spawn from a button inside
+        # it (see on_gemini_help) - Cocoa renders a window parented to a
+        # sheet as another attached, chromeless sheet-like panel (no title
+        # bar/traffic lights, pinned under the menu bar) rather than a normal
+        # movable/closable window. self.parent_frame is the actual top-level
+        # app window and parents correctly.
+        self.parent_frame: wx.Frame = parent
+
         self.constants: constants.Constants = global_constants
         self.title: str = title
 
@@ -97,5 +107,9 @@ class HelpFrame(wx.Frame):
             # backend crashes the navigation delegate on macOS hosts
             # older than 11.3 (e.g. 10.13 High Sierra), see GeminiWebView
             # docstring for details.
-            window = gui_support.GeminiWebView(self.dialog, size=(500, 850))
+            #
+            # Parented to self.parent_frame (the real top-level app window),
+            # NOT self.dialog (the modal sheet this button lives in) - see
+            # the comment on self.parent_frame in __init__ for why.
+            window = gui_support.GeminiWebView(self.parent_frame, size=(500, 850))
             window.Show()
