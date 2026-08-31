@@ -8,6 +8,7 @@ import stat
 import shlex
 import logging
 import subprocess
+import Security
 import os
 
 from pathlib import Path
@@ -118,21 +119,21 @@ def repair_privileged_helper_permissions() -> bool:
             environment,
             (
                 Security.kAuthorizationFlagInteractionAllowed
-        |       Security.kAuthorizationFlagExtendRights
+                | Security.kAuthorizationFlagExtendRights
             ),
-            None
+            None,
         )
+
+        if status == Security.errAuthorizationCanceled:
+            logging.info("User canceled the request")
+            return False
 
         if status != Security.errAuthorizationSuccess:
             raise RuntimeError(
                 f"AuthorizationCopyRights failed with status {status}"
             )
 
-        # AuthorizationExecuteWithPrivileges runs the specified executable
-        # with root privileges.
-        #
-        # PyObjC expects the argument list as byte strings and automatically
-        # adds the terminating NULL.
+
         chmod_arguments = (
             oct(OCLP_PRIVILEGED_HELPER_EXPECTED_MODE)[2:].encode("utf-8"),
             OCLP_PRIVILEGED_HELPER.encode("utf-8"),
@@ -143,8 +144,12 @@ def repair_privileged_helper_permissions() -> bool:
             b"/bin/chmod",
             Security.kAuthorizationFlagDefaults,
             chmod_arguments,
-            objc.NULL,
+            None,
         )
+
+        if status == Security.errAuthorizationCanceled:
+            logging.info("User canceled the request")
+            return False
 
         if status != Security.errAuthorizationSuccess:
             raise RuntimeError(
@@ -153,13 +158,12 @@ def repair_privileged_helper_permissions() -> bool:
 
         logging.info("Privileged Helper Tool permissions repaired (4755)")
         return True
+
     finally:
         Security.AuthorizationFree(
            auth_ref,
            Security.kAuthorizationFlagDefaults
         )
-
-
 def run(*args, **kwargs) -> subprocess.CompletedProcess:
     """
     Basic subprocess.run wrapper.
