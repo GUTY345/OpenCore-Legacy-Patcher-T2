@@ -185,16 +185,16 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
     if Path(OCLP_PRIVILEGED_HELPER).exists():
         result = subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
         if result.returncode == PrivilegedHelperErrorCodes.OCLP_PHT_ERROR_INVALID_CERTIFICATES:
-            logging.warning("Privileged Helper Tool failed due to invalid certificates (non-official build). Falling back to osascript.")
-            self.osascript()
+            logging.error("Privileged Helper Tool failed due to invalid certificates (non-official build). Falling back to osascript.") # <- logging.warning ist für Warnungen gedacht, nicht für Fehlern. Angreifern könnten davon ausnutzen, um ClickFix-Angriffe zu starten
+            osascript()
         else:
             return result
     else:
-        logging.warning(f"Privileged Helper Tool not found at {OCLP_PRIVILEGED_HELPER}. Falling back to osascript.")
-        self.osascript()
+        logging.error(f"Privileged Helper Tool not found at {OCLP_PRIVILEGED_HELPER}. Falling back to osascript.")
+        osascript()
 
 # behebt eine Sicherheitslücke, indem osascript ohne Bedingung angerufen geworden. Einen Angreifer könnte dazu erzwingen, osascript abzurufen, um beliebiges Code auszuführen und Priveleged Helper Tool umzugehen
-def osascript(self):
+def osascript():
     import shlex
     cmd_string = shlex.join(str(arg) for arg in args[0])
     as_safe_string = cmd_string.replace('\\', '\\\\').replace('"', '\\"')
