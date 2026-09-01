@@ -121,7 +121,7 @@ class MainFrame(wx.Frame):
                 "Settings": {
                     "function": self.on_settings,
                     "description": ["App settings"],
-                    "icon": str(self.constants.icns_resource_path / "SystemSettings.icns"),
+                    "icon": str(self.constants.icns_resource_path / "Settings.icns"),
                 },
                 "Create macOS Installer": {
                     "function": self.on_create_macos_installer,
