@@ -144,22 +144,32 @@ class CheckBinaryUpdates:
         if not releases or not isinstance(releases, list):
             return None
             
-        # The first item in the list is the most recent release, whether pre-release or stable
-        data_set = releases[0]
+        # GitHub's /releases API returns items sorted by creation date, not by version number.
+        # To avoid fetching an older version that was published more recently, we must find the highest version.
+        highest_release = None
+        highest_version = None
 
-        if "tag_name" not in data_set:
-            return None
+        for release in releases:
+            if "tag_name" not in release:
+                continue
+            
+            try:
+                rel_ver = version.parse(release["tag_name"])
+            except version.InvalidVersion:
+                continue
 
-        # The release marked as latest will always be stable, and thus, have a proper version number
-        # But if not, let's not crash the program
-        try:
-            logging.info("Checking if the version is valid")
-            latest_remote_version = version.parse(data_set["tag_name"])
-        except version.InvalidVersion:
-            logging.error(f"That version is invalid")
-            logging.exception("Stack Trace:")
+            if highest_version is None or rel_ver > highest_version:
+                highest_version = rel_ver
+                highest_release = release
+
+        if not highest_release:
+            logging.error("Could not find any valid versions in the repository releases.")
             logging.info("Please check for updates in GitHub manually.")
             return None
+
+        data_set = highest_release
+        latest_remote_version = highest_version
+        logging.info("Checking if the version is valid")
 
         # Fixed: Swap the parameters so that the remote version is tested against the local one properly.
         # Alternatively, you can also just pass (self.binary_version, latest_remote_version)
