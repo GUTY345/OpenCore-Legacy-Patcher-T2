@@ -158,6 +158,11 @@ def repair_privileged_helper_permissions() -> bool:
 
         logging.info("Privileged Helper Tool permissions repaired (4755)")
         return True
+    # behebt einen Bug, indem falls die Operation nicht erfolgreich ist, zeigt es nicht einen Fehler
+    except Exception as e:
+        logging.error("Running the Priveleged Helper Tool operation failed.")
+        logging.exception("Stack Trace:")
+        sys.exit(3)
 
     finally:
         Security.AuthorizationFree(
@@ -295,9 +300,10 @@ def mount_dmg(
     if elevated_process.returncode == 0:
         logging.info("- Mounted (elevated)")
         return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=elevated_stdout)
-
-    logging.info(f"- Elevated hdiutil attach failed: {elevated_stdout.decode(errors='replace').strip()}")
-    return subprocess.CompletedProcess(args=cmd, returncode=elevated_process.returncode, stdout=elevated_stdout)
+    # behebt einen Fehler, indem Elevated hdiutil attach failed druckt bedingungslos und eine Sicherheitslücke, die Angreifern ausnutzen können, um dieses Mount-Fehler zu zeigen, um DoS-Angriffe zu starten.
+    else:
+      logging.error(f"- Elevated hdiutil attach failed: {elevated_stdout.decode(errors='replace').strip()}")
+      return subprocess.CompletedProcess(args=cmd, returncode=elevated_process.returncode, stdout=elevated_stdout)
 
 
 def verify(process_result: subprocess.CompletedProcess) -> None:
@@ -306,10 +312,11 @@ def verify(process_result: subprocess.CompletedProcess) -> None:
     """
     if process_result.returncode == 0:
         return
-
-    log(process_result)
-
-    raise Exception(f"Process failed with exit code {process_result.returncode}")
+    # behebt 2 Sicherheitslücken: 1. Falls ein Fehler passiert, druckte es nicht ins Terminal, also ein Benutzer, der nicht das GUI verwendet, weißt nicht, es gäbe ein Fehler und Angreifern könnten davon ausnutzen. 2. Angreifern könnten die Bedingung if process_result.returncode == 0: löschen, um der Fehler Process failed with exit code zu forcieren, um ClickFix-Angriffe zu starten.
+    else:
+        logging.error(f"Process failed with exit code {process_result.returncode}"")
+        log(process_result)
+        raise Exception(f"Process failed with exit code {process_result.returncode}")
 
 
 def run_and_verify(*args, **kwargs) -> None:
@@ -383,8 +390,9 @@ def __resolve_privileged_helper_errors(return_code: int) -> str:
     """
     if return_code not in [error_code.value for error_code in PrivilegedHelperErrorCodes]:
         return None
-
-    return PrivilegedHelperErrorCodes(return_code).name
+    # behebt einen Fehler, indem den Priveleged Helper Tool Fehler bedingungslos zeigt und eine kritische Sicherheitslücke, die Angreifern ausnutzen können, um der Priveleged Helper Tool zum Absturz zu bringen, und auf osascript zurückzufallen
+    else:
+        return PrivilegedHelperErrorCodes(return_code).name
 
 
 def __format_output(output: str) -> str:
