@@ -7,6 +7,9 @@ import pprint
 import logging
 import os
 import sys
+import time
+import subprocess
+import Security
 from pathlib import Path
 from .. import constants
 
@@ -57,7 +60,9 @@ class SettingsFrame(wx.Frame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.AddSpacer(10)
 
-        tabs = ["App", "Developer"] # Build und Security sind beide leer, also diese sind nicht benötigt
+        tabs = list(self.settings.keys())
+        if not self.constants.Developer_Mode:
+            tabs.remove("Developer")
         for tab in tabs:
             panel = wx.ScrolledWindow(notebook)
             panel.SetScrollRate(0, 20)
@@ -255,15 +260,18 @@ class SettingsFrame(wx.Frame):
                     ],
                     "override_function": self._update_global_settings,
                 },
-                "Developer / Experimental Mode": {
+                "Developer Mode": {
                     "type": "checkbox",
-                    "override_function": self.on_enable_dev_mode,
-                    "variable": "Developer_Mode",
                     "value": self.constants.Developer_Mode,
+                    "variable": "Developer_Mode",
                     "description": [
-                        "Turns on Developer/Experimental Mode.",
-                        "Requires restarting the app to take effect."
+                        "Unlocks the Developer tab and the",
+                        "experimental T1/Matteo UI mode.",
+                        "The app will restart automatically",
+                        "to apply this change.",
                     ],
+                    "warning": "Developer Mode unlocks experimental, unfinished features (including a deliberate crash-test button and the T1/Matteo experimental UI) intended for testing, not everyday use.\n\nThe app will restart automatically to apply this change.\n\nAre you sure you want to enable it?",
+                    "override_function": self._toggle_developer_mode,
                 },
             },
             "Statistics": {
@@ -287,6 +295,32 @@ class SettingsFrame(wx.Frame):
                         "Intentionally crash the app to test whether a report comes up" # beschreibung hinzufügen was genau macht
                     ],
                 },
+                "Misc": {
+                    "type": "title",
+                },
+                "Default OpenCore Build": {
+                    "type": "choice",
+                    "choices": [
+                        "💬 Ask Each Time",
+                        "🟢 Standard / Safe Build",
+                        "🧪 [LEVEL-B] Experimental GPU",
+                        "🧪 [LEVEL-C] Experimental Tahoe (Native SMBIOS)",
+                        "🧪 [LEVEL-C] Experimental Spoof T2 (MacBookPro16,1)",
+                        "🧪 [LEVEL-D] All-In-One Tahoe (Wi-Fi + Audio + GPU + T1)"
+                    ],
+                    "value": "💬 Ask Each Time",
+                    "variable": "",
+                    "description": [
+                        "Change the OpenCore build Config that will be used",
+                        "NOTE: setting this to anything other then",
+                        "\"Ask Each Time\" will remove the prompt for a config."
+                    ]
+                },
+                "Populate OpenCore Build Override": {
+                    "type": "populate",
+                    "function": self._populate_oc_build_override,
+                    "args": wx.Frame,
+                    },
                 "wrap_around 1": {
                     "type": "wrap_around",
                 },
@@ -334,9 +368,66 @@ Hardware Information:
     {pprint.pformat(self.constants.computer, indent=4)}
 """
         # TextCtrl: properties
-        self.app_stats = wx.TextCtrl(panel, value=lines, pos=(-1, title.GetPosition()[1] + 30), size=(600, 525), style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_RICH2)
+        self.app_stats = wx.TextCtrl(panel, value=lines, pos=(-1, title.GetPosition()[1] + 30), size=(600, 525), style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_RICH2 | wx.BORDER_NONE | wx.HSCROLL | wx.VSCROLL | wx.TE_DONTWRAP) #TODO: Fix this to show a scrollbar!!! It has to be in the textCtrl, which is the tricky part
         self.app_stats.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
+        self.app_stats.SetScrollbar(wx.HORIZONTAL, 0, 600, 1200)
 
+    def _populate_oc_build_override(self, panel: wx.Panel) -> None:
+        oc_build_box: wx.Choice = None
+        for child in panel.GetChildren():
+            if isinstance(child, wx.Choice):
+                oc_build_box = child
+                break
+    
+        oc_build_box.Bind(wx.EVT_CHOICE, self.oc_build_selection)
+        if self.constants.build_profile == "standard":
+            oc_build_box.SetStringSelection("🟢 Standard / Safe Build")
+        elif (self.constants.build_profile is None) or (self.constants.build_profile == ""):
+            oc_build_box.SetStringSelection("💬 Ask Each Time")
+        elif self.constants.build_profile == "test_b":
+            oc_build_box.SetStringSelection("🧪 [LEVEL-B] Experimental GPU")
+        elif self.constants.build_profile == "test_c":
+             oc_build_box.SetStringSelection("🧪 [LEVEL-C] Experimental Tahoe (Native SMBIOS)")
+        elif self.constants.build_profile == "test_c_spoofed":
+            oc_build_box.SetStringsSelection("🧪 [LEVEL-C] Experimental Spoof T2 (MacBookPro16,1)")
+        elif self.constants.build_profile == "test_d":
+            oc_build_box.SetStringSelection("🧪 [LEVEL-D] All-In-One Tahoe (Wi-Fi + Audio + GPU + T1)")
+    
+    def oc_build_selection(self, event: wx.Event) -> None:
+        value = event.GetEventObject().GetStringSelection()
+        if value == "🟢 Standard / Safe Build":
+            logging.info("Updating OC build: Standard")
+            self.constants.build_profile = "standard"
+            global_settings.GlobalEnviromentSettings().write_property("GUI:oc_build", "standard")
+            return
+        elif value == "💬 Ask Each Time":
+            logging.info("Updating OC build: None")
+            self.constants.build_profile = ""
+            global_settings.GlobalEnviromentSettings().write_property("GUI:oc_build", "")
+            return
+        elif value == "🧪 [LEVEL-B] Experimental GPU":
+            logging.info("Updating OC build: Level-B")
+            self.constants.build_profile = "test_b"
+            global_settings.GlobalEnviromentSettings().write_property("GUI:oc_build", "test_b")
+            return
+        elif value == "🧪 [LEVEL-C] Experimental Tahoe (Native SMBIOS)":
+            logging.info("Updating OC build: Level-C")
+            self.constants.build_profile = "test_c"
+            global_settings.GlobalEnviromentSettings().write_property("GUI:oc_build", "test_c")
+            return
+        elif value == "🧪 [LEVEL-C] Experimental Spoof T2 (MacBookPro16,1)":
+            logging.info("Updating OC build: Level-C (Spoofed)")
+            self.constants.build_profile = "test_c_spoofed"
+            global_settings.GlobalEnviromentSettings().write_property("GUI:oc_build", "test_c_spoofed")
+            return
+        elif value == "🧪 [LEVEL-D] All-In-One Tahoe (Wi-Fi + Audio + GPU + T1)":
+            logging.info("Updating OC build: Level-D")
+            self.constants.build_profile = "test_d"
+            global_settings.GlobalEnviromentSettings().write_property("GUI:oc_build", "test_d")
+            return
+        
+
+    
     def on_checkbox(self, event: wx.Event, warning_pop: str = "", override_function: bool = False) -> None:
         """
         """
@@ -400,6 +491,211 @@ Hardware Information:
             self._update_setting(global_setting, value)
 
 
+    def _toggle_developer_mode(self, variable, value, constants_variable = None) -> None:
+        """
+        Enables or disables Developer Mode, then restarts the app so every
+        frame (Main Menu label, Developer settings tab, Matteo/Albert mode)
+        picks up the change - those are only computed when a frame is first
+        built, so without a restart they'd silently keep showing the old state.
+
+        defaults.py's _general_probe() determines Developer Mode purely from
+        whether ~/.dortania_developer exists on disk, checked fresh on every
+        launch - so rather than persisting a second, possibly-conflicting
+        setting, this creates/removes that same marker file.
+        """
+        marker_path = Path("~/.dortania_developer").expanduser()
+        logging.info(f"Developer Mode toggle requested: {'enable' if value else 'disable'} (marker currently {'exists' if marker_path.exists() else 'absent'} at {marker_path})")
+
+        def _apply_marker() -> None:
+            if value:
+                marker_path.touch(exist_ok=True)
+            elif marker_path.exists():
+                marker_path.unlink()
+
+        try:
+            _apply_marker()
+        except PermissionError:
+            # This project has hit this exact class of bug before (a root-owned
+            # .plist from an earlier sudo'd run causing Permission-Denied for a
+            # normal user) - if this marker file was ever created with "sudo
+            # touch" before this checkbox existed, a normal unlink()/touch()
+            # here fails silently unless we do something about it. Try a
+            # native admin prompt to fix it instead of sending the user to
+            # Terminal.
+            logging.error(f"Developer Mode marker file is inaccessible as the current user (likely owned by another user from an earlier 'sudo' run): {marker_path}")
+            if self._fix_developer_mode_marker_with_privileges(marker_path, create=value):
+                try:
+                    _apply_marker()
+                except Exception as e:
+                    logging.error(f"Marker file still inaccessible after privileged fix: {e}")
+        except Exception as e:
+            logging.error(f"Failed to update Developer Mode marker file ({marker_path}): {e}")
+            wx.MessageDialog(
+                self.frame_modal,
+                f"Failed to update the Developer Mode marker file:\n\n{e}\n\nDeveloper Mode was not changed.",
+                "Error",
+                wx.OK | wx.ICON_ERROR
+            ).ShowModal()
+            return
+
+        if marker_path.exists() != value:
+            # Don't silently claim success (and definitely don't restart) if
+            # the file on disk doesn't actually reflect the requested state -
+            # this is exactly the "stays on regardless" symptom, so surface
+            # it plainly instead of leaving the user guessing.
+            logging.error(f"Developer Mode marker file state mismatch after update: exists={marker_path.exists()}, expected={value}")
+            manual_fix = f"sudo rm {marker_path}" if not value else f"sudo rm -f {marker_path} && touch {marker_path}"
+            wx.MessageDialog(
+                self.frame_modal,
+                f"Couldn't {'create' if value else 'remove'} the Developer Mode marker file - it may be owned by another user (e.g. from an earlier 'sudo' run).\n\nYou can fix this yourself in Terminal with:\n\n{manual_fix}\n\nDeveloper Mode was not changed.",
+                "Permission Error",
+                wx.OK | wx.ICON_ERROR
+            ).ShowModal()
+            return
+
+        logging.info(f"Developer Mode: {'enabled' if value else 'disabled'} (marker file confirmed {'present' if value else 'absent'})")
+
+        # Purge any stale "GUI:Developer_Mode" entry from the persisted
+        # settings plist. defaults.py's _load_gui_defaults() restores every
+        # "GUI:*" key back onto self.constants on EVERY launch, and it runs
+        # AFTER _general_probe() (the marker-file check above) - so if this
+        # key was ever written here (e.g. from an earlier build of this
+        # checkbox), it would silently overwrite the correct, marker-file-
+        # derived value right after every restart, making the toggle look
+        # like it never took effect. Developer Mode's source of truth is the
+        # marker file alone; this key must never exist for it to stick.
+        global_settings.GlobalEnviromentSettings().delete_property("GUI:Developer_Mode")
+
+        self.constants.Developer_Mode = value
+        self.constants.app_mode = "matteo" if value else "albert"
+
+        self._restart_app(f"Developer Mode is now {'enabled' if value else 'disabled'}.")
+
+
+    def _fix_developer_mode_marker_with_privileges(self, marker_path: Path, create: bool) -> bool:
+        """
+        Best-effort recovery when the Developer Mode marker file can't be
+        touched/removed as the current user. Uses macOS Authorization
+        Services for a one-off privileged fix via a native admin prompt,
+        the same approach subprocess_wrapper.repair_privileged_helper_permissions()
+        already uses to fix the Privileged Helper Tool's own permissions -
+        deliberately not routed through the helper tool itself, since this
+        needs to work even if the helper tool is unrelated/unavailable.
+
+        Returns True if the privileged command ran successfully (not a
+        guarantee the marker file now matches the requested state - the
+        caller re-checks that itself).
+        """
+        try:
+            status, auth_ref = Security.AuthorizationCreate(None, None, Security.kAuthorizationFlagDefaults, None)
+            if status != Security.errAuthorizationSuccess:
+                logging.error(f"AuthorizationCreate failed with status {status}")
+                return False
+
+            try:
+                rights = (Security.AuthorizationItem(Security.kAuthorizationRightExecute, 0, None, 0),)
+                prompt = b"OpenCore Legacy Patcher T2 needs administrator permission to fix the Developer Mode marker file, which appears to be owned by another user."
+                environment = (Security.AuthorizationItem(Security.kAuthorizationEnvironmentPrompt, len(prompt), prompt, 0),)
+
+                status, _ = Security.AuthorizationCopyRights(
+                    auth_ref,
+                    rights,
+                    environment,
+                    Security.kAuthorizationFlagInteractionAllowed | Security.kAuthorizationFlagExtendRights,
+                    None,
+                )
+                if status == Security.errAuthorizationCanceled:
+                    logging.info("User canceled the Developer Mode marker file fix")
+                    return False
+                if status != Security.errAuthorizationSuccess:
+                    logging.error(f"AuthorizationCopyRights failed with status {status}")
+                    return False
+
+                if create:
+                    binary = b"/usr/bin/touch"
+                    arguments = (str(marker_path).encode("utf-8"),)
+                else:
+                    binary = b"/bin/rm"
+                    arguments = (b"-f", str(marker_path).encode("utf-8"))
+
+                status, _ = Security.AuthorizationExecuteWithPrivileges(auth_ref, binary, Security.kAuthorizationFlagDefaults, arguments, None)
+                if status != Security.errAuthorizationSuccess:
+                    logging.error(f"AuthorizationExecuteWithPrivileges failed with status {status}")
+                    return False
+
+                return True
+            finally:
+                Security.AuthorizationFree(auth_ref, Security.kAuthorizationFlagDefaults)
+        except Exception as e:
+            logging.error(f"Failed to run privileged Developer Mode marker file fix: {e}")
+            return False
+
+
+    def _restart_app(self, reason: str = "") -> None:
+        """
+        Relaunches the app from whatever it was actually started from
+        (a from-source checkout vs. the built .app), then exits this
+        process - so settings that are only read/rendered at startup
+        (like Developer Mode's UI gating) take effect without the user
+        having to quit and reopen the app manually themselves.
+        """
+        try:
+            if self.constants.launcher_script:
+                # Running from source: launcher_binary is just the bare Python
+                # interpreter (sys.executable), so re-invoke it against the
+                # actual entry point script rather than on its own.
+                command = [self.constants.launcher_binary, self.constants.launcher_script]
+            else:
+                command = [self.constants.launcher_binary]
+
+            # Explicit cwd, in case anything earlier in this run changed the
+            # working directory - subprocess.Popen would otherwise silently
+            # inherit whatever the current one happens to be right now.
+            current_dir = os.getcwd()
+            logging.info(f"Restarting app: {command} (cwd={current_dir})")
+            process = subprocess.Popen(command, cwd=current_dir)
+            logging.info(f"Restart subprocess spawned with PID {process.pid}")
+
+            # Popen() succeeding only means the OS could fork+exec the command,
+            # not that the program actually kept running - a from-source
+            # relaunch in particular can die almost immediately (import
+            # errors, a stale interpreter path, etc.), which would otherwise
+            # look exactly like "nothing happened" once this process exits
+            # below. Give it a moment and check it's still alive first.
+            time.sleep(1)
+            exit_code = process.poll()
+            if exit_code is not None:
+                raise RuntimeError(f"the new process exited immediately (code {exit_code}) - check the log above this line for why")
+        except Exception as e:
+            logging.error(f"Failed to restart the app: {e}")
+            wx.MessageDialog(
+                self.frame_modal,
+                f"{reason}\n\nFailed to restart automatically ({e}).\n\nPlease quit and reopen the app manually to apply this change.",
+                "Restart Failed",
+                wx.OK | wx.ICON_WARNING
+            ).ShowModal()
+            return
+
+        logging.info(f"{reason} Restarting to apply the change...")
+        wx.MessageDialog(
+            self.frame_modal,
+            f"{reason}\n\nThe app is restarting now to apply this change.",
+            "Restarting",
+            wx.OK | wx.ICON_INFORMATION
+        ).ShowModal()
+
+        # Plain sys.exit() here is unreliable: this runs from deep inside nested
+        # modal event loops (checkbox handler -> Settings dialog's own
+        # ShowModal() -> the dialog above), and wx's event dispatch can swallow
+        # the resulting SystemExit instead of letting it unwind all the way out,
+        # leaving this "old" process running alongside the freshly spawned one.
+        # os._exit() terminates immediately at the OS level, bypassing that
+        # entirely - safe here since the replacement process is already running
+        # and was just confirmed to still be alive above.
+        os._exit(0)
+
+
+
     def on_export_constants(self, event: wx.Event) -> None:
         # Throw pop up to get save location
         with wx.FileDialog(self.parent, "Save Constants File", wildcard="JSON files (*.txt)|*.txt", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT, defaultFile=f"constants-{self.constants.patcher_version}.txt") as fileDialog:
@@ -423,47 +719,3 @@ Hardware Information:
         if tmp_value is None:
             tmp_value = "PYTHON_NONE_VALUE"
         global_settings.GlobalEnviromentSettings().write_property(f"GUI:{variable}", tmp_value)
-
-    def on_enable_dev_mode(self, variable: str, value: bool, constants_variable: str) -> None:
-        is_enabled = value
-        if is_enabled:
-            logging.info("Turning on Developer Mode")
-            os.environ["OCLP_DEV_MODE"] = "1"
-            self.constants.Developer_Mode = True
-        else:
-            logging.info("Turning off Developer Mode")
-            os.environ["OCLP_DEV_MODE"] = "0"
-            self.constants.Developer_Mode = False
-
-        # BUGFIX: previously only the in-process OCLP_DEV_MODE env var was set, which
-        # only survives the immediate os.execl() restart below (exec inherits the
-        # current process environment). A real relaunch (Cmd+Q, quitting/reopening
-        # the app, or a reboot) starts a brand new process with no such variable,
-        # so Developer Mode silently fell back to off every time - it never actually
-        # "stuck". Persist it the same way every other checkbox setting does, so
-        # defaults.py's _load_gui_defaults() restores it correctly on every future
-        # launch, not just the one immediately after toggling it.
-        global_settings.GlobalEnviromentSettings().write_property(f"GUI:{variable}", self.constants.Developer_Mode)
-
-        dlg = wx.MessageDialog(
-            None,
-            "The application needs to restart to apply Developer Mode changes.\n\nWould you like to restart now?",
-            "Restart Required",
-            wx.YES_NO | wx.ICON_INFORMATION
-        )
-        if dlg.ShowModal() == wx.ID_YES:
-            logging.info("Restarting application to apply Developer Mode changes...")
-            os.execl(sys.executable, sys.executable, *sys.argv)
-            # BUGFIX: previously re-exec'd via sys.executable + this process's *current*
-            # sys.argv. That argv isn't always a valid script path - eg. when running
-            # from source and the app was started interactively (bare `python3` REPL,
-            # where sys.argv is ['']), the reconstructed exec had nothing usable after
-            # the interpreter path, so the "restart" collapsed into a plain interactive
-            # Python shell instead of relaunching the app (reproduced: this is exactly
-            # what the screenshot showed). launcher_binary/launcher_script are resolved
-            # once at genuine startup (application_entry.py) from __file__, not from
-            # argv, so they stay correct regardless of how this process was invoked.
-            if self.constants.launcher_script:
-                os.execl(self.constants.launcher_binary, self.constants.launcher_binary, self.constants.launcher_script)
-            else:
-                os.execl(self.constants.launcher_binary, self.constants.launcher_binary)

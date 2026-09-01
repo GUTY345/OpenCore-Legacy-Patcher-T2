@@ -45,7 +45,6 @@ class UpdateFrame(wx.Frame):
 
         self.title: str = title
         self.constants: constants.Constants = global_constants
-        self.pkg_download_path = self.constants.payload_path / "OpenCore-Patcher.pkg"
         self.screen_location: wx.Point = screen_location
         if parent:
             self.parent.Centre()
@@ -66,6 +65,12 @@ class UpdateFrame(wx.Frame):
                 sys.exit(3)
         self.version_label = version_label
         self.url = url
+
+        # Our own releases ship a raw "OpenCore-Patcher-T2.pkg" asset (see updates.py),
+        # while the upstream Dortania nightly.link fallback (gui_macos_configeration.py)
+        # still ships the original "OpenCore-Patcher.pkg" zipped up - keep expecting
+        # whichever one this URL actually points to instead of hardcoding one name.
+        self.pkg_download_path = self.constants.payload_path / ("OpenCore-Patcher.pkg" if self.url.endswith(".zip") else "OpenCore-Patcher-T2.pkg")
 
         logging.info(f"Update URL: {url}")
         logging.info(f"Update Version: {version_label}")
@@ -116,7 +121,7 @@ class UpdateFrame(wx.Frame):
         preventing GUI lockups and avoiding hazardous wx.Yield use.
         """
         download_obj = None
-        file_name = "OpenCore-Patcher.pkg.zip" if self.url.endswith(".zip") else "OpenCore-Patcher.pkg"
+        file_name = "OpenCore-Patcher.pkg.zip" if self.url.endswith(".zip") else "OpenCore-Patcher-T2.pkg"
         download_obj = network_handler.DownloadObject(self.url, self.constants.payload_path / file_name)
 
         # --- Phase 1: Download ---
@@ -287,10 +292,14 @@ class UpdateFrame(wx.Frame):
             sys.exit(1)
 
     def _launch_update(self) -> None:
+        # Same reasoning as pkg_download_path above: an upstream Dortania nightly
+        # install still lands as "OpenCore-Patcher.app", only our own T2 releases
+        # install as "OpenCore-Patcher-T2.app" (see package.py's _files mapping).
+        _app_name = "OpenCore-Patcher.app" if self.url.endswith(".zip") else "OpenCore-Patcher-T2.app"
         try:
-            logging.info("Aktualisierung beginnen: '/Library/Application Support/Dortania/OpenCore-Patcher.app'")
-            logging.info("Launching update: '/Library/Application Support/Dortania/OpenCore-Patcher.app'")
-            subprocess.Popen(["/Library/Application Support/Dortania/OpenCore-Patcher.app/Contents/MacOS/OpenCore-Patcher", "--update_installed"])
+            logging.info(f"Aktualisierung beginnen: '/Library/Application Support/Dortania/{_app_name}'")
+            logging.info(f"Launching update: '/Library/Application Support/Dortania/{_app_name}'")
+            subprocess.Popen([f"/Library/Application Support/Dortania/{_app_name}/Contents/MacOS/OpenCore-Patcher", "--update_installed"])
         except Exception as e:
             logging.error("Das Starten des Aktualisierung durch den Builtin-Update-Instrument hat fehlgeschlagen.")
             logging.error("Launching the update via the builtin updater failed.")

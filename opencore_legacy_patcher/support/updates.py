@@ -36,27 +36,6 @@ class CheckBinaryUpdates:
 
         self.latest_details = None
 
-    def _request_admin_password_for_helper_repair(self) -> str:
-        """
-        Prompt for the local administrator password via a plain dialog, so it
-        can be handed to sudo ourselves for repairing the Privileged Helper
-        Tool's permissions.
-
-        Same rationale as gui_main_menu.MainFrame._request_admin_password_for_helper_repair
-        / dmg_mount.PatcherSupportPkgMount._request_admin_password: "do shell
-        script ... with administrator privileges" runs elevated via a separate
-        authorization session (/usr/libexec/security_authtrampoline) detached
-        from the current login/Aqua session. A plain "display dialog" only
-        needs a WindowServer session to render, so we use it purely to collect
-        the password.
-        """
-        try:
-            return applescript.AppleScript(
-                f'set theResult to display dialog "OpenCore Legacy Patcher needs administrator access to repair the Privileged Helper Tool\'s permissions." default answer "" with hidden answer with title "OpenCore Legacy Patcher" with icon file "{str(self.constants.app_icon_path).replace("/", ":")[1:]}"\nreturn the text returned of theResult'
-            ).run()
-        except Exception:
-            return ""
-
     def _ensure_privileged_helper_permissions(self) -> None:
         """
         Ensure the Privileged Helper Tool still has its expected 4755
@@ -71,12 +50,7 @@ class CheckBinaryUpdates:
             return
 
         logging.info("Privileged Helper Tool permissions need repair, requesting administrator password")
-        admin_password = self._request_admin_password_for_helper_repair()
-        if not admin_password:
-            logging.info("Skipped Privileged Helper Tool permission repair (no password provided)")
-            return
-
-        subprocess_wrapper.repair_privileged_helper_permissions(admin_password)
+        subprocess_wrapper.repair_privileged_helper_permissions()
 
     def check_if_newer(self, version_to_check: Union[str, version.Version]) -> bool:
         """
@@ -198,7 +172,7 @@ class CheckBinaryUpdates:
         for asset in data_set["assets"]:
             logging.info("A new version is available")
             logging.info(f"Found asset: {asset['name']}")
-            if asset["name"] == "OpenCore-Patcher.pkg":
+            if asset["name"] == "OpenCore-Patcher-T2.pkg":
                 self.latest_details = {
                     "Name": asset["name"],
                     "Version": latest_remote_version,

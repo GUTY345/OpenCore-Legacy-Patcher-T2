@@ -7,9 +7,9 @@ import logging
 import threading
 import traceback
 import webbrowser
-import wx.html2
 import platform
 import time
+import sys
 
 from .. import constants
 
@@ -21,20 +21,6 @@ from ..wx_gui import (
     gui_support,
     gui_sys_patch_display
 )
-
-class GeminiWebView(wx.Frame):
-    def __init__(self, parent, title, url="https://gemini.google.com"):
-        super().__init__(parent, title=title, size=(1000, 700))
-        
-        # Create the WebView
-        self.browser = wx.html2.WebView.New(self)
-        self.browser.LoadURL(url)
-        
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.Centre()
-
-    def OnClose(self, event):
-        self.Destroy()
 
 class InstallOCFrame(wx.Frame):
     """
@@ -366,9 +352,34 @@ class InstallOCFrame(wx.Frame):
                     webbrowser.open("https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues")
                 
                 # Check directly for your custom event return hook code
+                # Unter macOS Catalina und älter Gemini funktioniert nicht richtig unter Safari/WebKit
                 elif response == GEMINI_CLICKED_ID:
-                    gemini_window = GeminiWebView(self, title="Gemini AI Assistant")
-                    gemini_window.Show()
+                    # Gemini can't see the install log on its own, so copy it to the clipboard
+                    # and tell the user to paste it in, rather than making them go hunt for
+                    # the text box and select/copy it manually.
+                    try:
+                        clipboard = wx.Clipboard.Get()
+                        if not clipboard.IsOpened():
+                            clipboard.Open()
+                        clipboard.SetData(wx.TextDataObject(self.text_box.GetValue()))
+                        clipboard.Close()
+                        wx.MessageDialog(
+                            self,
+                            "The installation log has been copied to your clipboard.\n\nPaste it into the Gemini chat so it can help diagnose the error.",
+                            "Copied to Clipboard",
+                            wx.OK | wx.ICON_INFORMATION
+                        ).ShowModal()
+                    except Exception as clipboard_error:
+                        logging.error(f"Failed to copy installation log to clipboard: {clipboard_error}")
+
+                    if self.constants.detected_os >= os_data.os_data.big_sur:
+                        logging.info("- Launching Gemini AI Assistant (wx.html2 WebView)")
+                        gemini_window = gui_support.GeminiWebView(self, title="Gemini AI Assistant")
+                        gemini_window.Show()
+                    else:
+                        logging.info("- Launching Gemini AI Assistant (default web browser, host predates Big Sur)")
+                        logging.info("macOS Catalina, Mojave and High Sierra can't load Gemini in Safari and WebKit because they're too old.")
+                        webbrowser.open("https://gemini.google.com")
                     
                 error_dialog.Destroy()
 

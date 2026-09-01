@@ -112,67 +112,33 @@ class MainFrame(wx.Frame):
         self.model_button = model_Button
 
         # Main Feature Buttons
-        # hier gab es einen Fehler, die zu IndentationError: unexpected indent führt, behoben
-        if self.constants.Developer_Mode:
-            menu_buttons = {
-                # ein zweites Build OpenCore Button ist nicht nötig, es ist schon ein Duplikat von was unter OpenCore Settings (OpenCore) gibt, Es wird einfach Benutzer verwirren.
-                "Create macOS Installer": {
-                    "function": self.on_create_macos_installer,
-                    "description": ["Download and flash a macOS", "Installer for your system."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
-                },
-                "macOS Configuration": {
-                    "function": self.on_macos_config,
-                    "description": ["Settings, drivers and", "patches for your system."],
-                    "icon": str(self.constants.patch_icon_path),
-                },
+        menu_buttons = {
                 "OpenCore": {
                     "function": self.on_oc_settings,
-                    "description": ["Prepares provided drive to be", "able to boot unsupported OSes."],
+                    "description": ["Settings to prepares provided drives to be", "able to boot unsupported macOSes."],
                     "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
                 },
                 "Settings": {
                     "function": self.on_settings,
-                    "description": ["App settings, reporting and", "Developer/Experimental Mode."],
-                    "icon": str(self.constants.icns_resource_path / "Settings.icns")
-                },
-                "Help": {
-                    "function": self.on_help,
-                    "description": ["Resources for OpenCore Legacy", "Patcher, including Ask Gemini."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
-                }
-            }
-        else:
-            # hier gab es einen Fehler, die zu IndentationError: unexpected indent führt, behoben
-            menu_buttons = {
-                # sollte auf erstes Platz sein - bevor, es war unter Create macOS installer.
-                "OpenCore": {
-                    "function": self.on_oc_settings,
-                    "description": ["Settings, drivers and", "patches for your system."],
-                    "icon": str(self.constants.icns_resource_path / "OC-Build.icns")
+                    "description": ["App settings"],
+                    "icon": str(self.constants.icns_resource_path / "Settings.icns"),
                 },
                 "Create macOS Installer": {
                     "function": self.on_create_macos_installer,
                     "description": ["Download and flash a macOS", "Installer for your system."],
                     "icon": str(self.constants.icns_resource_path / "OC-Installer.icns"),
                 },
-                # macOS Configuration war nicht da und es verursachte, dass Benutzer keine Root Patches mehr sehen könnten
                 "macOS Configuration": {
                     "function": self.on_macos_config,
                     "description": ["Settings, drivers and", "patches for your system."],
                     "icon": str(self.constants.patch_icon_path),
-                }, 
-                "Settings": {
-                    "function": self.on_settings,
-                    "description": ["App settings, reporting and", "Developer/Experimental Mode."],
-                    "icon": str(self.constants.icns_resource_path / "Settings.icns")
                 },
                 "Help": {
                     "function": self.on_help,
-                    "description": ["Resources for OpenCore Legacy", "Patcher T2, including Ask Gemini."],
+                    "description": ["Resources for OpenCore Legacy", "Patcher."],
                     "icon": str(self.constants.icns_resource_path / "OC-Support.icns"),
                 }
-            }
+        }
 
         button_x = 25
         button_y = self.model_button.GetPosition()[1] + 30
@@ -183,14 +149,14 @@ class MainFrame(wx.Frame):
         for button_name, button_function in menu_buttons.items():
             if "icon" in button_function:
                 icon = wx.StaticBitmap(self, bitmap=wx.Bitmap(button_function["icon"], wx.BITMAP_TYPE_ICON), pos=(button_x - 5, button_y), size=(64, 64))
-                if "Build OpenCore" in button_name or "EXPERIMENTAL" in button_name:
+                if "OpenCore" in button_name or "EXPERIMENTAL" in button_name:
                     icon.SetSize((68, 68))
             
             button = wx.Button(self, label=button_name, pos=(button_x + 68, button_y), size=(205, 30))
             button.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_NORMAL))
             button.Bind(wx.EVT_BUTTON, lambda event, f=button_function["function"]: f(event))
 
-            if "Build OpenCore" in button_name or "EXPERIMENTAL" in button_name:
+            if "OpenCore" in button_name or "EXPERIMENTAL" in button_name:
                 self.build_button = button
                 if not gui_support.CheckProperties(self.constants).host_can_build():
                     button.Disable()
@@ -265,21 +231,34 @@ class MainFrame(wx.Frame):
                     style=wx.OK | wx.ICON_EXCLAMATION
                 )
                 pop_up.ShowModal()
-                self.on_build_and_install()
+                self.Hide()
+                gui_build.BuildFrame(
+                    self,
+                    self.title,
+                    self.constants,
+                    self.GetPosition(),
+                    install=True,
+                )
                 return
 
         except Exception as e:
             print(f"DEBUG: Preflight error: {e}")
 
         self.update_thread = threading.Thread(target=self._check_for_updates)
-        self.update_thread.daemon = True  
+        self.update_thread.daemon = True
         self.update_thread.start()
+        # Also tracked on constants (not just this frame) so PatcherApp.OnExit()
+        # can join it at quit the same way it already does for unpack_thread/
+        # analytics_thread - this frame instance itself may already be gone by
+        # then (the app keeps destroying and recreating MainFrame as the user
+        # navigates), but constants persists for the whole process lifetime.
+        self.constants.update_thread = self.update_thread
 
         if "--update_installed" in sys.argv and self.constants.has_checked_updates is False and gui_support.CheckProperties(self.constants).host_can_build():
             self.constants.has_checked_updates = True
             pop_up = wx.MessageDialog(
                 self,
-                f"{self.constants.patcher_name} has been updated to the latest version: {self.constants.patcher_version_label}\n\nWould you like to update OpenCore and your root volume patches?",
+                f"{self.constants.patcher_name} has been updated to the latest available version: {self.constants.patcher_version_label}\n\nWould you like to update OpenCore and your root volume patches?",
                 "Update successful!",
                 style=wx.YES_NO | wx.YES_DEFAULT | wx.ICON_INFORMATION
             )
@@ -297,7 +276,8 @@ class MainFrame(wx.Frame):
                 parent=None,
                 title=self.title,
                 global_constants=self.constants,
-                screen_location=pos
+                screen_location=pos,
+                install=True
             )
             wx.CallAfter(self.Destroy)
 

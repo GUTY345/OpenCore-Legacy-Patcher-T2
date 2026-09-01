@@ -16,7 +16,7 @@ class Constants:
     def __init__(self) -> None:
         # Patcher Versioning
         # Wenn eine Version mit s endet, es heißt, dass sie noch nicht fertig ist.
-        self.patcher_version:                 str = "4.0.0.17003"  # OpenCore-Legacy-Patcher-T2 # die richtige Version kennzeichen, damit nicht den Update-API mit unnötigen Anfragen zu überladen 
+        self.patcher_version:                 str = "4.0.0.18000.1"  # OpenCore-Legacy-Patcher-T2 # die richtige Version kennzeichen, damit nicht den Update-API mit unnötigen Anfragen zu überladen 
         self.patcher_version_label=self.patcher_version
         self.patcher_support_pkg_version:     str = "2.0.0"  # PatcherSupportPkg
         self.copyright_date:                  str = "Copyright © 2020-2026 Dortania"
@@ -25,7 +25,7 @@ class Constants:
         self.url_patcher_support_pkg:         str = "https://github.com/YBronst/PatcherSupportPkg/download/"
         self.guide_link:                      str = "https://dortania.github.io/OpenCore-Legacy-Patcher/"
         self.repo_link:                       str = "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"
-        self.installer_pkg_url:               str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
+        self.installer_pkg_url:               str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets-T2.pkg"
 
         # OpenCore Versioning
         # https://github.com/acidanthera/OpenCorePkg
@@ -144,7 +144,7 @@ class Constants:
         self.ignore_updates:            bool = False  # Follow custom fork updates
         self.build_profile:             str = "standard"  # "standard" or "test_b" — gates TEST-B GPU modifications
         self.app_mode:                  str = "albert"    # "albert" or "matteo"
-        self.experimental_version:      str = "4.9.0"     # Matteo's version string
+        self.experimental_version:      str = "5.0.0"     # Matteo's version string
         self.wxpython_variant:          bool = False  # Determine if using wxPython variant
         self.has_checked_updates:       bool = False  # Determine if check for updates has been run
         self.root_patcher_succeeded:    bool = False  # Determine if root patcher succeeded
@@ -847,11 +847,11 @@ class Constants:
 
     @property
     def installer_pkg_path(self):
-        return self.payload_path / Path("AutoPkg-Assets.pkg")
+        return self.payload_path / Path("AutoPkg-Assets-T2.pkg")
 
     @property
     def installer_pkg_zip_path(self):
-        return self.payload_path / Path("AutoPkg-Assets.pkg.zip")
+        return self.payload_path / Path("AutoPkg-Assets-T2.pkg.zip")
 
     # Apple Payloads Paths
     @property

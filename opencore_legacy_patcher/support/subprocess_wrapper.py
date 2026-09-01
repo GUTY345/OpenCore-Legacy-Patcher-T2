@@ -8,6 +8,7 @@ import stat
 import shlex
 import logging
 import subprocess
+import Security
 import os
 
 from pathlib import Path
@@ -64,30 +65,105 @@ def privileged_helper_needs_setuid_repair() -> bool:
     return True
 
 
-def repair_privileged_helper_permissions(admin_password: str) -> bool:
+def repair_privileged_helper_permissions() -> bool:
     """
-    Reset the Privileged Helper Tool back to 4755 using the supplied
-    administrator password.
+    Reset the Privileged Helper Tool back to 4755 using the Security framework,
+    which is supported on macOS 10.0+, that easily fits with 10.10!
 
     Note: Deliberately does NOT go through run_as_root() (i.e. the helper
     tool itself), since a helper tool missing its setuid bit can't elevate
     itself - that's precisely the problem being repaired here.
     """
-    process = subprocess.Popen(
-        ["/usr/bin/sudo", "-S", "/bin/chmod", oct(OCLP_PRIVILEGED_HELPER_EXPECTED_MODE)[2:], OCLP_PRIVILEGED_HELPER],
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    # Authorize the privileged operation using macOS Authorization Services.
+    # This causes macOS to present its native authorization UI rather than
+    # requiring OCLP to collect an administrator password.
+    # MARK: IMPORTANT
+
+    # If this doesn't work make sure that you have pyObjC 12.1, as that was version that has been tested.
+    status, auth_ref = Security.AuthorizationCreate(
+        None,
+        None,
+        Security.kAuthorizationFlagDefaults,
+        None
     )
-    stdout, _ = process.communicate(input=(admin_password + "\n").encode())
 
-    if process.returncode != 0:
-        logging.error("Failed to repair Privileged Helper Tool permissions")
-        logging.error(stdout.decode(errors="replace").strip())
-        return False
+    if status != Security.errAuthorizationSuccess:
+        raise RuntimeError(
+            f"AuthorizationCreate failed with status {status}"
+        )
 
-    logging.info("Privileged Helper Tool permissions repaired (4755)")
-    return True
+    try:
+        # Request the right to execute a privileged tool.
+        rights = (
+            Security.AuthorizationItem(
+                Security.kAuthorizationRightExecute,
+                0,
+                None,
+                0
+            ),
+        )
+        prompt = b"OpenCore Legacy Patcher needs administrator permission to repair the permissions of its privileged helper tool."
+
+        environment = (
+            Security.AuthorizationItem(
+                Security.kAuthorizationEnvironmentPrompt,
+                len(prompt),
+                prompt,
+                0
+            ),
+        )
+
+        status, authorized_rights = Security.AuthorizationCopyRights(
+            auth_ref,
+            rights,
+            environment,
+            (
+                Security.kAuthorizationFlagInteractionAllowed
+                | Security.kAuthorizationFlagExtendRights
+            ),
+            None,
+        )
+
+        if status == Security.errAuthorizationCanceled:
+            logging.info("User canceled the request")
+            return False
+
+        if status != Security.errAuthorizationSuccess:
+            raise RuntimeError(
+                f"AuthorizationCopyRights failed with status {status}"
+            )
 
 
+        chmod_arguments = (
+            oct(OCLP_PRIVILEGED_HELPER_EXPECTED_MODE)[2:].encode("utf-8"),
+            OCLP_PRIVILEGED_HELPER.encode("utf-8"),
+        )
+
+        status, _ = Security.AuthorizationExecuteWithPrivileges(
+            auth_ref,
+            b"/bin/chmod",
+            Security.kAuthorizationFlagDefaults,
+            chmod_arguments,
+            None,
+        )
+
+        if status == Security.errAuthorizationCanceled:
+            logging.info("User canceled the request")
+            return False
+
+        if status != Security.errAuthorizationSuccess:
+            raise RuntimeError(
+                f"AuthorizationExecuteWithPrivileges failed with status {status}"
+            )
+
+        logging.info("Privileged Helper Tool permissions repaired (4755)")
+        return True
+
+    finally:
+        Security.AuthorizationFree(
+           auth_ref,
+           Security.kAuthorizationFlagDefaults
+        )
 def run(*args, **kwargs) -> subprocess.CompletedProcess:
     """
     Basic subprocess.run wrapper.
@@ -111,16 +187,31 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
         return subprocess.run(args[0], **kwargs)
 
     if Path(OCLP_PRIVILEGED_HELPER).exists():
+        if privileged_helper_needs_setuid_repair():
+            fixed = repair_privileged_helper_permissions()
+            if not fixed:
+                logging.error("User did not allow us to fix the privileged helper. cannot compete request.")
+                return
         result = subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
-        if result.returncode == PrivilegedHelperErrorCodes.OCLP_PHT_ERROR_INVALID_CERTIFICATES:
-            logging.warning("Privileged Helper Tool failed due to invalid certificates (non-official build). Falling back to osascript.")
-        else:
-            return result
+        # Any of our own PrivilegedHelperErrorCodes sentinel values (160-170) means the helper
+        # tool itself couldn't do its job - an escalation failure (eg. missing/invalid setuid bit)
+        # or another internal precondition (signing/certificates/command validation) - as opposed
+        # to the wrapped command failing on its own merits with an ordinary low exit code, which is
+        # just returned as-is: retrying that via osascript wouldn't fix a genuine command failure,
+        # and would only cost an extra administrator-password prompt for nothing.
+        _helper_error = __resolve_privileged_helper_errors(result.returncode)
+        if _helper_error is not None:
+            logging.error(f"Privileged Helper Tool failed ({_helper_error}). Falling back to osascript.")
+            return osascript(args[0], **kwargs)
+        return result
     else:
         logging.warning(f"Privileged Helper Tool not found at {OCLP_PRIVILEGED_HELPER}. Falling back to osascript.")
-        
+        return osascript(args[0], **kwargs)
+
+# behebt eine Sicherheitslücke, indem osascript ohne Bedingung angerufen geworden. Einen Angreifer könnte dazu erzwingen, osascript abzurufen, um beliebiges Code auszuführen und Priveleged Helper Tool umzugehen
+def osascript(cmd_args, **kwargs): # <- behebt einen Fehler, die zu Fehler NameError: name 'args' is not defined verursacht, die nur ins Repository https://github.com/Medelcartelinc/OpenCore-Legacy-Patcher-T2 existierte
     import shlex
-    cmd_string = shlex.join(str(arg) for arg in args[0])
+    cmd_string = shlex.join(str(arg) for arg in cmd_args)
     as_safe_string = cmd_string.replace('\\', '\\\\').replace('"', '\\"')
     apple_script = f'do shell script "{as_safe_string}" with administrator privileges'
     return subprocess.run(["osascript", "-e", apple_script], **kwargs)

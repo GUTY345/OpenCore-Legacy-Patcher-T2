@@ -10,6 +10,7 @@ import zipfile
 import plistlib
 import sys
 import webbrowser
+import subprocess
 
 from pathlib import Path
 from datetime import date
@@ -612,7 +613,11 @@ class BuildOpenCore:
                     # es ist ein erwartetes Fehler, also kein Stack Trace zu drucken ist nötig - es würde einfach NoneType None drucken und es bringt nichts.
             logging.info("")
             logging.info(f"Your OpenCore EFI for {self.model} has been built at:")
-            logging.info(f"    {self.constants.opencore_release_folder}")
+            if self.constants.oc_build_path != None:
+                subprocess.run(["/bin/mv", str(self.constants.opencore_release_folder), str(self.constants.oc_build_path)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.decode().strip()
+                logging.info(f"    {self.constants.oc_build_path}")
+            else:
+                logging.info(f"    {self.constants.opencore_release_folder}")
             logging.info("")
         except Exception as e:
             logging.info("")

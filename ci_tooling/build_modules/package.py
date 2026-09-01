@@ -36,7 +36,7 @@ from .package_scripts import GenerateScripts
 
 class GeneratePackage:
     """
-    Generate OpenCore-Patcher.pkg
+    Generate OpenCore-Patcher-T2.pkg
     """
 
     def __init__(self) -> None:
@@ -99,7 +99,7 @@ class GeneratePackage:
 
         _welcome += "# PLEASE DO NOT RUN AUTOPKG-ASSETS MANUALLY!\n\n"
         _welcome += "## THIS WILL CORRUPT THE OPERATING SYSTEM!\n\n"
-        _welcome += "This package is intented to be used only by the Patcher application itslef, not run manually by a user. Download the OpenCore-Patcher.pkg on the Github Repository.\n\n"
+        _welcome += "This package is intented to be used only by the Patcher application itslef, not run manually by a user. Download the OpenCore-Patcher-T2.pkg on the Github Repository.\n\n"
         _welcome += f"[OpenCore Legacy Patcher T2 GitHub Release]({constants.Constants().repo_link})"
 
         return _welcome
@@ -107,7 +107,7 @@ class GeneratePackage:
 
     def generate(self) -> None:
         """
-        Generate OpenCore-Patcher.pkg
+        Generate OpenCore-Patcher-T2.pkg
         """
         print("Generating OpenCore-Patcher-Uninstaller.pkg")
         _tmp_uninstall = tempfile.NamedTemporaryFile(delete=False)
@@ -125,7 +125,7 @@ class GeneratePackage:
             pkg_welcome=self._generate_uninstaller_welcome(),
         ).build() is True
 
-        print("Generating OpenCore-Patcher.pkg")
+        print("Generating OpenCore-Patcher-T2.pkg")
 
         _tmp_pkg_preinstall = tempfile.NamedTemporaryFile(delete=False)
         _tmp_pkg_postinstall = tempfile.NamedTemporaryFile(delete=False)
@@ -135,7 +135,7 @@ class GeneratePackage:
             f.write(GenerateScripts().postinstall_pkg())
 
         assert macos_pkg_builder.Packages(
-            pkg_output="./dist/OpenCore-Legacy-Patcher-T2.pkg",
+            pkg_output="./dist/OpenCore-Patcher-T2.pkg",
             pkg_bundle_id="com.dortania.opencore-legacy-patcher-t2",
             pkg_version=constants.Constants().patcher_version,
             pkg_allow_relocation=False,
@@ -148,7 +148,7 @@ class GeneratePackage:
             pkg_welcome=self._generate_installer_welcome(),
         ).build() is True
 
-        print("Generating AutoPkg-Assets.pkg")
+        print("Generating AutoPkg-Assets-T2.pkg")
 
         _tmp_auto_pkg_preinstall = tempfile.NamedTemporaryFile(delete=False)
         _tmp_auto_pkg_postinstall = tempfile.NamedTemporaryFile(delete=False)
@@ -158,7 +158,7 @@ class GeneratePackage:
             f.write(GenerateScripts().postinstall_autopkg())
 
         assert macos_pkg_builder.Packages(
-            pkg_output="./dist/AutoPkg-Assets.pkg",
+            pkg_output="./dist/AutoPkg-Assets-T2.pkg",
             pkg_bundle_id="com.dortania.pkg.AutoPkg-Assets",
             pkg_version=constants.Constants().patcher_version,
             pkg_allow_relocation=False,
