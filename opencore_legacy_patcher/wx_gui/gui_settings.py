@@ -646,7 +646,16 @@ Hardware Information:
             # inherit whatever the current one happens to be right now.
             current_dir = os.getcwd()
             logging.info(f"Restarting app: {command} (cwd={current_dir})")
-            process = subprocess.Popen(command, cwd=current_dir)
+            
+            # Prevent OSError: [Errno 5] Input/output error when running from source
+            # by detaching stdin/stdout/stderr, as the parent terminal might close
+            kwargs = {}
+            if self.constants.launcher_script:
+                kwargs["stdin"] = subprocess.DEVNULL
+                kwargs["stdout"] = subprocess.DEVNULL
+                kwargs["stderr"] = subprocess.DEVNULL
+
+            process = subprocess.Popen(command, cwd=current_dir, **kwargs)
             logging.info(f"Restart subprocess spawned with PID {process.pid}")
 
             # Popen() succeeding only means the OS could fork+exec the command,
