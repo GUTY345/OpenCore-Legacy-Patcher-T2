@@ -7,6 +7,7 @@ import pprint
 import logging
 import os
 import sys
+import subprocess
 from pathlib import Path
 from .. import constants
 
@@ -264,10 +265,10 @@ class SettingsFrame(wx.Frame):
                     "description": [
                         "Unlocks the Developer tab and the",
                         "experimental T1/Matteo UI mode.",
-                        "Takes effect next time you return to",
-                        "the Main Menu or restart the app.",
+                        "The app will restart automatically",
+                        "to apply this change.",
                     ],
-                    "warning": "Developer Mode unlocks experimental, unfinished features (including a deliberate crash-test button and the T1/Matteo experimental UI) intended for testing, not everyday use.\n\nAre you sure you want to enable it?",
+                    "warning": "Developer Mode unlocks experimental, unfinished features (including a deliberate crash-test button and the T1/Matteo experimental UI) intended for testing, not everyday use.\n\nThe app will restart automatically to apply this change.\n\nAre you sure you want to enable it?",
                     "override_function": self._toggle_developer_mode,
                 },
             },
@@ -490,12 +491,15 @@ Hardware Information:
 
     def _toggle_developer_mode(self, variable, value, constants_variable = None) -> None:
         """
-        Enables or disables Developer Mode.
+        Enables or disables Developer Mode, then restarts the app so every
+        frame (Main Menu label, Developer settings tab, Matteo/Albert mode)
+        picks up the change - those are only computed when a frame is first
+        built, so without a restart they'd silently keep showing the old state.
 
         defaults.py's _general_probe() determines Developer Mode purely from
         whether ~/.dortania_developer exists on disk, checked fresh on every
         launch - so rather than persisting a second, possibly-conflicting
-        setting, this checkbox just creates/removes that same marker file.
+        setting, this creates/removes that same marker file.
         """
         marker_path = Path("~/.dortania_developer").expanduser()
         try:
@@ -505,10 +509,55 @@ Hardware Information:
                 marker_path.unlink()
         except Exception as e:
             logging.error(f"Failed to update Developer Mode marker file ({marker_path}): {e}")
+            wx.MessageDialog(
+                self.frame_modal,
+                f"Failed to update the Developer Mode marker file:\n\n{e}\n\nDeveloper Mode was not changed.",
+                "Error",
+                wx.OK | wx.ICON_ERROR
+            ).ShowModal()
+            return
 
         logging.info(f"Developer Mode: {'enabled' if value else 'disabled'}")
         self.constants.Developer_Mode = value
         self.constants.app_mode = "matteo" if value else "albert"
+
+        self._restart_app(f"Developer Mode is now {'enabled' if value else 'disabled'}.")
+
+
+    def _restart_app(self, reason: str = "") -> None:
+        """
+        Relaunches the app from whatever it was actually started from
+        (a from-source checkout vs. the built .app), then exits this
+        process - so settings that are only read/rendered at startup
+        (like Developer Mode's UI gating) take effect without the user
+        having to quit and reopen the app manually themselves.
+        """
+        try:
+            if self.constants.launcher_script:
+                # Running from source: launcher_binary is just the bare Python
+                # interpreter (sys.executable), so re-invoke it against the
+                # actual entry point script rather than on its own.
+                subprocess.Popen([self.constants.launcher_binary, self.constants.launcher_script])
+            else:
+                subprocess.Popen([self.constants.launcher_binary])
+        except Exception as e:
+            logging.error(f"Failed to restart the app: {e}")
+            wx.MessageDialog(
+                self.frame_modal,
+                f"{reason}\n\nFailed to restart automatically ({e}).\n\nPlease quit and reopen the app manually to apply this change.",
+                "Restart Failed",
+                wx.OK | wx.ICON_WARNING
+            ).ShowModal()
+            return
+
+        logging.info(f"{reason} Restarting to apply the change...")
+        wx.MessageDialog(
+            self.frame_modal,
+            f"{reason}\n\nThe app is restarting now to apply this change.",
+            "Restarting",
+            wx.OK | wx.ICON_INFORMATION
+        ).ShowModal()
+        sys.exit(0)
 
 
 
