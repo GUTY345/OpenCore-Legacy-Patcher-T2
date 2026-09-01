@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Build-Project.command: Generate OpenCore-Patcher.app and OpenCore-Patcher.pkg
+Build-Project.command: Generate OpenCore-Patcher-T2.app and OpenCore-Patcher.pkg
 Optimiert für Sicherheit und Stabilität.
 """
 
@@ -85,11 +85,11 @@ def main() -> None:
                 git_commit_date=args.git_commit_date,
             ).generate()
 
-            check_file_exists(Path("dist/OpenCore-Patcher.app"))
+            check_file_exists(Path("dist/OpenCore-Patcher-T2.app"))
             print("--- Signiere App ---")
             print("--- Sign the app ---")
             sign_notarize.SignAndNotarize(
-                path=Path("dist/OpenCore-Patcher.app"),
+                path=Path("dist/OpenCore-Patcher-T2.app"),
                 signing_identity=args.application_signing_identity,
                 notarization_apple_id=args.notarization_apple_id,
                 notarization_password=notarization_password,
