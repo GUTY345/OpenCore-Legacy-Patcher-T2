@@ -443,7 +443,7 @@ class macOSInstallerFlashFrame(wx.Frame):
 
     def _auto_package_handler(self):
         """
-        Function's main goal is to grab the correct AutoPkg-Assets.pkg and unzip it
+        Function's main goal is to grab the correct AutoPkg-Assets-T2.pkg and unzip it
         Note the following:
             - When running a release build, pull from Github's release page with the same versioning
             - When running from source/unable to find on Github, use the nightly.link variant

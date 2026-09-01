@@ -25,7 +25,7 @@ class Constants:
         self.url_patcher_support_pkg:         str = "https://github.com/YBronst/PatcherSupportPkg/download/"
         self.guide_link:                      str = "https://dortania.github.io/OpenCore-Legacy-Patcher/"
         self.repo_link:                       str = "https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/"
-        self.installer_pkg_url:               str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets.pkg"
+        self.installer_pkg_url:               str = f"{self.repo_link}/releases/download/{self.patcher_version}/AutoPkg-Assets-T2.pkg"
 
         # OpenCore Versioning
         # https://github.com/acidanthera/OpenCorePkg
@@ -847,11 +847,11 @@ class Constants:
 
     @property
     def installer_pkg_path(self):
-        return self.payload_path / Path("AutoPkg-Assets.pkg")
+        return self.payload_path / Path("AutoPkg-Assets-T2.pkg")
 
     @property
     def installer_pkg_zip_path(self):
-        return self.payload_path / Path("AutoPkg-Assets.pkg.zip")
+        return self.payload_path / Path("AutoPkg-Assets-T2.pkg.zip")
 
     # Apple Payloads Paths
     @property
