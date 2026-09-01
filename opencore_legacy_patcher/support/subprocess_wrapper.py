@@ -295,9 +295,10 @@ def mount_dmg(
     if elevated_process.returncode == 0:
         logging.info("- Mounted (elevated)")
         return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=elevated_stdout)
-
-    logging.info(f"- Elevated hdiutil attach failed: {elevated_stdout.decode(errors='replace').strip()}")
-    return subprocess.CompletedProcess(args=cmd, returncode=elevated_process.returncode, stdout=elevated_stdout)
+    # behebt einen Fehler, indem Elevated hdiutil attach failed druckt bedingungslos und eine Sicherheitslücke, die Angreifern ausnutzen können, um dieses Mount-Fehler zu zeigen, um DoS-Angriffe zu starten.
+    else:
+      logging.error(f"- Elevated hdiutil attach failed: {elevated_stdout.decode(errors='replace').strip()}")
+      return subprocess.CompletedProcess(args=cmd, returncode=elevated_process.returncode, stdout=elevated_stdout)
 
 
 def verify(process_result: subprocess.CompletedProcess) -> None:
