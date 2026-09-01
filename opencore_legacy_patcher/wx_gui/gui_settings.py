@@ -257,6 +257,19 @@ class SettingsFrame(wx.Frame):
                     ],
                     "override_function": self._update_global_settings,
                 },
+                "Developer Mode": {
+                    "type": "checkbox",
+                    "value": self.constants.Developer_Mode,
+                    "variable": "Developer_Mode",
+                    "description": [
+                        "Unlocks the Developer tab and the",
+                        "experimental T1/Matteo UI mode.",
+                        "Takes effect next time you return to",
+                        "the Main Menu or restart the app.",
+                    ],
+                    "warning": "Developer Mode unlocks experimental, unfinished features (including a deliberate crash-test button and the T1/Matteo experimental UI) intended for testing, not everyday use.\n\nAre you sure you want to enable it?",
+                    "override_function": self._toggle_developer_mode,
+                },
             },
             "Statistics": {
                 "Statistics": {
@@ -473,6 +486,30 @@ Hardware Information:
         global_settings.GlobalEnviromentSettings().write_property(variable, tmp_value)
         if global_setting is not None:
             self._update_setting(global_setting, value)
+
+
+    def _toggle_developer_mode(self, variable, value, constants_variable = None) -> None:
+        """
+        Enables or disables Developer Mode.
+
+        defaults.py's _general_probe() determines Developer Mode purely from
+        whether ~/.dortania_developer exists on disk, checked fresh on every
+        launch - so rather than persisting a second, possibly-conflicting
+        setting, this checkbox just creates/removes that same marker file.
+        """
+        marker_path = Path("~/.dortania_developer").expanduser()
+        try:
+            if value:
+                marker_path.touch(exist_ok=True)
+            elif marker_path.exists():
+                marker_path.unlink()
+        except Exception as e:
+            logging.error(f"Failed to update Developer Mode marker file ({marker_path}): {e}")
+
+        logging.info(f"Developer Mode: {'enabled' if value else 'disabled'}")
+        self.constants.Developer_Mode = value
+        self.constants.app_mode = "matteo" if value else "albert"
+
 
 
     def on_export_constants(self, event: wx.Event) -> None:
