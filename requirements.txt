@@ -1,7 +1,7 @@
 requests
 pyobjc
 wxpython<4.2.5
-pyinstaller --no-binary=pyinstaller
+pyinstaller
 packaging
 py_sip_xnu
 py-applescript
