@@ -248,8 +248,8 @@ __pycache__/
 /payloads/Installer.sh
 /payloads/Info.plist
 /payloads/seed.plist
-/payloads/AutoPkg-Assets.pkg
-/payloads/AutoPkg-Assets.pkg.zip
+/payloads/AutoPkg-Assets-T2.pkg
+/payloads/AutoPkg-Assets-T2.pkg.zip
 /payloads/Universal-Binaries
 /payloads/OpenCore-Legacy-Patcher
 /payloads/InstallAssistant.pkg.integrityDataV1
