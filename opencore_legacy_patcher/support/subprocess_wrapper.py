@@ -264,7 +264,11 @@ def mount_dmg(
         cmd.extend(["-shadow", str(shadow_path)])
     cmd.append("-stdinpass")
 
-    process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    # Force hdiutil to output in English so we can reliably match "Permission denied"
+    env = os.environ.copy()
+    env["LC_ALL"] = "C"
+
+    process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
     stdout, _ = process.communicate(input=password.encode() if password else None)
 
     if process.returncode == 0 or admin_password_prompt is None:
@@ -291,7 +295,7 @@ def mount_dmg(
     )
     elevated_cmd = ["/usr/bin/sudo", "-S", "/bin/sh", "-c", elevated_shell]
 
-    elevated_process = subprocess.Popen(elevated_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    elevated_process = subprocess.Popen(elevated_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
     # sudo -S reads exactly one line from stdin for its own password, then hands the
     # remaining, still-open stdin through to the shell (and on to hdiutil's -stdinpass)
     stdin_payload = admin_password + "\n" + (password or "")
