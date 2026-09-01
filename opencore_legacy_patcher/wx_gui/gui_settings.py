@@ -8,6 +8,7 @@ import logging
 import os
 import sys
 import subprocess
+import Security
 from pathlib import Path
 from .. import constants
 
@@ -502,11 +503,30 @@ Hardware Information:
         setting, this creates/removes that same marker file.
         """
         marker_path = Path("~/.dortania_developer").expanduser()
-        try:
+        logging.info(f"Developer Mode toggle requested: {'enable' if value else 'disable'} (marker currently {'exists' if marker_path.exists() else 'absent'} at {marker_path})")
+
+        def _apply_marker() -> None:
             if value:
                 marker_path.touch(exist_ok=True)
             elif marker_path.exists():
                 marker_path.unlink()
+
+        try:
+            _apply_marker()
+        except PermissionError:
+            # This project has hit this exact class of bug before (a root-owned
+            # .plist from an earlier sudo'd run causing Permission-Denied for a
+            # normal user) - if this marker file was ever created with "sudo
+            # touch" before this checkbox existed, a normal unlink()/touch()
+            # here fails silently unless we do something about it. Try a
+            # native admin prompt to fix it instead of sending the user to
+            # Terminal.
+            logging.error(f"Developer Mode marker file is inaccessible as the current user (likely owned by another user from an earlier 'sudo' run): {marker_path}")
+            if self._fix_developer_mode_marker_with_privileges(marker_path, create=value):
+                try:
+                    _apply_marker()
+                except Exception as e:
+                    logging.error(f"Marker file still inaccessible after privileged fix: {e}")
         except Exception as e:
             logging.error(f"Failed to update Developer Mode marker file ({marker_path}): {e}")
             wx.MessageDialog(
@@ -517,11 +537,85 @@ Hardware Information:
             ).ShowModal()
             return
 
-        logging.info(f"Developer Mode: {'enabled' if value else 'disabled'}")
+        if marker_path.exists() != value:
+            # Don't silently claim success (and definitely don't restart) if
+            # the file on disk doesn't actually reflect the requested state -
+            # this is exactly the "stays on regardless" symptom, so surface
+            # it plainly instead of leaving the user guessing.
+            logging.error(f"Developer Mode marker file state mismatch after update: exists={marker_path.exists()}, expected={value}")
+            manual_fix = f"sudo rm {marker_path}" if not value else f"sudo rm -f {marker_path} && touch {marker_path}"
+            wx.MessageDialog(
+                self.frame_modal,
+                f"Couldn't {'create' if value else 'remove'} the Developer Mode marker file - it may be owned by another user (e.g. from an earlier 'sudo' run).\n\nYou can fix this yourself in Terminal with:\n\n{manual_fix}\n\nDeveloper Mode was not changed.",
+                "Permission Error",
+                wx.OK | wx.ICON_ERROR
+            ).ShowModal()
+            return
+
+        logging.info(f"Developer Mode: {'enabled' if value else 'disabled'} (marker file confirmed {'present' if value else 'absent'})")
         self.constants.Developer_Mode = value
         self.constants.app_mode = "matteo" if value else "albert"
 
         self._restart_app(f"Developer Mode is now {'enabled' if value else 'disabled'}.")
+
+
+    def _fix_developer_mode_marker_with_privileges(self, marker_path: Path, create: bool) -> bool:
+        """
+        Best-effort recovery when the Developer Mode marker file can't be
+        touched/removed as the current user. Uses macOS Authorization
+        Services for a one-off privileged fix via a native admin prompt,
+        the same approach subprocess_wrapper.repair_privileged_helper_permissions()
+        already uses to fix the Privileged Helper Tool's own permissions -
+        deliberately not routed through the helper tool itself, since this
+        needs to work even if the helper tool is unrelated/unavailable.
+
+        Returns True if the privileged command ran successfully (not a
+        guarantee the marker file now matches the requested state - the
+        caller re-checks that itself).
+        """
+        try:
+            status, auth_ref = Security.AuthorizationCreate(None, None, Security.kAuthorizationFlagDefaults, None)
+            if status != Security.errAuthorizationSuccess:
+                logging.error(f"AuthorizationCreate failed with status {status}")
+                return False
+
+            try:
+                rights = (Security.AuthorizationItem(Security.kAuthorizationRightExecute, 0, None, 0),)
+                prompt = b"OpenCore Legacy Patcher T2 needs administrator permission to fix the Developer Mode marker file, which appears to be owned by another user."
+                environment = (Security.AuthorizationItem(Security.kAuthorizationEnvironmentPrompt, len(prompt), prompt, 0),)
+
+                status, _ = Security.AuthorizationCopyRights(
+                    auth_ref,
+                    rights,
+                    environment,
+                    Security.kAuthorizationFlagInteractionAllowed | Security.kAuthorizationFlagExtendRights,
+                    None,
+                )
+                if status == Security.errAuthorizationCanceled:
+                    logging.info("User canceled the Developer Mode marker file fix")
+                    return False
+                if status != Security.errAuthorizationSuccess:
+                    logging.error(f"AuthorizationCopyRights failed with status {status}")
+                    return False
+
+                if create:
+                    binary = b"/usr/bin/touch"
+                    arguments = (str(marker_path).encode("utf-8"),)
+                else:
+                    binary = b"/bin/rm"
+                    arguments = (b"-f", str(marker_path).encode("utf-8"))
+
+                status, _ = Security.AuthorizationExecuteWithPrivileges(auth_ref, binary, Security.kAuthorizationFlagDefaults, arguments, None)
+                if status != Security.errAuthorizationSuccess:
+                    logging.error(f"AuthorizationExecuteWithPrivileges failed with status {status}")
+                    return False
+
+                return True
+            finally:
+                Security.AuthorizationFree(auth_ref, Security.kAuthorizationFlagDefaults)
+        except Exception as e:
+            logging.error(f"Failed to run privileged Developer Mode marker file fix: {e}")
+            return False
 
 
     def _restart_app(self, reason: str = "") -> None:
