@@ -187,6 +187,11 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
         return subprocess.run(args[0], **kwargs)
 
     if Path(OCLP_PRIVILEGED_HELPER).exists():
+        if privileged_helper_needs_setuid_repair():
+            fixed = repair_privileged_helper_permissions()
+            if not fixed:
+                logging.error("User did not allow us to fix the privileged helper. cannot compete request.")
+                return
         result = subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
         # Any of our own PrivilegedHelperErrorCodes sentinel values (160-170) means the helper
         # tool itself couldn't do its job - an escalation failure (eg. missing/invalid setuid bit)
