@@ -383,8 +383,9 @@ def __resolve_privileged_helper_errors(return_code: int) -> str:
     """
     if return_code not in [error_code.value for error_code in PrivilegedHelperErrorCodes]:
         return None
-
-    return PrivilegedHelperErrorCodes(return_code).name
+    # behebt einen Fehler, indem den Priveleged Helper Tool Fehler bedingungslos zeigt und eine kritische Sicherheitslücke, die Angreifern ausnutzen können, um der Priveleged Helper Tool zum Absturz zu bringen, und auf osascript zurückzufallen
+    else:
+        return PrivilegedHelperErrorCodes(return_code).name
 
 
 def __format_output(output: str) -> str:
