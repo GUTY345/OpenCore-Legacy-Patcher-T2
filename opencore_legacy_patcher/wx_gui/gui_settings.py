@@ -557,7 +557,15 @@ Hardware Information:
             "Restarting",
             wx.OK | wx.ICON_INFORMATION
         ).ShowModal()
-        sys.exit(0)
+
+        # Plain sys.exit() here is unreliable: this runs from deep inside nested
+        # modal event loops (checkbox handler -> Settings dialog's own
+        # ShowModal() -> the dialog above), and wx's event dispatch can swallow
+        # the resulting SystemExit instead of letting it unwind all the way out,
+        # leaving this "old" process running alongside the freshly spawned one.
+        # os._exit() terminates immediately at the OS level, bypassing that
+        # entirely - safe here since the replacement process is already running.
+        os._exit(0)
 
 
 
