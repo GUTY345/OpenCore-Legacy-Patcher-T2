@@ -7,6 +7,7 @@ import pprint
 import logging
 import os
 import sys
+import time
 import subprocess
 import Security
 from pathlib import Path
@@ -631,9 +632,28 @@ Hardware Information:
                 # Running from source: launcher_binary is just the bare Python
                 # interpreter (sys.executable), so re-invoke it against the
                 # actual entry point script rather than on its own.
-                subprocess.Popen([self.constants.launcher_binary, self.constants.launcher_script])
+                command = [self.constants.launcher_binary, self.constants.launcher_script]
             else:
-                subprocess.Popen([self.constants.launcher_binary])
+                command = [self.constants.launcher_binary]
+
+            # Explicit cwd, in case anything earlier in this run changed the
+            # working directory - subprocess.Popen would otherwise silently
+            # inherit whatever the current one happens to be right now.
+            current_dir = os.getcwd()
+            logging.info(f"Restarting app: {command} (cwd={current_dir})")
+            process = subprocess.Popen(command, cwd=current_dir)
+            logging.info(f"Restart subprocess spawned with PID {process.pid}")
+
+            # Popen() succeeding only means the OS could fork+exec the command,
+            # not that the program actually kept running - a from-source
+            # relaunch in particular can die almost immediately (import
+            # errors, a stale interpreter path, etc.), which would otherwise
+            # look exactly like "nothing happened" once this process exits
+            # below. Give it a moment and check it's still alive first.
+            time.sleep(1)
+            exit_code = process.poll()
+            if exit_code is not None:
+                raise RuntimeError(f"the new process exited immediately (code {exit_code}) - check the log above this line for why")
         except Exception as e:
             logging.error(f"Failed to restart the app: {e}")
             wx.MessageDialog(
@@ -658,7 +678,8 @@ Hardware Information:
         # the resulting SystemExit instead of letting it unwind all the way out,
         # leaving this "old" process running alongside the freshly spawned one.
         # os._exit() terminates immediately at the OS level, bypassing that
-        # entirely - safe here since the replacement process is already running.
+        # entirely - safe here since the replacement process is already running
+        # and was just confirmed to still be alive above.
         os._exit(0)
 
 
