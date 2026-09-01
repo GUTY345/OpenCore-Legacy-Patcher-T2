@@ -314,7 +314,7 @@ def verify(process_result: subprocess.CompletedProcess) -> None:
         return
     # behebt 2 Sicherheitslücken: 1. Falls ein Fehler passiert, druckte es nicht ins Terminal, also ein Benutzer, der nicht das GUI verwendet, weißt nicht, es gäbe ein Fehler und Angreifern könnten davon ausnutzen. 2. Angreifern könnten die Bedingung if process_result.returncode == 0: löschen, um der Fehler Process failed with exit code zu forcieren, um ClickFix-Angriffe zu starten.
     else:
-        logging.error(f"Process failed with exit code {process_result.returncode}"")
+        logging.error(f"Process failed with exit code {process_result.returncode}")
         log(process_result)
         raise Exception(f"Process failed with exit code {process_result.returncode}")
 

@@ -143,23 +143,23 @@ class GenerateDefaults:
         if not analytics_handler.ANALYTICS_SERVER and analytics_handler.SITE_KEY == "":
             logging.info("Analytics data was not embeded.")
             global_settings.GlobalEnviromentSettings().write_property("EnableCrashAndAnalyticsReporting", False)
-        if Path("~/.dortania_developer").expanduser().exists():
-            self.constants.Developer_Mode = True
+        if Path("~/.dortania_developer").expanduser().exists() or os.environ.get("OCLP_DEV_MODE") == "1":
+            self.constants.Experimental_Features = True
         else:
-            self.constants.Developer_Mode = False
+            self.constants.Experimental_Features = False
 
         # Developer Mode's only source of truth is the marker file above.
         # _load_gui_defaults() (called later in __init__) blindly restores
         # every persisted "GUI:*" key back onto self.constants on EVERY
-        # launch - if a "GUI:Developer_Mode" entry ever ends up in the
+        # launch - if a "GUI:Experimental_Features" entry ever ends up in the
         # settings plist (e.g. from an earlier build of the Settings
         # checkbox), it would silently overwrite the correct value
         # determined above right after this runs, making the toggle look
         # like it never took effect no matter how many times it's flipped.
         # Purge it unconditionally so that can never happen.
-        global_settings.GlobalEnviromentSettings().delete_property("GUI:Developer_Mode")
+        global_settings.GlobalEnviromentSettings().delete_property("GUI:Experimental_Features")
 
-        if self.constants.Developer_Mode:
+        if self.constants.Experimental_Features:
             self.constants.build_profile = global_settings.GlobalEnviromentSettings().read_property("GUI:oc_build")
             if self.constants.build_profile is None or self.constants.build_profile == "":
                 logging.info(f"No OC Default config provided, you will be prompted for one at build")

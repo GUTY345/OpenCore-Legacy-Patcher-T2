@@ -129,7 +129,7 @@ class EntryPoint:
             # If Developer Mode is OFF -> Albert mode (Standard)
             # If Developer Mode is ON -> Matteo mode (T1 Experimental)
             try:
-                if not self.constants.Developer_Mode:
+                if not self.constants.Experimental_Features:
                     logging.info(f"Developer Mode is OFF, bypassing Mode Selector → Standard UI")
                     self.constants.app_mode = "albert"
                     entry = gui_main_menu.MainFrame

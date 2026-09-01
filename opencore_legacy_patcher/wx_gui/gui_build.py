@@ -51,7 +51,8 @@ class BuildFrame(wx.Frame):
         self.Centre()
         self.frame_modal.ShowWindowModal()
 
-        self._invoke_build()
+        if not self.constants.Experimental_Features:
+            self._invoke_build()
 
 
     def on_build_failure(self) -> None:
@@ -88,8 +89,65 @@ class BuildFrame(wx.Frame):
         model_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         model_label.Centre(wx.HORIZONTAL)
 
+        next_y = model_label.GetPosition()[1] + model_label.GetSize()[1] + 5
+
+        # Profile selection for MacBookPro14,3
+        target_model = self.constants.custom_model or self.constants.computer.real_model
+        if target_model == "MacBookPro14,3":
+            self.radio_standard = wx.RadioButton(frame, label="STANDARD / SAFE", pos=(-1, next_y), style=wx.RB_GROUP)
+            self.radio_standard.Centre(wx.HORIZONTAL)
+            next_y += 30
+
+            self.radio_testa = wx.RadioButton(frame, label="TEST-A (GPU)", pos=(-1, next_y))
+            self.radio_testa.Centre(wx.HORIZONTAL)
+            next_y += 30
+
+            self.radio_testb = wx.RadioButton(frame, label="TEST-B (GPU + No-Compat)", pos=(-1, next_y))
+            self.radio_testb.Centre(wx.HORIZONTAL)
+            next_y += 30
+            
+            self.radio_testc = wx.RadioButton(frame, label="TEST-C (GPU + No-Compat + VBootArgs)", pos=(-1, next_y))
+            self.radio_testc.Centre(wx.HORIZONTAL)
+            next_y += 30
+            
+            self.radio_testd = wx.RadioButton(frame, label="TEST-D (GPU + BootArgs + XPC)", pos=(-1, next_y))
+            self.radio_testd.Centre(wx.HORIZONTAL)
+            next_y += 40
+            
+            if self.constants.build_profile == "test_d":
+                self.radio_testd.SetValue(True)
+            elif self.constants.build_profile == "test_c":
+                self.radio_testc.SetValue(True)
+            elif self.constants.build_profile == "test_b":
+                self.radio_testb.SetValue(True)
+            elif self.constants.build_profile == "test_a":
+                self.radio_testa.SetValue(True)
+            else:
+                self.radio_standard.SetValue(True)
+        else:
+            self.radio_standard = None
+            self.radio_testa = None
+            self.radio_testb = None
+            self.radio_testc = None
+            self.radio_testd = None
+
+        if self.constants.Experimental_Features:
+            # Button: Build OpenCore (Only in Developer Mode to allow selection)
+            build_button = wx.Button(frame, label="🔨 Build OpenCore", pos=(-1, next_y), size=(150, 30))
+            build_button.Bind(wx.EVT_BUTTON, self.on_build_click)
+            build_button.Centre(wx.HORIZONTAL)
+            self.build_button = build_button
+            next_y += 35
+
+        # Button: Install OpenCore
+        install_button = wx.Button(frame, label="🔩 Install OpenCore", pos=(-1, next_y), size=(150, 30))
+        install_button.Bind(wx.EVT_BUTTON, self.on_install)
+        install_button.Centre(wx.HORIZONTAL)
+        install_button.Disable()
+        self.install_button = install_button
+
         # Read-only text box: {empty}
-        text_box = wx.TextCtrl(frame, value="", pos=(-1, model_label.GetPosition()[1] + model_label.GetSize()[1] + 10), size=(380, 350), style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_RICH2)
+        text_box = wx.TextCtrl(frame, value="", pos=(-1, install_button.GetPosition()[1] + install_button.GetSize()[1] + 10), size=(380, 350), style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_RICH2)
         text_box.Centre(wx.HORIZONTAL)
         self.text_box = text_box
 
@@ -97,7 +155,11 @@ class BuildFrame(wx.Frame):
         return_button = wx.Button(frame, label="Return to Main Menu", pos=(-1, text_box.GetPosition()[1] + text_box.GetSize()[1] + 5), size=(150, 30))
         return_button.Bind(wx.EVT_BUTTON, self.on_return_to_main_menu)
         return_button.Centre(wx.HORIZONTAL)
-        return_button.Disable()
+        
+        # Disable by default if standard mode (since it builds automatically)
+        if not self.constants.Experimental_Features:
+            return_button.Disable()
+            
         self.return_button = return_button
 
         # Adjust window size to fit all elements
@@ -306,3 +368,26 @@ class BuildFrame(wx.Frame):
             screen_location=self.GetScreenPosition(),
         )
         install_oc_frame.Show()
+
+    def on_build_click(self, event: wx.Event) -> None:
+        self.build_button.Disable()
+        if getattr(self, "radio_standard", None):
+            if self.radio_testd.GetValue():
+                self.constants.build_profile = "test_d"
+            elif self.radio_testc.GetValue():
+                self.constants.build_profile = "test_c"
+            elif self.radio_testb.GetValue():
+                self.constants.build_profile = "test_b"
+            elif self.radio_testa.GetValue():
+                self.constants.build_profile = "test_a"
+            else:
+                self.constants.build_profile = "standard"
+
+            self.radio_standard.Disable()
+            self.radio_testa.Disable()
+            self.radio_testb.Disable()
+            self.radio_testc.Disable()
+            self.radio_testd.Disable()
+        if hasattr(self, "return_button"):
+            self.return_button.Disable()
+        self._invoke_build()
