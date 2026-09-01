@@ -16,7 +16,7 @@ class Constants:
     def __init__(self) -> None:
         # Patcher Versioning
         # Wenn eine Version mit s endet, es heißt, dass sie noch nicht fertig ist.
-        self.patcher_version:                 str = "4.0.0.17003"  # OpenCore-Legacy-Patcher
+        self.patcher_version:                 str = "4.0.0.17003"  # OpenCore-Legacy-Patcher-T2 # die richtige Version kennzeichen, damit nicht den Update-API mit unnötigen Anfragen zu überladen 
         self.patcher_version_label=self.patcher_version
         self.patcher_support_pkg_version:     str = "2.0.0"  # PatcherSupportPkg
         self.copyright_date:                  str = "Copyright © 2020-2026 Dortania"
@@ -914,9 +914,7 @@ class Constants:
     ]
 
     @property
-    def patcher_name(self) -> str:
-        if getattr(self, "Developer_Mode", False):
-            return "OpenCore Legacy Patcher T1"
+    def patcher_name(self) -> str: # sollte hier niemals T1 returnen, sonst es würde den Patcher selbst verwirren
         return "OpenCore Legacy Patcher T2"
 
     @property

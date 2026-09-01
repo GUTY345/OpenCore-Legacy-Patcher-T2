@@ -1,4 +1,4 @@
 #!/bin/bash
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "Installing OpenCore Legacy Patcher T1 for MacBookPro14,3..."
-sudo installer -pkg "${DIR}/OpenCore-Legacy-Patcher-T1-MBP14,3.pkg" -target /
+sudo installer -pkg "${DIR}/OpenCore-Legacy-Patcher-T2.pkg" -target /

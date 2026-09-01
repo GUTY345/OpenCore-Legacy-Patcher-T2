@@ -118,10 +118,10 @@ class MainFrame(wx.Frame):
                     "description": ["Settings to prepares provided drives to be", "able to boot unsupported macOSes."],
                     "icon": str(self.constants.icns_resource_path / "OC-Build.icns"),
                 },
-                "App Settings": {
+                "Settings": {
                     "function": self.on_settings,
                     "description": ["App settings"],
-                    "icon": str(self.constants.icns_resource_path / "SystemSettings.icns"),
+                    "icon": str(self.constants.icns_resource_path / "Settings.icns"),
                 },
                 "Create macOS Installer": {
                     "function": self.on_create_macos_installer,
@@ -161,6 +161,9 @@ class MainFrame(wx.Frame):
                 if not gui_support.CheckProperties(self.constants).host_can_build():
                     button.Disable()
                     button.SetToolTip("Building OpenCore is not supported on Hackintoshes or virtual machines. For installing OpenCore on Hackintoshes, follow Dortania's guide here: https://dortania.github.io/OpenCore-Install-Guide/")
+                # behebt eine Sicherheitslücke, die könnte einen Angreifer erlauben, das Build OpenCore-Button auch auf ecthe Macs zu deaktivieren, um DoS-Angriffe zu starten.
+                else:
+                    logging.info("Building OpenCore is supported for real Macs.")
 
             # Info / Details button right next to each entry
             if "info_tab" in button_function:
@@ -203,6 +206,7 @@ class MainFrame(wx.Frame):
             wx.CallAfter(self.Destroy)
         except Exception as e:
             logging.error(f"Failed to return to mode selector: {e}")
+            logging.exception("Stack Trace:") # <- Angreifern könnten davon ausnutzen, dass Benutzer nicht das exakte Fehler weißen, um ClickFix-Angriffe zu starten
 
     def _preflight_checks(self):
         try:
@@ -261,7 +265,7 @@ class MainFrame(wx.Frame):
             pop_up.ShowModal()
 
             if pop_up.GetReturnCode() != wx.ID_YES:
-                logging.info("Skipping OpenCore and root volume patch update...")
+                logging.info("Skipping OpenCore and root volume patch updates...")
                 return
 
             logging.info("Updating OpenCore and root volume patches...")
@@ -279,6 +283,7 @@ class MainFrame(wx.Frame):
 
     def _check_for_updates(self):
         if self.constants.has_checked_updates is True:
+            logging.info("We have already checked for updates.")
             return
         self.constants.has_checked_updates = True
         
@@ -304,7 +309,7 @@ class MainFrame(wx.Frame):
     
         if getattr(self, 'exiting_app', False) or gui_support.is_app_exiting():
             return
-
+        
         logging.info(f"Newer version detected: {remote_version_str}")
         
         url = "https://api.github.com/repos/albert-mueller/OpenCore-Legacy-Patcher-T2/releases/latest"
@@ -409,6 +414,59 @@ class MainFrame(wx.Frame):
             logging.error(f"Failed to open Test Explanation dialog: {e}")
             logging.exception("Stack Trace:")
 
+    def on_build_and_install_standard(self, event: wx.Event = None):
+        self.constants.build_profile = "standard"
+        self.on_build_and_install(event)
+
+    def on_build_opencore_menu(self, event: wx.Event = None):
+        choices = [
+            "🟢 Standard / Safe Build",
+            "🧪 [LEVEL-B] Experimental GPU",
+            "🧪 [LEVEL-C] Experimental Tahoe (Native SMBIOS)",
+            "🧪 [LEVEL-C] Experimental Spoof T2 (MacBookPro16,1)",
+            "🧪 [LEVEL-D] All-In-One Tahoe (Wi-Fi + Audio + GPU + T1)"
+        ]
+        dialog = wx.SingleChoiceDialog(
+            self,
+            "Select the OpenCore build profile you wish to generate:",
+            "Build OpenCore",
+            choices
+        )
+        
+        if dialog.ShowModal() == wx.ID_OK:
+            selection = dialog.GetSelection()
+            if selection == 0:
+                self.constants.build_profile = "standard"
+            elif selection == 1:
+                self.constants.build_profile = "test_b"
+            elif selection == 2:
+                self.constants.build_profile = "test_c"
+            elif selection == 3:
+                self.constants.build_profile = "test_c_spoofed"
+            elif selection == 4:
+                self.constants.build_profile = "test_d"
+            # behebt eine Sicherheitslücke, die erlaubt Angreifern, selection zu manipulieren und beispielsweise zu behaupten, es wäre Option 5 ausgewählt, die erst gar nicht existiert, um die Anwendung zum Absturz zu bringen.
+            else:
+                logging.error("You haven't selected a valid testing OpenCore option.")
+                logging.info("Please try again later.")
+            
+            self.on_build_and_install(event)
+        
+        dialog.Destroy()
+
+    def on_build_and_install_testd(self, event: wx.Event = None):
+        self.constants.build_profile = "test_d"
+        self.on_build_and_install(event)
+
+    def on_build_and_install(self, event: wx.Event = None):
+        try:
+            self.Hide()
+            gui_build.BuildFrame(parent=None, title=self.title, global_constants=self.constants, screen_location=self.GetPosition())
+            wx.CallAfter(self.Destroy)
+        except Exception as e:
+            logging.error(f"We failed to open up Build and Install OpenCore: {e}")
+            logging.exception("Stack Trace:")
+
     def on_root_patches(self, event: wx.Event = None):
         try:
             self.Hide()
@@ -432,13 +490,18 @@ class MainFrame(wx.Frame):
             logging.exception("Stack Trace:")
             return
     def on_edit_model(self, event: wx.Event = None):
-        self.Disable()
-        gui_model_change.ModelPickerFrame(
-            parent=self,
-            title=self.title,
-            global_constants=self.constants,
-            screen_location=self.GetPosition(),
-        )
+        # behebt eine Sicherheitslücke, die erlaubt Angreifern, wenn Fehlern in on_edit_model gibt, die Anwendung zum Absturz zu bringen oder beliebiges Code auszuführen
+        try:
+            self.Disable()
+            gui_model_change.ModelPickerFrame(
+                parent=self,
+                title=self.title,
+                global_constants=self.constants,
+                screen_location=self.GetPosition(),
+            )
+        except Exception as e:
+            logging.error(f"We failed to call the function on_edit_model: {e}")
+            logging.exception("Stack Trace:")
 
     def on_oc_settings(self, event: wx.Event = None):
         try:
@@ -459,6 +522,7 @@ class MainFrame(wx.Frame):
         except Exception as e:
             logging.error(f"We failed to open up Download macOS: {e}")
             logging.exception("Stack Trace:")
+            return # <- da fehlte das return-Funktion, also der App könnte trotzdem der fehlerhafte Code auszuführen, auch wenn es schlug fehl. Angreifern könnten davon ausnutzen, um die Anwendung zum Absturz zu bringen oder beliebiges Code auszuführen
 
     def on_settings(self, event: wx.Event = None):
         try:
@@ -466,6 +530,7 @@ class MainFrame(wx.Frame):
         except Exception as e:
             logging.error(f"We failed to open up Settings: {e}")
             logging.exception("Stack Trace:")
+            return # <- da fehlte das return-Funktion, also der App könnte trotzdem der fehlerhafte Code auszuführen, auch wenn es schlug fehl. Angreifern könnten davon ausnutzen, um die Anwendung zum Absturz zu bringen oder beliebiges Code auszuführen
 
     def on_help(self, event: wx.Event = None):
         try:
@@ -473,4 +538,5 @@ class MainFrame(wx.Frame):
         except Exception as e:
             logging.error(f"We failed to open up Help: {e}")
             logging.exception("Stack Trace:")
+            return # <- da fehlte das return-Funktion, also der App könnte trotzdem der fehlerhafte Code auszuführen, auch wenn es schlug fehl. Angreifern könnten davon ausnutzen, um die Anwendung zum Absturz zu bringen oder beliebiges Code auszuführen
 

@@ -276,6 +276,7 @@ class SettingsFrame(wx.Frame):
                     "type": "button",
                     "function": self.on_test_exception,
                     "description": [
+                        "Intentionally crash the app to test whether a report comes up" # beschreibung hinzufügen was genau macht
                     ],
                 },
                 "Misc": {

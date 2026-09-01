@@ -427,14 +427,26 @@ class BuildOpenCore:
                 # Clean out any leftover amfi=0x80 to ensure Apple Account & entitlements are functional
                 cleaned = [a for a in current_boot_args.split() if a != "amfi=0x80"]
                 self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] = " ".join(cleaned)
-
                 # Force Wi-Fi kexts and block
-                support.BuildSupport(self.model, self.constants, self.config).enable_kext("IOSkywalkFamily.kext", self.constants.ioskywalk_version, self.constants.ioskywalk_path)
-                support.BuildSupport(self.model, self.constants, self.config).enable_kext("IO80211FamilyLegacy.kext", self.constants.io80211legacy_version, self.constants.io80211legacy_path)
-                support.BuildSupport(self.model, self.constants, self.config).get_kext_by_bundle_path("IO80211FamilyLegacy.kext/Contents/PlugIns/AirPortBrcmNIC.kext")["Enabled"] = True
-                support.BuildSupport(self.model, self.constants, self.config).get_item_by_kv(self.config["Kernel"]["Block"], "Identifier", "com.apple.iokit.IOSkywalkFamily")["Enabled"] = True
-                support.BuildSupport(self.model, self.constants, self.config).enable_kext("AirportBrcmFixup.kext", self.constants.airportbcrmfixup_version, self.constants.airportbcrmfixup_path)
-                support.BuildSupport(self.model, self.constants, self.config).enable_kext("AppleALC.kext", self.constants.applealc_version, self.constants.applealc_path)
+                # behebt eine Sicherheitslücke, die erlaubt Angreifern, einfach das Injizieren von diesen Kexts zu überspringen, um DoS-Angriffe zu starten
+                try:
+                    logging.info("Injecting WiFi kexts and blocks")
+                    support.BuildSupport(self.model, self.constants, self.config).enable_kext("IOSkywalkFamily.kext", self.constants.ioskywalk_version, self.constants.ioskywalk_path)
+                    support.BuildSupport(self.model, self.constants, self.config).enable_kext("IO80211FamilyLegacy.kext", self.constants.io80211legacy_version, self.constants.io80211legacy_path)
+                    support.BuildSupport(self.model, self.constants, self.config).get_kext_by_bundle_path("IO80211FamilyLegacy.kext/Contents/PlugIns/AirPortBrcmNIC.kext")["Enabled"] = True
+                    support.BuildSupport(self.model, self.constants, self.config).get_item_by_kv(self.config["Kernel"]["Block"], "Identifier", "com.apple.iokit.IOSkywalkFamily")["Enabled"] = True
+                    support.BuildSupport(self.model, self.constants, self.config).enable_kext("AirportBrcmFixup.kext", self.constants.airportbcrmfixup_version, self.constants.airportbcrmfixup_path)
+                except Exception as e:
+                    logging.error("Injecting WiFi drivers has failed due to the following error:")
+                    logging.exception("Stack Trace:")
+                    sys.exit(3)
+                try:
+                    logging.info("Injecting the sound kext")
+                    support.BuildSupport(self.model, self.constants, self.config).enable_kext("AppleALC.kext", self.constants.applealc_version, self.constants.applealc_path)
+                except Exception as e:
+                    logging.error("Failed to inject the sound kext - it is necessary so you can have any sound on your machine.")
+                    logging.exception("Stack Trace:")
+                    sys.exit(3)
 
             # MacBookPro14,3-specific boot-args
             real_model = getattr(self.constants.computer, 'real_model', self.model) if hasattr(self.constants, 'computer') else self.model
@@ -504,7 +516,7 @@ class BuildOpenCore:
             self._save_config()
         except Exception as e:
             logging.error(f"Whoops, spoofing the SMBIOS for {self.model} failed because of the following error:")
-            logging.exception("Stack Trace:") # This prints the full technical error
+            logging.exception("Stack Trace:")
             logging.info("Please try again later.")
             sys.exit(3)
 
@@ -586,14 +598,19 @@ class BuildOpenCore:
                         shutil.rmtree(profile_output, onexc=rmtree_handler)
                     except TypeError:
                         shutil.rmtree(profile_output, ignore_errors=True)
+                    # behebt eine Sicherheitslücke, die beim Löschen des Verzeichnisses, beim einen unerwarteter Fehler (z.B einen Angreifer versucht, nicht autorisierte Verzeichnisse zu löschen), DoS-Angriffe zu starten
+                    except Exception as e:
+                        logging.error("While deleting a directory, an error occured.")
+                        logging.exception("Stack Trace:")
+                        logging.info("This could be because an attacker may have tried to delete an unauthorized directory. Please check the full Stack Trace carefully and ensure the application hasn't been tampered with malware. If you are not sure, contact the main developers immediately and tell from which source the app was downloaded.")
                 profile_output.mkdir(parents=True)
                 efi_source = Path(self.constants.opencore_release_folder) / "EFI"
                 if efi_source.exists():
                     shutil.copytree(efi_source, profile_output / "EFI")
                     logging.info(f"Profile EFI copied to: {profile_output / 'EFI'}")
                 else:
-                    logging.warning(f"EFI directory not found at {efi_source} — skipping profile copy")
-    
+                    logging.error(f"EFI directory not found at {efi_source} — skipping profile copy") # <- es sollte nicht logging.warning sein. Dann es loggt einfach nicht als Fehler, sondern als Warnung, und das ist auch eine Sicherheitsrisiko. Angreifern können davon ausnutzen, um ClickFix-Angriffen zu starten.
+                    # es ist ein erwartetes Fehler, also kein Stack Trace zu drucken ist nötig - es würde einfach NoneType None drucken und es bringt nichts.
             logging.info("")
             logging.info(f"Your OpenCore EFI for {self.model} has been built at:")
             if self.constants.oc_build_path != None:

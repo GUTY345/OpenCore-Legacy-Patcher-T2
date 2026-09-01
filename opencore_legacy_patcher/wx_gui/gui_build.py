@@ -156,16 +156,23 @@ class BuildFrame(wx.Frame):
 
                 if response == wx.ID_OK:
                     webbrowser.open("https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues")
+                # Safari und WebKit unter macOS Catalina und älter können nicht richtig Gemini öffnen, deshalb falls diese Version läuft, wird Gemini ins Webbrowser geöffnet
                 elif response == GEMINI_CLICKED_ID:
-                    gemini_window = gui_support.GeminiWebView(self, title="Gemini AI Assistant")
-                    gemini_window.Show()
+                    if self.constants.detected_os >= os_data.os_data.big_sur:
+                        logging.info("- Launching Gemini AI Assistant (wx.html2 WebView)")
+                        gemini_window = gui_support.GeminiWebView(self, title="Gemini AI Assistant")
+                        gemini_window.Show()
+                    else:
+                        logging.info("- Launching Gemini AI Assistant (default web browser, host predates Big Sur)")
+                        logging.info("macOS Catalina, Mojave and High Sierra can't load Gemini in Safari and WebKit because they're too old.")
+                        webbrowser.open("https://gemini.google.com")
 
                 error_dialog.Destroy()
             except Exception as e:
                 logging.error(f"Failed to display build error dialog: {e}")
                 dialog = wx.MessageDialog(
                     parent=self,
-                    message="An error occurred while building OpenCore",
+                    message="An error occurred while building OpenCore. We tried to display another error dialog, but encountered an error and that's why it displays this instead.",
                     caption="Error building OpenCore",
                     style=wx.OK | wx.ICON_ERROR
                 )

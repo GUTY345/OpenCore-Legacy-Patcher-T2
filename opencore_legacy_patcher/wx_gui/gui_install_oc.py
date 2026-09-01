@@ -352,9 +352,16 @@ class InstallOCFrame(wx.Frame):
                     webbrowser.open("https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues")
                 
                 # Check directly for your custom event return hook code
+                # Unter macOS Catalina und älter Gemini funktioniert nicht richtig unter Safari/WebKit
                 elif response == GEMINI_CLICKED_ID:
-                    gemini_window = gui_support.GeminiWebView(self, title="Gemini AI Assistant")
-                    gemini_window.Show()
+                    if self.constants.detected_os >= os_data.os_data.big_sur:
+                        logging.info("- Launching Gemini AI Assistant (wx.html2 WebView)")
+                        gemini_window = gui_support.GeminiWebView(self, title="Gemini AI Assistant")
+                        gemini_window.Show()
+                    else:
+                        logging.info("- Launching Gemini AI Assistant (default web browser, host predates Big Sur)")
+                        logging.info("macOS Catalina, Mojave and High Sierra can't load Gemini in Safari and WebKit because they're too old.")
+                        webbrowser.open("https://gemini.google.com")
                     
                 error_dialog.Destroy()
 

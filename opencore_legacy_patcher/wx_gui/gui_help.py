@@ -120,7 +120,7 @@ class HelpFrame(wx.Frame):
         # - and it sidesteps mac_ver()'s well-known Big Sur "10.16"
         # misreport quirk entirely.
         if self.constants.detected_os >= os_data.os_data.big_sur:
-            logger.info("- Launching Gemini AI Assistant (wx.html2 WebView)")
+            logging.info("- Launching Gemini AI Assistant (wx.html2 WebView)")
 
             # Uses gui_support.GeminiWebView (wx.html2.WebView) instead of
             # the third-party 'pywebview' package: pywebview's Cocoa
@@ -134,5 +134,6 @@ class HelpFrame(wx.Frame):
             window = gui_support.GeminiWebView(self.parent_frame, size=(500, 850))
             window.Show()
         else:
-            logger.info("- Launching Gemini AI Assistant (default web browser, host predates Big Sur)")
+            logging.info("- Launching Gemini AI Assistant (default web browser, host predates Big Sur)")
+            logging.info("macOS Catalina, Mojave and High Sierra can't load Gemini in Safari and WebKit because they're too old.")
             webbrowser.open("https://gemini.google.com")

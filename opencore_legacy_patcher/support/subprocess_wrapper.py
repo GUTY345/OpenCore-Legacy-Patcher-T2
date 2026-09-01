@@ -9,7 +9,7 @@ import shlex
 import logging
 import subprocess
 import Security
-import objc
+import os
 
 from pathlib import Path
 from typing import Callable, Optional
@@ -164,8 +164,6 @@ def repair_privileged_helper_permissions() -> bool:
            auth_ref,
            Security.kAuthorizationFlagDefaults
         )
-
-
 def run(*args, **kwargs) -> subprocess.CompletedProcess:
     """
     Basic subprocess.run wrapper.
@@ -184,6 +182,10 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
     if not Path(args[0][0]).exists():
         raise FileNotFoundError(f"File not found: {args[0][0]}")
 
+    # If we are already running as root (e.g. launched via sudo), bypass the Helper Tool
+    if os.geteuid() == 0:
+        return subprocess.run(args[0], **kwargs)
+
     if Path(OCLP_PRIVILEGED_HELPER).exists():
         result = subprocess.run([OCLP_PRIVILEGED_HELPER] + [args[0][0]] + args[0][1:], **kwargs)
         # Any of our own PrivilegedHelperErrorCodes sentinel values (160-170) means the helper
@@ -201,17 +203,9 @@ def run_as_root(*args, **kwargs) -> subprocess.CompletedProcess:
         logging.warning(f"Privileged Helper Tool not found at {OCLP_PRIVILEGED_HELPER}. Falling back to osascript.")
         return osascript(args[0], **kwargs)
 
-
-def osascript(cmd_args, **kwargs) -> subprocess.CompletedProcess:
-    """
-    Fallback for run_as_root() when the Privileged Helper Tool is unavailable or reports
-    one of its own error codes. Elevates via a plain AppleScript 'do shell script ... with
-    administrator privileges' call (macOS's native admin-password prompt).
-
-    Note: osascript itself has no '-a' flag - its actual options are -l language, -i,
-    -s flags, and -e statement (see 'man osascript'). Administrator elevation here comes
-    from the AppleScript command text ('with administrator privileges'), not a CLI switch.
-    """
+# behebt eine Sicherheitslücke, indem osascript ohne Bedingung angerufen geworden. Einen Angreifer könnte dazu erzwingen, osascript abzurufen, um beliebiges Code auszuführen und Priveleged Helper Tool umzugehen
+def osascript(cmd_args, **kwargs): # <- behebt einen Fehler, die zu Fehler NameError: name 'args' is not defined verursacht, die nur ins Repository https://github.com/Medelcartelinc/OpenCore-Legacy-Patcher-T2 existierte
+    import shlex
     cmd_string = shlex.join(str(arg) for arg in cmd_args)
     as_safe_string = cmd_string.replace('\\', '\\\\').replace('"', '\\"')
     apple_script = f'do shell script "{as_safe_string}" with administrator privileges'
