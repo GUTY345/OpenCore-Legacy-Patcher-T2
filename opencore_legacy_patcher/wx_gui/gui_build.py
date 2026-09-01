@@ -158,6 +158,24 @@ class BuildFrame(wx.Frame):
                     webbrowser.open("https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues")
                 # Safari und WebKit unter macOS Catalina und älter können nicht richtig Gemini öffnen, deshalb falls diese Version läuft, wird Gemini ins Webbrowser geöffnet
                 elif response == GEMINI_CLICKED_ID:
+                    # Gemini can't see the build log on its own, so copy it to the clipboard
+                    # and tell the user to paste it in, rather than making them go hunt for
+                    # the text box and select/copy it manually.
+                    try:
+                        clipboard = wx.Clipboard.Get()
+                        if not clipboard.IsOpened():
+                            clipboard.Open()
+                        clipboard.SetData(wx.TextDataObject(self.text_box.GetValue()))
+                        clipboard.Close()
+                        wx.MessageDialog(
+                            self,
+                            "The build log has been copied to your clipboard.\n\nPaste it into the Gemini chat so it can help diagnose the error.",
+                            "Copied to Clipboard",
+                            wx.OK | wx.ICON_INFORMATION
+                        ).ShowModal()
+                    except Exception as clipboard_error:
+                        logging.error(f"Failed to copy build log to clipboard: {clipboard_error}")
+
                     if self.constants.detected_os >= os_data.os_data.big_sur:
                         logging.info("- Launching Gemini AI Assistant (wx.html2 WebView)")
                         gemini_window = gui_support.GeminiWebView(self, title="Gemini AI Assistant")
@@ -288,5 +306,3 @@ class BuildFrame(wx.Frame):
             screen_location=self.GetScreenPosition(),
         )
         install_oc_frame.Show()
-
-
