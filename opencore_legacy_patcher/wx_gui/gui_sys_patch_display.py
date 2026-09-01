@@ -27,10 +27,19 @@ class SysPatchDisplayFrame(wx.Frame):
     def __init__(self, parent: wx.Frame, title: str, global_constants: constants.Constants, screen_location: tuple = None):
         logging.info("Initializing Root Patch Display Frame")
 
+        # Always properly construct the underlying wx.Frame C++ peer, regardless of
+        # whether a parent was supplied - the previous "if parent:" branch skipped
+        # this call entirely in that case, leaving self as a half-initialized
+        # wx.Frame subclass with no real backing window. wxPython's C++/Python
+        # binding doesn't support that safely: it can crash natively (no Python
+        # traceback, since it isn't a Python exception) once the object is torn
+        # down and the garbage collector touches it again - matching exactly the
+        # silent crash-on-return seen after "No applicable patches available".
+        super().__init__(parent, title=title, size=(360, 200), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER ^ wx.MAXIMIZE_BOX)
+
         if parent:
             self.frame = parent
         else:
-            super().__init__(parent, title=title, size=(360, 200), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER ^ wx.MAXIMIZE_BOX)
             self.frame = self
             self.frame.Centre()
 
@@ -94,8 +103,6 @@ class SysPatchDisplayFrame(wx.Frame):
         frame.ShowWindowModal()
 
         gui_support.wait_for_thread(thread)
-
-        frame.Close()
 
         progress_bar.Hide()
         progress_bar_animation.stop_pulse()

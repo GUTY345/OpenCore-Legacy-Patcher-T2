@@ -554,6 +554,18 @@ Hardware Information:
             return
 
         logging.info(f"Developer Mode: {'enabled' if value else 'disabled'} (marker file confirmed {'present' if value else 'absent'})")
+
+        # Purge any stale "GUI:Developer_Mode" entry from the persisted
+        # settings plist. defaults.py's _load_gui_defaults() restores every
+        # "GUI:*" key back onto self.constants on EVERY launch, and it runs
+        # AFTER _general_probe() (the marker-file check above) - so if this
+        # key was ever written here (e.g. from an earlier build of this
+        # checkbox), it would silently overwrite the correct, marker-file-
+        # derived value right after every restart, making the toggle look
+        # like it never took effect. Developer Mode's source of truth is the
+        # marker file alone; this key must never exist for it to stick.
+        global_settings.GlobalEnviromentSettings().delete_property("GUI:Developer_Mode")
+
         self.constants.Developer_Mode = value
         self.constants.app_mode = "matteo" if value else "albert"
 
