@@ -154,7 +154,8 @@ class CheckBinaryUpdates:
 
         # Dynamically generate the API URL from constants.repo_link
         repo_api_url = self.constants.repo_link.replace("https://github.com/", "https://api.github.com/repos/").strip("/")
-        repo_latest_release_url = f"{repo_api_url}/releases/latest"
+        # Use /releases instead of /releases/latest to ensure we fetch pre-releases (alphas/betas) as well
+        repo_latest_release_url = f"{repo_api_url}/releases"
 
         if not network_handler.NetworkUtilities(repo_latest_release_url).verify_network_connection():
             logging.error("It failed to connect with the GitHub page")
@@ -164,7 +165,13 @@ class CheckBinaryUpdates:
             return None
             
         response = network_handler.NetworkUtilities().get(repo_latest_release_url)
-        data_set = response.json()
+        releases = response.json()
+        
+        if not releases or not isinstance(releases, list):
+            return None
+            
+        # The first item in the list is the most recent release, whether pre-release or stable
+        data_set = releases[0]
 
         if "tag_name" not in data_set:
             return None
