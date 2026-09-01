@@ -95,7 +95,7 @@ class OCSettingsFrame(wx.Frame):
 
         # Add Build OpenCore Button
         build_oc_button = wx.Button(frame, label="Install OpenCore", pos=(-1, -1), size=(120, 30))
-        if self.constants.Developer_Mode:
+        if self.constants.Experimental_Features:
             if self.constants.build_profile == None or self.constants.build_profile == "":
                 build_oc_button.Bind(wx.EVT_BUTTON, self.on_build_opencore_menu)
             else:

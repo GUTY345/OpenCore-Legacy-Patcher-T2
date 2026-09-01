@@ -61,7 +61,7 @@ class SettingsFrame(wx.Frame):
         sizer.AddSpacer(10)
 
         tabs = list(self.settings.keys())
-        if not self.constants.Developer_Mode:
+        if not self.constants.Experimental_Features:
             tabs.remove("Developer")
         for tab in tabs:
             panel = wx.ScrolledWindow(notebook)
@@ -554,17 +554,12 @@ Hardware Information:
         logging.info(f"Developer Mode: {'enabled' if value else 'disabled'} (marker file confirmed {'present' if value else 'absent'})")
 
         # Purge any stale "GUI:Developer_Mode" entry from the persisted
-        # settings plist. defaults.py's _load_gui_defaults() restores every
-        # "GUI:*" key back onto self.constants on EVERY launch, and it runs
-        # AFTER _general_probe() (the marker-file check above) - so if this
-        # key was ever written here (e.g. from an earlier build of this
-        # checkbox), it would silently overwrite the correct, marker-file-
-        # derived value right after every restart, making the toggle look
-        # like it never took effect. Developer Mode's source of truth is the
-        # marker file alone; this key must never exist for it to stick.
-        global_settings.GlobalEnviromentSettings().delete_property("GUI:Developer_Mode")
+        # Purge any stale "GUI:Experimental_Features" entry from the persisted
+        # settings whenever the toggle is flipped, ensuring the marker
+        # file remains the single source of truth for the next launch.
+        global_settings.GlobalEnviromentSettings().delete_property("GUI:Experimental_Features")
 
-        self.constants.Developer_Mode = value
+        self.constants.Experimental_Features = value
         self.constants.app_mode = "matteo" if value else "albert"
 
         self._restart_app(f"Developer Mode is now {'enabled' if value else 'disabled'}.")

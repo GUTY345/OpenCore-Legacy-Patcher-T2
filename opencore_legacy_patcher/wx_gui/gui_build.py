@@ -147,7 +147,7 @@ class BuildFrame(wx.Frame):
         self.install_button = install_button
 
         # Read-only text box: {empty}
-        text_box = wx.TextCtrl(frame, value="", pos=(-1, model_label.GetPosition()[1] + model_label.GetSize()[1] + 10), size=(380, 350), style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_RICH2)
+        text_box = wx.TextCtrl(frame, value="", pos=(-1, install_button.GetPosition()[1] + install_button.GetSize()[1] + 10), size=(380, 350), style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_RICH2)
         text_box.Centre(wx.HORIZONTAL)
         self.text_box = text_box
 
@@ -368,3 +368,26 @@ class BuildFrame(wx.Frame):
             screen_location=self.GetScreenPosition(),
         )
         install_oc_frame.Show()
+
+    def on_build_click(self, event: wx.Event) -> None:
+        self.build_button.Disable()
+        if getattr(self, "radio_standard", None):
+            if self.radio_testd.GetValue():
+                self.constants.build_profile = "test_d"
+            elif self.radio_testc.GetValue():
+                self.constants.build_profile = "test_c"
+            elif self.radio_testb.GetValue():
+                self.constants.build_profile = "test_b"
+            elif self.radio_testa.GetValue():
+                self.constants.build_profile = "test_a"
+            else:
+                self.constants.build_profile = "standard"
+
+            self.radio_standard.Disable()
+            self.radio_testa.Disable()
+            self.radio_testb.Disable()
+            self.radio_testc.Disable()
+            self.radio_testd.Disable()
+        if hasattr(self, "return_button"):
+            self.return_button.Disable()
+        self._invoke_build()
