@@ -95,8 +95,6 @@ class SysPatchDisplayFrame(wx.Frame):
 
         gui_support.wait_for_thread(thread)
 
-        frame.Close()
-
         progress_bar.Hide()
         progress_bar_animation.stop_pulse()
 
