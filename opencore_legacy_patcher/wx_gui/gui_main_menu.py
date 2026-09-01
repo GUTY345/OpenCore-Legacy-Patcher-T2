@@ -89,7 +89,7 @@ class MainFrame(wx.Frame):
 
         # Model label
         try:
-            if self.constants.Developer_Mode:
+            if self.constants.Experimental_Features:
                 dev_label = wx.StaticText(self, label="Developer Mode is ON", pos=(-1, version_label.GetPosition()[1] + 20))
                 dev_label.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
                 dev_label.Centre(wx.HORIZONTAL)

@@ -143,10 +143,10 @@ class GenerateDefaults:
         if not analytics_handler.ANALYTICS_SERVER and analytics_handler.SITE_KEY == "":
             logging.info("Analytics data was not embeded.")
             global_settings.GlobalEnviromentSettings().write_property("EnableCrashAndAnalyticsReporting", False)
-        if Path("~/.dortania_developer").expanduser().exists():
-            self.constants.Developer_Mode = True
+        if Path("~/.dortania_developer").expanduser().exists() or os.environ.get("OCLP_DEV_MODE") == "1":
+            self.constants.Experimental_Features = True
         else:
-            self.constants.Developer_Mode = False
+            self.constants.Experimental_Features = False
 
         # Developer Mode's only source of truth is the marker file above.
         # _load_gui_defaults() (called later in __init__) blindly restores

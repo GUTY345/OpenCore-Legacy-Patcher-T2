@@ -66,6 +66,14 @@ class OpenCoreLegacyPatcher:
 
         self.constants.wxpython_variant = True
 
+        # True Developer Mode check
+        if "--developer" in sys.argv or getattr(sys, "frozen", False) is False:
+            logging.info("True Developer Mode is active (Developer flag or running from source).")
+            self.constants.True_Developer_Mode = True
+            
+            # As per #246, highly dangerous testing flags are enabled only in True Developer Mode
+            self.constants.allow_vmware_root_patching = True
+
         # Ensure we live after parent process dies (ie. LaunchAgent)
         os.setpgrp()
 

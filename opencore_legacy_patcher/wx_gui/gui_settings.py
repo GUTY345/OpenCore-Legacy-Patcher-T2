@@ -260,18 +260,16 @@ class SettingsFrame(wx.Frame):
                     ],
                     "override_function": self._update_global_settings,
                 },
-                "Developer Mode": {
+                "Enable Experimental Features": {
                     "type": "checkbox",
-                    "value": self.constants.Developer_Mode,
-                    "variable": "Developer_Mode",
-                    "description": [
-                        "Unlocks the Developer tab and the",
-                        "experimental T1/Matteo UI mode.",
-                        "The app will restart automatically",
-                        "to apply this change.",
-                    ],
-                    "warning": "Developer Mode unlocks experimental, unfinished features (including a deliberate crash-test button and the T1/Matteo experimental UI) intended for testing, not everyday use.\n\nThe app will restart automatically to apply this change.\n\nAre you sure you want to enable it?",
                     "override_function": self._toggle_developer_mode,
+                    "variable": "Experimental_Features",
+                    "value": self.constants.Experimental_Features,
+                    "warning": "You are about to enable Experimental Features. This reveals advanced configuration options and unvalidated test builds.\n\nWARNING: Modifying experimental settings without understanding them can render your system unbootable or damage your root volume. Do not proceed unless you know exactly what you are doing.",
+                    "description": [
+                        "Enables experimental features and build settings.",
+                        "Requires restarting the app to take effect."
+                    ],
                 },
             },
             "Statistics": {
@@ -719,3 +717,4 @@ Hardware Information:
         if tmp_value is None:
             tmp_value = "PYTHON_NONE_VALUE"
         global_settings.GlobalEnviromentSettings().write_property(f"GUI:{variable}", tmp_value)
+

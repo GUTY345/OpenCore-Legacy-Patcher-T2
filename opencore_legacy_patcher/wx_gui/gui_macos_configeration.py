@@ -61,7 +61,7 @@ class MacosConfigFrame(wx.Frame):
         sizer.AddSpacer(10)
 
         tabs = list(self.settings.keys())
-        if not self.constants.Developer_Mode:
+        if not self.constants.Experimental_Features:
             tabs.remove("Developer")
         for tab in tabs:
             panel = wx.ScrolledWindow(notebook)
