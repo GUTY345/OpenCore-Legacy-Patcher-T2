@@ -158,6 +158,11 @@ def repair_privileged_helper_permissions() -> bool:
 
         logging.info("Privileged Helper Tool permissions repaired (4755)")
         return True
+    # behebt einen Bug, indem falls die Operation nicht erfolgreich ist, zeigt es nicht einen Fehler
+    except Exception as e:
+        logging.error("Running the Priveleged Helper Tool operation failed.")
+        logging.exception("Stack Trace:")
+        sys.exit(3)
 
     finally:
         Security.AuthorizationFree(
