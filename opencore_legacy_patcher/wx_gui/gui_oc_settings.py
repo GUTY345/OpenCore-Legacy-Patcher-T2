@@ -1020,6 +1020,11 @@ class OCSettingsFrame(wx.Frame):
 
         
     def on_save(self, event):
+        # Must be initialised before the branch below. If a build profile is already set
+        # (e.g. an earlier build in the same session), the prompt is skipped entirely and
+        # the reset check at the end of this method would hit an unbound local, crashing
+        # with UnboundLocalError right after the build was already written to disk.
+        user_had_prompt_set = False
         if self.constants.build_profile is None or self.constants.build_profile == "":
             user_had_prompt_set = True
             choices = [
@@ -1048,12 +1053,16 @@ class OCSettingsFrame(wx.Frame):
                     self.constants.build_profile = "test_c_spoofed"
                 elif selection == 4:
                     self.constants.build_profile = "test_d"
-                dialog.Close()
+                dialog.Destroy()
             else: #We asume that the user doesn't want to save OpenCore so we stop.
+                dialog.Destroy()
                 return
         # Throw pop up to get save location
         with wx.FileDialog(self.parent, wildcard="All files (*.*)|*.*", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT, defaultFile=f"OpenCore-Build-{self.constants.custom_model or self.constants.computer.real_model}", name="Save OpenCore Build") as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
+                # Profile was only picked for this save, don't leak it into the next build
+                if user_had_prompt_set:
+                    self.constants.build_profile = ""
                 return
 
             self.constants.oc_build_path = Path(fileDialog.GetPath())
