@@ -75,7 +75,10 @@ class MacosConfigFrame(wx.Frame):
         root_patch_button = wx.Button(frame, label="Root Patching", pos=(-1, -1), size=(120, 30))
         root_patch_button.Bind(wx.EVT_BUTTON, self.on_root_patch)
         root_patch_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-        if (gui_support.CheckProperties(self.constants).host_can_build() is False) or (self.constants.detected_os < os_data.os_data.big_sur):
+        # host_can_root_patch(), not host_can_build(): this button only patches the volume
+        # this host already runs, so it may stay available where building an EFI is not
+        # (eg. a VMware VM with allow_vmware_root_patching set) - see gui_support.py.
+        if (gui_support.CheckProperties(self.constants).host_can_root_patch() is False) or (self.constants.detected_os < os_data.os_data.big_sur):
             root_patch_button.Disable()
         sizer.Add(root_patch_button, 0, wx.ALIGN_CENTER | wx.ALL, 0)
 
