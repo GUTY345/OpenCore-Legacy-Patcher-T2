@@ -468,10 +468,18 @@ class MacosConfigFrame(wx.Frame):
 
 
     def on_return(self, event):
-        self.frame_modal.Destroy()
+        # End the sheet session before destroying, and defer the Destroy - the button
+        # handling this event is a child of the dialog (see gui_support.end_window_modal).
+        gui_support.end_window_modal(self.frame_modal)
+        self.frame_modal.Hide()
+        wx.CallAfter(self.frame_modal.Destroy)
 
     def on_root_patch(self, event):
-        self.frame_modal.Destroy()
+        # Ends this sheet before the root patch sheet gets attached to the same parent:
+        # a leftover modal session here would keep the parent blocked for good.
+        gui_support.end_window_modal(self.frame_modal)
+        self.frame_modal.Hide()
+        wx.CallAfter(self.frame_modal.Destroy)
         gui_sys_patch_display.SysPatchDisplayFrame(
             parent=self.parent,
             title=self.title,
