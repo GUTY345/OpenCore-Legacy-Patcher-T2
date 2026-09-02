@@ -271,6 +271,27 @@ class GaugePulseCallback:
             time.sleep(0.005)
 
 
+def end_window_modal(dialog: wx.Dialog) -> None:
+    """
+    End the modal session of a dialog shown with ShowWindowModal()
+
+    On macOS such a dialog is an NSWindow sheet attached to its parent, and only
+    EndModal() ends that session. Hiding or Destroy()ing the dialog directly takes the
+    content away while the parent stays sheet-blocked, leaving an empty grey sheet the
+    user cannot dismiss. Callers remain responsible for the teardown itself, and should
+    defer it via wx.CallAfter when running inside an event handler of one of the
+    dialog's own children.
+    """
+    if not dialog:
+        return
+    try:
+        if dialog.IsModal():
+            dialog.EndModal(wx.ID_CANCEL)
+    except Exception as e:
+        logging.error(f"Failed to end window modal session: {e}")
+        logging.exception("Stack Trace:")
+
+
 class CheckProperties:
 
     def __init__(self, global_constants: constants.Constants) -> None:
