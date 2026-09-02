@@ -364,11 +364,11 @@ class MainFrame(wx.Frame):
         self.web_view.Bind(wx.html2.EVT_WEBVIEW_NEWWINDOW, self._onWebviewNav)
         self.web_view.EnableContextMenu(False)
         
-        self.close_button = wx.Button(panel, label="Dismiss")
+        self.close_button = wx.Button(panel, label="Update Later")
         self.close_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(wx.ID_CANCEL))
         self.view_button = wx.Button(panel, ID_GITHUB, label="View on GitHub")
         self.view_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(ID_GITHUB))
-        self.install_button = wx.Button(panel, label="Download and Install")
+        self.install_button = wx.Button(panel, label="Update Now")
         self.install_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(ID_UPDATE))
         self.install_button.SetDefault()
 
