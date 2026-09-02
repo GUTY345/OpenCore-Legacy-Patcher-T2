@@ -32,3 +32,11 @@ If possible, we highly recommend creating a developer account with Apple and sig
 * Additionally you will be required to compile OpenCore-Patcher-T2.app with your own Developer ID Application certificate
 
 If this is not possible, we recommend using [OpenCore Legacy Patcher's prebuilt binaries](../../SOURCE.md) instead.
+
+## Self signing Priveleged Helper Tool - prefered over make debug
+Self signing the Priveleged Helper Tool is prefered to running make debug, as it doesn't come with security compromises while giving the ability to use it without paying the Apple Tax. To do so, you need to compile the Priveleged Helper Tool like this, after you have created a self signed certificate via the Keychain app (doesn't matter if you're running High Sierra, Sequoia or Tahoe, on all of them it works just fine):
+cd ci_tooling/privileged_helper_tool # (replace this with the path of the Priveleged Helper Tool folder)
+make                                   # release build, keeps the certificate check
+codesign -f -s "OCLP Self Signed" com.dortania.opencore-legacy-patcher.privileged-helper
+codesign -dvvv com.dortania.opencore-legacy-patcher.privileged-helper 2>&1 | grep Authority
+sudo ./install.sh                      # copies to /Library/PrivilegedHelperTools + sets the setuid bit
