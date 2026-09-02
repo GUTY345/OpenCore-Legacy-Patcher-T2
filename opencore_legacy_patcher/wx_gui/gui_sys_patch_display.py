@@ -247,7 +247,14 @@ class SysPatchDisplayFrame(wx.Frame):
 
         # Set frame size
         frame.SetSize((-1, return_button.GetPosition().y + return_button.GetSize().height + 15))
-        frame.ShowWindowModal()
+        # Deliberately no second ShowWindowModal(): this dialog was already shown as a sheet
+        # further up, before the patch detection thread ran. On macOS every ShowWindowModal()
+        # call begins another NSWindow sheet session on the parent, and tearing the dialog
+        # down ends only one of them - the leftover session kept the parent blocked behind an
+        # empty grey sheet, which is the "Return to Main Menu hangs on a white screen" bug.
+        # This frame was the only one in the app calling ShowWindowModal() twice. The controls
+        # added above appear on their own, being children of an already visible window.
+        frame.Refresh()
 
 
     def on_start_root_patching(self, patches: dict):
@@ -339,6 +346,8 @@ creando un nuovo snapshot APFS.
         # Get frame from event
         frame_modal: wx.Dialog = event.GetEventObject().GetParent()
         frame: wx.Frame = frame_modal.Parent
+        # As in on_return_dismiss: end the sheet session before hiding it.
+        gui_support.end_window_modal(frame_modal)
         frame_modal.Hide()
         frame.Hide()
 
@@ -348,12 +357,20 @@ creando un nuovo snapshot APFS.
             global_constants=self.constants,
         )
         main_menu_frame.Show()
-        frame.Destroy()
+        # Deferred, so the frame outlives the button event handler running inside it.
+        wx.CallAfter(frame.Destroy)
 
 
     def on_return_dismiss(self, event: wx.Event = None):
+        if not self.frame_modal:
+            return
+        # End the sheet's modal session before tearing it down (see
+        # gui_support.end_window_modal), and defer the Destroy: the button running this
+        # handler is itself a child of the dialog being destroyed.
+        gui_support.end_window_modal(self.frame_modal)
         self.frame_modal.Hide()
-        self.frame_modal.Destroy()
+        wx.CallAfter(self.frame_modal.Destroy)
+        self.frame_modal = None
 
 
     def _check_if_new_patches_needed(self, patches: dict) -> bool:
