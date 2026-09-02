@@ -102,7 +102,12 @@ class OCSettingsFrame(wx.Frame):
                  build_oc_button.Bind(wx.EVT_BUTTON, self.on_build_and_install)
         else:
             build_oc_button.Bind(wx.EVT_BUTTON, self.on_build_and_install_standard)
-        build_oc_button.SetDefault()
+        # Deliberately NOT SetDefault(): wx fires the default button on Return from anywhere
+        # in the dialog, including from any wx.TextCtrl without TE_PROCESS_ENTER (the custom
+        # serial number fields on this very frame). "Install OpenCore" writes OpenCore to disk
+        # and BuildFrame starts building the moment it is constructed (gui_build.py), so a
+        # single stray Return while editing a text field was enough to kick off a full,
+        # unconfirmed build and install.
         build_oc_button.SetToolTip("Installs OpenCore to your disk")
         build_oc_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
         if gui_support.CheckProperties(self.constants).host_can_build() is False:
