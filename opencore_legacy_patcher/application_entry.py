@@ -12,6 +12,7 @@ from pathlib import Path
 
 from . import constants
 from .wx_gui import gui_entry
+from .datasets import smbios_data
 from .detections import (
     device_probe,
     os_probe
@@ -57,6 +58,80 @@ class OpenCoreLegacyPatcher:
             _test_dir = Path.home()
             os.chdir(_test_dir)
             logging.warning(f"Current working directory was invalid, reset safety fallback to: {_test_dir}")
+
+
+    def _build_simulated_gpu(self, identifier: str):
+        """
+        Dev/test only: build a synthetic device_probe GPU from a "vendor:device" hex pair
+
+        The IDs are run through the real device_probe classes, so arch detection comes out of
+        pci_data exactly as it does for physical hardware - no second table to drift from it.
+        """
+        try:
+            vendor_id, device_id = (int(i, 16) for i in identifier.replace("0x", "").split(":"))
+        except ValueError:
+            logging.warning(f"vmware_simulated_gpu '{identifier}' is not a 'vendor:device' hex pair (eg. 1002:6821), ignoring")
+            return None
+
+        gpu_classes = {
+            device_probe.AMD.VENDOR_ID:    device_probe.AMD,
+            device_probe.NVIDIA.VENDOR_ID: device_probe.NVIDIA,
+            device_probe.Intel.VENDOR_ID:  device_probe.Intel,
+        }
+        if vendor_id not in gpu_classes:
+            logging.warning(f"vmware_simulated_gpu vendor {hex(vendor_id)} is not AMD, NVIDIA or Intel, ignoring")
+            return None
+
+        gpu_class = gpu_classes[vendor_id]
+        gpu = gpu_class(
+            vendor_id=vendor_id,
+            device_id=device_id,
+            class_code=device_probe.GPU.CLASS_CODES[0],
+            name=f"Simulated {gpu_class.__name__} GPU",
+        )
+        if gpu.arch == gpu_class.Archs.Unknown:
+            logging.warning(f"vmware_simulated_gpu {identifier} resolves to an unknown architecture - no graphics patchset will match it")
+        return gpu
+
+
+    def _apply_vmware_simulated_hardware(self) -> None:
+        """
+        Dev/test only: present synthetic hardware to root patch detection inside a VMware VM
+
+        HardwarePatchsetDetection never consults model_array.py. Each patchset decides for
+        itself in present(), reading either computer.real_model against a hardcoded model list
+        (legacy_audio.py, gmux.py, t1_security.py, ...) or computer.gpus for a specific
+        device_probe arch (every graphics patchset). A VM matches neither - its display adapter
+        is a VMware SVGA II, which maps to no known arch - so detection correctly reports that
+        no patches are required, no matter which model is whitelisted elsewhere.
+
+        These two constants override exactly those two inputs, so the patchset assembly and
+        patching paths can be exercised without the hardware. Both are hand-edit only with no
+        GUI control, and are read only here, behind host_is_vmware_vm + allow_vmware_root_patching
+        - the same two-flag gate the SIP/AMFI validation bypasses use.
+        """
+        if self.constants.allow_vmware_root_patching is False:
+            return
+
+        if self.constants.vmware_simulated_model:
+            model = self.constants.vmware_simulated_model
+            if model not in smbios_data.smbios_dictionary:
+                logging.warning(f"vmware_simulated_model '{model}' is not a Mac model with SMBIOS data, ignoring")
+            else:
+                logging.info(f"Simulating host model {model} for root patch detection (test-only, see vmware_simulated_model)")
+                self.constants.computer.real_model = model
+
+        if self.constants.vmware_simulated_gpu:
+            gpu = self._build_simulated_gpu(self.constants.vmware_simulated_gpu)
+            if gpu is not None:
+                logging.info(f"Simulating {type(gpu).__name__} GPU {self.constants.vmware_simulated_gpu} ({gpu.arch.value}) for root patch detection (test-only, see vmware_simulated_gpu)")
+                self.constants.computer.gpus = [gpu]
+                if isinstance(gpu, device_probe.Intel):
+                    self.constants.computer.igpu = gpu
+                    self.constants.computer.dgpu = None
+                else:
+                    self.constants.computer.dgpu = gpu
+                    self.constants.computer.igpu = None
 
 
     def _generate_base_data(self) -> None:
@@ -113,16 +188,18 @@ class OpenCoreLegacyPatcher:
                 logging.info("This can be done only if you are running the code from source.")
                 logging.info("The Root Patching button will stay disabled until allow_vmware_root_patching is also set to True - this is a deliberate, GUI-inaccessible switch (constants.py) so this test-only bypass can't be flipped on by anyone just clicking around Settings.")
                 logging.info("To test the syntax for installing drivers and patches inside a virtual machine, you need to do the following:")
-                logging.info("1. Open model_array.py inside Visual Studio Code")
-                logging.info("2. command+F")
-                logging.info("3. Search for VMWare20,1 - this is the SMBIOS for VMWare VMs")
-                logging.info("4. Remove # in front of VMWare20,1")
-                logging.info("5. Open constants.py and set allow_vmware_root_patching to True")
+                logging.info("1. Open constants.py inside Visual Studio Code")
+                logging.info("2. Set allow_vmware_root_patching to True")
+                logging.info("3. Set vmware_simulated_model to the Mac model detection should see, eg. \"iMac11,2\" - this drives every patchset whose present() checks computer.real_model (Legacy Audio, gmux, keyboard backlight, PCIe webcam, T1, USB1.1)")
+                logging.info("4. Optionally set vmware_simulated_gpu to a PCI \"vendor:device\" pair, eg. \"1002:6821\" (AMD Legacy GCN v1) - graphics patchsets match on computer.gpus and never on a model list")
+                logging.info("5. Note that model_array.py plays no part in root patch detection: HardwarePatchsetDetection calls each patchset's present() directly, so whitelisting a model there changes nothing about which patches are found")
                 logging.info("6. Save the changes and quit Visual Studio Code")
                 logging.info("7. Then open the Terminal")
                 logging.info("8. Run python3, followed by the directory where is located the Build-Project.command.")
                 logging.info("9. Once successfully builds the project, you'll get Build successful")
                 logging.info("10. Then open the dist foler and install OpenCore Legacy Patcher T2 with the newly done changes")
+
+            self._apply_vmware_simulated_hardware()
 
         # Generate environment data
         self.constants.recovery_status = utilities.check_recovery()
