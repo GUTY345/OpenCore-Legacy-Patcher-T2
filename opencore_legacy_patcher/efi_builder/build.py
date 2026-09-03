@@ -196,8 +196,8 @@ class BuildOpenCore:
             
             # Target some 2017 Mac models specifically to bypass vt-d/broadcom complications
             # Dies ist benötigt, um WLAN und Bluetooth richtig zu funktionieren auf macOS 26 Tahoe.
-            _2017_MODELS_NEED_DART = ["iMac18,1", "iMac18,2", "iMac18,3", "MacBookPro14,1", "MacBookPro14,2", "MacBookPro14,3"]
-            if self.model in _2017_MODELS_NEED_DART:
+            MODELS_NEED_DART = ["iMac18,1", "iMac18,2", "iMac18,3", "MacBookPro14,1", "MacBookPro14,2", "MacBookPro14,3", "MacBookAir6,2"]
+            if self.model in MODELS_NEED_DART:
                 if "dart=0" not in current_boot_args:
                     logging.info(f"- Appending dart=0 boot argument for {self.model} hardware target to fix WiFi/Bluetooth issues on macOS Tahoe ({self.model})")
                     current_boot_args = f"{current_boot_args} dart=0".strip()
