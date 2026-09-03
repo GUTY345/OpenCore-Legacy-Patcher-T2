@@ -398,12 +398,13 @@ class MacosConfigFrame(wx.Frame):
             return
 
         self._update_setting(self.settings[self._find_parent_for_key(label)][label]["variable"], value)
-        if label == "Allow native models":
-            if hasattr(self.parent, 'build_button') and self.parent.build_button:
-                if gui_support.CheckProperties(self.constants).host_can_build() is True:
-                    self.parent.build_button.Enable()
-                else:
-                    self.parent.build_button.Disable()
+        # NOTE: "Allow native models" used to enable/disable the main menu's "OpenCore" button
+        # (self.parent.build_button) from here. It no longer does: that button only opens the
+        # OpenCore settings frame, which gates its own "Save OpenCore"/"Install OpenCore" buttons
+        # on host_can_build() - see gui_oc_settings._refresh_build_gated_buttons(). Disabling the
+        # entry point from here would put an unsupported host back in the state this fix removes:
+        # unable to reach the very settings ("Allow native models", target model) that unlock
+        # building in the first place.
 
 
     def on_spinctrl(self, event: wx.Event, label: str) -> None:

@@ -44,6 +44,12 @@ class OCSettingsFrame(wx.Frame):
 
         self.hyperlink_colour = (25, 179, 231)
 
+        # The two controls that actually write an OpenCore build to disk. Held as attributes
+        # so their enabled state can be re-evaluated live (see _refresh_build_gated_buttons()),
+        # instead of being frozen at whatever host_can_build() returned when the frame opened.
+        self.save_oc_button: wx.Button = None
+        self.build_oc_button: wx.Button = None
+
         self.settings = self._settings()
 
         self.frame_modal = wx.Dialog(parent, title=title, size=(600, 685))
@@ -87,8 +93,7 @@ class OCSettingsFrame(wx.Frame):
         save_oc_button.Bind(wx.EVT_BUTTON, self.on_save)
         save_oc_button.SetToolTip("Builds and Saves OpenCore to the filesystem")
         save_oc_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-        if gui_support.CheckProperties(self.constants).host_can_build() is False:
-            save_oc_button.Disable()
+        self.save_oc_button = save_oc_button
         bot_sizer.Add(save_oc_button, 0, wx.ALIGN_CENTER | wx.ALL, 0)
 
         bot_sizer.AddSpacer(20)
@@ -110,8 +115,10 @@ class OCSettingsFrame(wx.Frame):
         # unconfirmed build and install.
         build_oc_button.SetToolTip("Installs OpenCore to your disk")
         build_oc_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-        if gui_support.CheckProperties(self.constants).host_can_build() is False:
-            build_oc_button.Disable()
+        self.build_oc_button = build_oc_button
+        # Sole gate for both disk-writing buttons now that the main menu lets every host in
+        # here. Re-run on every change to a setting that feeds host_can_build().
+        self._refresh_build_gated_buttons()
         bot_sizer.Add(build_oc_button, 0, wx.ALIGN_CENTER | wx.ALL, 0)
 
         bot_sizer.AddSpacer(20)
@@ -318,6 +325,25 @@ class OCSettingsFrame(wx.Frame):
                 # instead of being clipped by the fixed dialog height.
                 panel.SetVirtualSize((int(horizontal_center * 2), lowest_height_reached + 50))
                 panel.AdjustScrollbars()
+
+
+    def _refresh_build_gated_buttons(self) -> None:
+        """
+        Enable/disable the two controls that write an OpenCore build to disk
+        ("Save OpenCore" and "Install OpenCore") based on host_can_build().
+
+        This frame is reachable from the main menu on every host now, so this is the only
+        thing standing between an unsupported host and a build - and it has to stay live:
+        "Allow native models" (allow_oc_everywhere) and the target model are changed from
+        inside this very frame, so evaluating host_can_build() only once at construction
+        would leave a user who just ticked the box staring at two dead buttons until they
+        relaunched the app.
+        """
+        can_build = gui_support.CheckProperties(self.constants).host_can_build()
+        for button in (self.save_oc_button, self.build_oc_button):
+            if not button:
+                continue
+            button.Enable(can_build)
 
     # MARK: Settings dict
     def _settings(self) -> dict:
@@ -946,11 +972,14 @@ class OCSettingsFrame(wx.Frame):
 
         self._update_setting(self.settings[self._find_parent_for_key(label)][label]["variable"], value)
         if label == "Allow native models":
-            if hasattr(self.parent, 'build_button') and self.parent.build_button:
-                if gui_support.CheckProperties(self.constants).host_can_build() is True:
-                    self.parent.build_button.Enable()
-                else:
-                    self.parent.build_button.Disable()
+            # Re-gate this frame's own Save/Install buttons: the checkbox that was just
+            # toggled is exactly what host_can_build() reads, so the answer may have
+            # changed under us.
+            self._refresh_build_gated_buttons()
+            # NOTE: the main menu's "OpenCore" button (self.parent.build_button) is deliberately
+            # NOT touched here any more. It only opens this frame, and disabling it on an
+            # unsupported host is what made this checkbox unreachable in the first place -
+            # unticking it here would have re-locked the door from the inside.
 
     def on_spinctrl(self, event: wx.Event, label: str) -> None:
         """
