@@ -54,9 +54,17 @@ def available_codesigning_identities() -> list:
 
     identities = []
     for line in result.stdout.splitlines():
-        match = re.match(r'\s*\d+\)\s+([0-9A-Fa-f]{40})\s+"(.+)"\s*$', line)
+        # "security find-identity" haengt bei nicht vertrauenswuerdigen Zertifikaten
+        # eine Statusmeldung an, z.B. (CSSMERR_TP_NOT_TRUSTED). Ein selbst signiertes
+        # Zertifikat ist damit trotzdem brauchbar: das Helper Tool vergleicht nur die
+        # Zertifikatsketten und fuehrt keine Trust-Pruefung durch.
+        #
+        # "security find-identity" appends a status note for certificates that are not
+        # trusted, e.g. (CSSMERR_TP_NOT_TRUSTED). A self signed certificate still works:
+        # the helper tool only compares certificate chains and runs no trust evaluation.
+        match = re.match(r'\s*\d+\)\s+([0-9A-Fa-f]{40})\s+"(.+?)"\s*(\(CSSMERR_[A-Z_]+\))?\s*$', line)
         if match:
-            identities.append((match.group(1), match.group(2)))
+            identities.append((match.group(1), match.group(2), match.group(3)))
     return identities
 
 
@@ -76,10 +84,10 @@ def resolve_application_identity(requested: str, auto_detect: bool) -> str:
     if requested:
         # Only reject when the lookup actually returned something; an empty list means the
         # query failed or we are not on macOS, which is not evidence the identity is missing.
-        if identities and not any(requested in (identity_hash, name) for identity_hash, name in identities):
+        if identities and not any(requested in (identity_hash, name) for identity_hash, name, _ in identities):
             print(f"Fehler: Keine gueltige Signatur-Identitaet gefunden fuer: {requested}")
             print(f"Error: no valid signing identity found matching: {requested}")
-            print("       Available: " + (", ".join(f'"{name}"' for _, name in identities) or "none"))
+            print("       Available: " + (", ".join(f'"{name}"' for _, name, _ in identities) or "none"))
             sys.exit(3)
         return requested
 
@@ -98,14 +106,19 @@ def resolve_application_identity(requested: str, auto_detect: bool) -> str:
     if len(identities) > 1:
         print("Hinweis: Mehrere Code-Signing-Zertifikate gefunden - keines automatisch gewaehlt.")
         print("Note: multiple code signing certificates found, none picked automatically:")
-        for _, name in identities:
+        for _, name, _ in identities:
             print(f"      - {name}")
         print('      Pass --application-signing-identity "<name>" to choose one.')
         return None
 
-    name = identities[0][1]
+    _, name, status = identities[0]
     print(f"Zertifikat automatisch gewaehlt: {name}")
     print(f"Automatically selected signing identity: {name}")
+    if status:
+        print(f"      Hinweis: Zertifikat ist nicht vertrauenswuerdig {status} - zum Signieren")
+        print( "      genuegt das, das Helper Tool prueft nur die Zertifikatskette.")
+        print(f"      Note: certificate is not trusted {status} - that is enough for signing,")
+        print( "      the helper tool only compares certificate chains.")
     return name
 
 
