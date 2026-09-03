@@ -1,0 +1,197 @@
+#!/bin/bash
+#
+# create-signing-certificate.sh
+#
+# Erstellt ein selbstsigniertes Code-Signing-Zertifikat fuer den lokalen Build
+# von OpenCore-Patcher-T2 und importiert es in den Anmeldeschlussel.
+#
+# Creates a self signed code signing certificate for local builds of
+# OpenCore-Patcher-T2 and imports it into the login keychain.
+#
+# Nutzung / Usage:
+#   ./create-signing-certificate.sh
+#   ./create-signing-certificate.sh --name "Mein Zertifikat"
+#   ./create-signing-certificate.sh --force      # vorhandene ersetzen / replace existing
+#
+
+set -euo pipefail
+
+CERT_NAME="OCLP Self Signed"
+VALID_DAYS=3650
+FORCE=0
+
+LOGIN_KEYCHAIN="${HOME}/Library/Keychains/login.keychain-db"
+SYSTEM_KEYCHAIN="/Library/Keychains/System.keychain"
+
+# ---------------------------------------------------------------- Argumente --
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --name)
+            CERT_NAME="${2:-}"
+            if [[ -z "${CERT_NAME}" ]]; then
+                echo "[!] --name benoetigt einen Wert / --name requires a value" >&2
+                exit 1
+            fi
+            shift 2
+            ;;
+        --days)
+            VALID_DAYS="${2:-}"
+            shift 2
+            ;;
+        --force)
+            FORCE=1
+            shift
+            ;;
+        -h|--help)
+            sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+            exit 0
+            ;;
+        *)
+            echo "[!] Unbekannte Option / unknown option: $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# ------------------------------------------------------------ Vorbedingungen --
+
+if [[ "$(uname)" != "Darwin" ]]; then
+    echo "[!] Dieses Skript laeuft nur unter macOS."
+    echo "[!] This script only runs on macOS."
+    exit 1
+fi
+
+if ! command -v openssl >/dev/null 2>&1; then
+    echo "[!] openssl wurde nicht gefunden / openssl not found"
+    exit 1
+fi
+
+# ------------------------------------------------- Vorhandene Identitaeten --
+
+existing_count=$(security find-identity -v -p codesigning 2>/dev/null \
+    | grep -c "\"${CERT_NAME}\"" || true)
+
+if [[ "${existing_count}" -gt 0 ]]; then
+    echo "--- Vorhandene Zertifikate gefunden / existing certificates found ---"
+    echo "    ${existing_count}x \"${CERT_NAME}\""
+    echo
+
+    if [[ "${FORCE}" -eq 0 ]]; then
+        if [[ "${existing_count}" -eq 1 ]]; then
+            echo "Ein gueltiges Zertifikat ist bereits vorhanden. Nichts zu tun."
+            echo "A valid certificate already exists. Nothing to do."
+            echo
+            echo "Zum Ersetzen / to replace it: $0 --force"
+            exit 0
+        fi
+
+        echo "[!] Mehrere Zertifikate mit gleichem Namen - codesign kann sie nicht"
+        echo "    unterscheiden (\"ambiguous\"). Mit --force werden alle entfernt"
+        echo "    und genau eines neu erstellt."
+        echo "[!] Several certificates share this name - codesign cannot tell them"
+        echo "    apart (\"ambiguous\"). Use --force to remove them all and create"
+        echo "    exactly one replacement."
+        exit 1
+    fi
+
+    echo "--- Entferne alte Zertifikate / removing old certificates ---"
+    while security find-certificate -c "${CERT_NAME}" "${LOGIN_KEYCHAIN}" \
+            >/dev/null 2>&1; do
+        sha1=$(security find-certificate -c "${CERT_NAME}" -Z "${LOGIN_KEYCHAIN}" \
+            | awk '/SHA-1 hash:/ { print $3; exit }')
+        [[ -z "${sha1}" ]] && break
+        security delete-identity -Z "${sha1}" "${LOGIN_KEYCHAIN}" >/dev/null 2>&1 \
+            || security delete-certificate -Z "${sha1}" "${LOGIN_KEYCHAIN}" \
+                >/dev/null 2>&1 \
+            || break
+        echo "    ${sha1} entfernt / removed"
+    done
+    echo
+fi
+
+# --------------------------------------------------------- Arbeitsverzeichnis --
+
+WORKDIR=$(mktemp -d)
+cleanup() {
+    rm -rf "${WORKDIR}"
+}
+trap cleanup EXIT
+
+# Zufaelliges Passwort - die .p12 existiert nur fuer Sekunden.
+# Random password - the .p12 only exists for a few seconds.
+P12_PASS=$(openssl rand -hex 24)
+
+# ---------------------------------------------- Zertifikat erzeugen / create --
+
+echo "--- Erzeuge Zertifikat / creating certificate ---"
+echo "    Name:          ${CERT_NAME}"
+echo "    Gueltig / valid: ${VALID_DAYS} Tage / days"
+
+cat > "${WORKDIR}/cert.cnf" << EOF
+[ req ]
+distinguished_name = dn
+x509_extensions    = v3
+prompt             = no
+
+[ dn ]
+CN = ${CERT_NAME}
+
+[ v3 ]
+basicConstraints     = critical,CA:true
+keyUsage             = critical,digitalSignature
+extendedKeyUsage     = critical,codeSigning
+subjectKeyIdentifier = hash
+EOF
+
+openssl req -x509 -newkey rsa:2048 -nodes -days "${VALID_DAYS}" \
+    -config "${WORKDIR}/cert.cnf" \
+    -keyout "${WORKDIR}/key.pem" \
+    -out "${WORKDIR}/cert.pem" 2>/dev/null
+
+openssl pkcs12 -export \
+    -inkey "${WORKDIR}/key.pem" \
+    -in "${WORKDIR}/cert.pem" \
+    -name "${CERT_NAME}" \
+    -out "${WORKDIR}/bundle.p12" \
+    -passout "pass:${P12_PASS}"
+
+# ------------------------------------------------------- Import / Vertrauen --
+
+echo "--- Importiere in Anmeldeschluessel / importing into login keychain ---"
+security import "${WORKDIR}/bundle.p12" \
+    -k "${LOGIN_KEYCHAIN}" \
+    -P "${P12_PASS}" \
+    -T /usr/bin/codesign \
+    -T /usr/bin/security >/dev/null
+
+echo "--- Setze Vertrauensstellung / setting trust (sudo) ---"
+sudo security add-trusted-cert -d -r trustRoot -p codeSign \
+    -k "${SYSTEM_KEYCHAIN}" "${WORKDIR}/cert.pem"
+
+echo "--- Erlaube Zugriff ohne Rueckfrage / allowing access without prompts ---"
+echo "    Anmeldepasswort / login password:"
+read -rs LOGIN_PASS
+security set-key-partition-list -S apple-tool:,apple:,codesign: \
+    -s -k "${LOGIN_PASS}" "${LOGIN_KEYCHAIN}" >/dev/null 2>&1 \
+    || echo "    [!] Fehlgeschlagen - codesign fragt ggf. nach / failed, codesign may prompt"
+unset LOGIN_PASS
+
+# ----------------------------------------------------------- Pruefung / check --
+
+echo
+echo "--- Pruefe Ergebnis / verifying ---"
+found=$(security find-identity -v -p codesigning | grep -c "\"${CERT_NAME}\"" || true)
+
+if [[ "${found}" -eq 1 ]]; then
+    security find-identity -v -p codesigning | grep "\"${CERT_NAME}\""
+    echo
+    echo "Fertig. Jetzt bauen mit:"
+    echo "Done. Now build with:"
+    echo "    python3 Build-Project.command"
+    exit 0
+fi
+
+echo "[!] Es wurden ${found} Identitaeten gefunden, erwartet war 1."
+echo "[!] Found ${found} identities, expected 1."
+exit 1
