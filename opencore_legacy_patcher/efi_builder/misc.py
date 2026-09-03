@@ -452,6 +452,24 @@ class BuildMiscellaneous:
             logging.error("We have an issue to compare the bytes length.")
             sys.exit(3)
     
+    if self.model in ["MacBookAir8,1", "MacBookAir8,2", "MacBookPro11,1", "MacBookPro11,2", "MacBookPro11,3"]:
+        try:
+            cpu_topology_fix()
+        except Exception as e:
+            logging.error("The patches for the CPU topology are missing.")
+            logging.error("Stack Trace:")
+            sys.exit(3)
+    
+    def cpu_topology_fix():
+        try:
+            logging.info(f"Applying patches for {self.model} to fix CPU topology / thread pooling panic layouts")
+            self.config["Kernel"]["Quirks"]["ProvideCurrentCpuInfo"] = True
+        except Exception as e:
+            logging.error("Applying patches to fix this specific kernel panic failed due to the following error:")
+            logging.exception("Stack Trace:")
+            logging.info("Please try again later.")
+            sys.exit(3)
+    
     def _t2_handling(self) -> None:
         """T2 Security Chip Handler."""
         if not self._is_t2_mac():
@@ -523,16 +541,6 @@ class BuildMiscellaneous:
                     logging.exception("Stack Trace:")
                     logging.info("Please try again later.")
                     sys.exit(3)
-                
-                if self.model in ["MacBookAir8,1", "MacBookAir8,2", "MacBookPro11,1", "MacBookPro11,2", "MacBookPro11,3"]:
-                    try:
-                        logging.info("Applying patches for MacBookAir8,1 or 8,2 to fix CPU topology / thread pooling panic layouts")
-                        self.config["Kernel"]["Quirks"]["ProvideCurrentCpuInfo"] = True
-                    except Exception as e:
-                        logging.error("Applying patches to fix this specific kernel panic failed due to the following error:")
-                        logging.exception("Stack Trace:")
-                        logging.info("Please try again later.")
-                        sys.exit(3)
                     
                 # Structure guarding for OpenCore NVRAM delete layout
                 self.config.setdefault("NVRAM", {}).setdefault("Delete", {})
@@ -540,8 +548,6 @@ class BuildMiscellaneous:
                     self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID] = []
                 if "boot-args" not in self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID]:
                     self.config["NVRAM"]["Delete"][APPLE_NVRAM_UUID].append("boot-args")
-        
-                # Injizieren von bypass für library validation enforcement auf T2 hardware übersprungen, um frühe Kernel Panics zu vermeiden, bevor die Betriebssystem überhaupt startet
         
                 try:
                     logging.info("- Set SIP to 0xfff - crucial to be able to boot properly on T2 Macs")
