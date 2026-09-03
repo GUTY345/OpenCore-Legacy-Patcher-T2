@@ -229,9 +229,24 @@ unset LOGIN_PASS
 
 # ----------------------------------------------------------- Pruefung / check --
 
-count_identities() {
+identity_lines() {
     security find-identity -v -p codesigning 2>/dev/null \
-        | grep -c "\"${CERT_NAME}\"" || true
+        | grep "\"${CERT_NAME}\"" || true
+}
+
+count_identities() {
+    identity_lines | grep -c . || true
+}
+
+# Nicht vertrauenswuerdige Zertifikate erscheinen mit einem Zusatz wie
+# "(CSSMERR_TP_NOT_TRUSTED)". Build-Project.command hat solche Eintraege
+# frueher verworfen, deshalb hier pruefen und Vertrauen setzen.
+#
+# Certificates that are not trusted show up with a suffix such as
+# "(CSSMERR_TP_NOT_TRUSTED)". Build-Project.command used to discard those
+# entries, so detect the case and set trust.
+count_untrusted() {
+    identity_lines | grep -c "CSSMERR" || true
 }
 
 echo
@@ -247,7 +262,7 @@ found=$(count_identities)
 # USER domain. Do not use "add-trusted-cert -d ... -k System.keychain": that puts
 # a second copy of the certificate into the system keychain, after which codesign
 # reports "ambiguous" again.
-if [[ "${found}" -eq 0 ]]; then
+if [[ "${found}" -eq 0 || "$(count_untrusted)" -gt 0 ]]; then
     echo "    Setze Vertrauensstellung / setting trust"
     security add-trusted-cert -r trustRoot -p codeSign \
         -k "${LOGIN_KEYCHAIN}" "${WORKDIR}/cert.pem" >/dev/null 2>&1 \
@@ -255,13 +270,27 @@ if [[ "${found}" -eq 0 ]]; then
     found=$(count_identities)
 fi
 
-if [[ "${found}" -eq 1 ]]; then
-    security find-identity -v -p codesigning | grep "\"${CERT_NAME}\""
+untrusted=$(count_untrusted)
+
+if [[ "${found}" -eq 1 && "${untrusted}" -eq 0 ]]; then
+    identity_lines
     echo
     echo "Fertig. Jetzt bauen mit:"
     echo "Done. Now build with:"
     echo "    python3 Build-Project.command"
     exit 0
+fi
+
+if [[ "${untrusted}" -gt 0 ]]; then
+    identity_lines
+    echo
+    echo "[!] Das Zertifikat gilt nicht als vertrauenswuerdig."
+    echo "    In der Schluesselbundverwaltung: Zertifikat doppelklicken >"
+    echo "    Vertrauen > Codesignatur: \"Immer vertrauen\""
+    echo "[!] The certificate is not trusted."
+    echo "    In Keychain Access: double-click the certificate >"
+    echo "    Trust > Code Signing: \"Always Trust\""
+    exit 1
 fi
 
 echo "[!] Es wurden ${found} Identitaeten gefunden, erwartet war 1."
