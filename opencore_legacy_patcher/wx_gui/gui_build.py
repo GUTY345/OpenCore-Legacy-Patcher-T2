@@ -383,8 +383,15 @@ class BuildFrame(wx.Frame):
                 logging.error("If you continue to see this error, delete the following file and restart the application:")
                 logging.error("Path: /Users/Shared/.com.dortania.opencore-legacy-patcher.plist")
 
-        if len(logger.handlers) > 2:
-            logger.removeHandler(logger.handlers[2])
+        finally:
+            # Was logger.handlers[2], which is only the ThreadHandler if the root
+            # logger happens to have exactly the handlers it had at startup - so it
+            # could remove the wrong handler and leave this one attached to a text
+            # box that the next frame handoff destroys. Match by type instead, and
+            # do it in a finally so an early exception cannot leak the handler.
+            for existing in logger.handlers[:]:
+                if isinstance(existing, gui_support.ThreadHandler):
+                    logger.removeHandler(existing)
 
 
     def on_return_to_main_menu(self, event: wx.Event = None) -> None:
