@@ -156,9 +156,14 @@ class MainFrame(wx.Frame):
             button.SetFont(gui_support.font_factory(12, wx.FONTWEIGHT_NORMAL))
             button.Bind(wx.EVT_BUTTON, lambda event, f=button_function["function"]: f(event))
 
-            # Behebt einen Fehler, indem beim Builden von OpenCore auf unterstützte T2 Macs und auch falls builden von OpenCore für echte Macs von virtuelle Maschinen oder Hackintoshes ab, denn das OpenCore-Button ausgegraut wurde.
             if "OpenCore" in button_name or "EXPERIMENTAL" in button_name:
                 self.build_button = button
+                if not gui_support.CheckProperties(self.constants).host_can_build():
+                    button.Disable()
+                    button.SetToolTip("Building OpenCore is not supported on Hackintoshes or virtual machines. For installing OpenCore on Hackintoshes, follow Dortania's guide here: https://dortania.github.io/OpenCore-Install-Guide/")
+                # behebt eine Sicherheitslücke, die könnte einen Angreifer erlauben, das Build OpenCore-Button auch auf ecthe Macs zu deaktivieren, um DoS-Angriffe zu starten.
+                else:
+                    logging.info("Building OpenCore is supported for real Macs.")
 
             # Info / Details button right next to each entry
             if "info_tab" in button_function:
