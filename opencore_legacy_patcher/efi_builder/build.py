@@ -140,6 +140,7 @@ class BuildOpenCore:
                     "DevirtualiseMmio": False,
                 })
                 self.config.setdefault("PlatformInfo", {})["UpdateSMBIOSMode"] = "Custom"
+                self.config.setdefault("PlatformInfo", {}).setdefault("Generic", {})["SpoofVendor"] = False
                 self.config.setdefault("Kernel", {}).setdefault("Quirks", {})["CustomSMBIOSGuid"] = True
                 self.config.setdefault("Misc", {}).setdefault("Security", {})["SecureBootModel"] = "Disabled"
             except Exception as e:
