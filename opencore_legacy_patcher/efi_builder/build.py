@@ -35,7 +35,8 @@ security,
 misc
 )
 from ..datasets import (
-    os_data
+    os_data,
+    smbios_data
 )
 
 # von def rmtree_handler(func, path, exc_info) -> None: verabscheiden und zu def rmtree_handler(func, path, exc: BaseException) -> None: wechseln, um Kompabilität mit Python 3.13+ zu verbessern und Python 3.14-Kompabilität zu ermöglichen
@@ -71,6 +72,16 @@ class BuildOpenCore:
 
             if not hasattr(self.constants, "device_properties"):
                 self.constants.device_properties = {}
+
+            # Every builder below reads smbios_data.smbios_dictionary[self.model] directly, in
+            # about a dozen places across firmware.py/smbios.py/graphics_audio.py/misc.py. An
+            # unknown model therefore surfaces as a bare KeyError from whichever of them happens
+            # to run first (in practice firmware.py's _dual_dp_handling()), dozens of frames away
+            # from the actual cause. Catch it once, here, with a message that says what to do.
+            if self.model not in smbios_data.smbios_dictionary:
+                logging.error(f"- Model '{self.model}' is not a Mac model OpenCore Legacy Patcher has SMBIOS data for")
+                logging.error("- Cannot build an EFI for it. If this host is a VM or Hackintosh, pick a real target Mac model in Settings first")
+                raise ValueError(f"Unsupported build model: {self.model}")
 
             self._build_opencore()
         except Exception as e:
@@ -185,8 +196,8 @@ class BuildOpenCore:
             
             # Target some 2017 Mac models specifically to bypass vt-d/broadcom complications
             # Dies ist benötigt, um WLAN und Bluetooth richtig zu funktionieren auf macOS 26 Tahoe.
-            _2017_MODELS_NEED_DART = ["iMac18,1", "iMac18,2", "iMac18,3", "MacBookPro14,1", "MacBookPro14,2", "MacBookPro14,3"]
-            if self.model in _2017_MODELS_NEED_DART:
+            MODELS_NEED_DART = ["iMac18,1", "iMac18,2", "iMac18,3", "MacBookPro14,1", "MacBookPro14,2", "MacBookPro14,3", "MacBookAir6,2"]
+            if self.model in MODELS_NEED_DART:
                 if "dart=0" not in current_boot_args:
                     logging.info(f"- Appending dart=0 boot argument for {self.model} hardware target to fix WiFi/Bluetooth issues on macOS Tahoe ({self.model})")
                     current_boot_args = f"{current_boot_args} dart=0".strip()

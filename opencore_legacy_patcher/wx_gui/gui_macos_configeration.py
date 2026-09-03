@@ -75,7 +75,10 @@ class MacosConfigFrame(wx.Frame):
         root_patch_button = wx.Button(frame, label="Root Patching", pos=(-1, -1), size=(120, 30))
         root_patch_button.Bind(wx.EVT_BUTTON, self.on_root_patch)
         root_patch_button.SetFont(gui_support.font_factory(13, wx.FONTWEIGHT_NORMAL))
-        if (gui_support.CheckProperties(self.constants).host_can_build() is False) or (self.constants.detected_os < os_data.os_data.big_sur):
+        # host_can_root_patch(), not host_can_build(): this button only patches the volume
+        # this host already runs, so it may stay available where building an EFI is not
+        # (eg. a VMware VM with allow_vmware_root_patching set) - see gui_support.py.
+        if (gui_support.CheckProperties(self.constants).host_can_root_patch() is False) or (self.constants.detected_os < os_data.os_data.big_sur):
             root_patch_button.Disable()
         sizer.Add(root_patch_button, 0, wx.ALIGN_CENTER | wx.ALL, 0)
 
@@ -395,12 +398,13 @@ class MacosConfigFrame(wx.Frame):
             return
 
         self._update_setting(self.settings[self._find_parent_for_key(label)][label]["variable"], value)
-        if label == "Allow native models":
-            if hasattr(self.parent, 'build_button') and self.parent.build_button:
-                if gui_support.CheckProperties(self.constants).host_can_build() is True:
-                    self.parent.build_button.Enable()
-                else:
-                    self.parent.build_button.Disable()
+        # NOTE: "Allow native models" used to enable/disable the main menu's "OpenCore" button
+        # (self.parent.build_button) from here. It no longer does: that button only opens the
+        # OpenCore settings frame, which gates its own "Save OpenCore"/"Install OpenCore" buttons
+        # on host_can_build() - see gui_oc_settings._refresh_build_gated_buttons(). Disabling the
+        # entry point from here would put an unsupported host back in the state this fix removes:
+        # unable to reach the very settings ("Allow native models", target model) that unlock
+        # building in the first place.
 
 
     def on_spinctrl(self, event: wx.Event, label: str) -> None:
@@ -465,10 +469,18 @@ class MacosConfigFrame(wx.Frame):
 
 
     def on_return(self, event):
-        self.frame_modal.Destroy()
+        # End the sheet session before destroying, and defer the Destroy - the button
+        # handling this event is a child of the dialog (see gui_support.end_window_modal).
+        gui_support.end_window_modal(self.frame_modal)
+        self.frame_modal.Hide()
+        wx.CallAfter(self.frame_modal.Destroy)
 
     def on_root_patch(self, event):
-        self.frame_modal.Destroy()
+        # Ends this sheet before the root patch sheet gets attached to the same parent:
+        # a leftover modal session here would keep the parent blocked for good.
+        gui_support.end_window_modal(self.frame_modal)
+        self.frame_modal.Hide()
+        wx.CallAfter(self.frame_modal.Destroy)
         gui_sys_patch_display.SysPatchDisplayFrame(
             parent=self.parent,
             title=self.title,

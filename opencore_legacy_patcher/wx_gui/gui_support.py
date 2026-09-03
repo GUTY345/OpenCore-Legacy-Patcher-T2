@@ -271,6 +271,27 @@ class GaugePulseCallback:
             time.sleep(0.005)
 
 
+def end_window_modal(dialog: wx.Dialog) -> None:
+    """
+    End the modal session of a dialog shown with ShowWindowModal()
+
+    On macOS such a dialog is an NSWindow sheet attached to its parent, and only
+    EndModal() ends that session. Hiding or Destroy()ing the dialog directly takes the
+    content away while the parent stays sheet-blocked, leaving an empty grey sheet the
+    user cannot dismiss. Callers remain responsible for the teardown itself, and should
+    defer it via wx.CallAfter when running inside an event handler of one of the
+    dialog's own children.
+    """
+    if not dialog:
+        return
+    try:
+        if dialog.IsModal():
+            dialog.EndModal(wx.ID_CANCEL)
+    except Exception as e:
+        logging.error(f"Failed to end window modal session: {e}")
+        logging.exception("Stack Trace:")
+
+
 class CheckProperties:
 
     def __init__(self, global_constants: constants.Constants) -> None:
@@ -280,6 +301,15 @@ class CheckProperties:
     def host_can_build(self):
         """
         Check if host supports building OpenCore configs
+
+        NOTE: this answers one question only - "may an OpenCore EFI be built here?".
+        Root patching asks a different question and must use host_can_root_patch()
+        below. The allow_vmware_root_patching escape hatch used to live in this
+        function, and because OCSettingsFrame gates "Save OpenCore"/"Install OpenCore"
+        on host_can_build() too, it also unlocked building inside a VMware VM. The
+        resulting build ran for the VM's own model ("VMware20,1"), which smbios_data
+        has no entry for, and died with a bare KeyError in efi_builder/firmware.py's
+        _dual_dp_handling().
         """
         # Hackintoshes/VMs must stay blocked regardless of a selected custom_model,
         # unless the user has explicitly opted in via allow_oc_everywhere. Checking
@@ -288,16 +318,6 @@ class CheckProperties:
         # (this is what the on_model_choice() fix alone could not solve, since it
         # just re-checks this same function).
         if self.constants.host_is_hackintosh is True and self.constants.allow_oc_everywhere is False:
-            # Dev/test only, narrower escape hatch than allow_oc_everywhere above: that toggle is a
-            # GUI Settings checkbox ("Allow native models") any user of a pre-built app could flip,
-            # which is too broad for what this is meant for (exercising root-patch syntax inside a
-            # VMware VM, see host_is_vmware_vm in application_entry.py/constants.py). allow_vmware_root_patching
-            # has no GUI control at all and defaults to False - it only ever becomes True if someone
-            # hand-edits constants.py and runs from source, so it can't be abused by end users the way
-            # a GUI checkbox could. Scoped to host_is_vmware_vm specifically, so it can never unlock
-            # this button for a hackintosh or any other unsupported real Mac.
-            if self.constants.host_is_vmware_vm is True and self.constants.allow_vmware_root_patching is True:
-                return True
             # A Hackintosh/VM can still be a *build station* for a different, real Mac: if the
             # user explicitly picked a target (custom_model) and that target is itself a genuine,
             # supported Mac model, the resulting OpenCore build isn't destined for this Hackintosh/VM
@@ -336,6 +356,29 @@ class CheckProperties:
             return True
 
         return False
+
+
+    def host_can_root_patch(self):
+        """
+        Check if host supports root patching
+
+        Split out of host_can_build(): root patching targets the volume this host is
+        already running, so it needs no valid Mac SMBIOS build target, while building
+        an EFI does. Keeping the two apart is what stops a dev-only root-patch escape
+        hatch from also enabling the build buttons.
+        """
+        # Dev/test only, narrower escape hatch than allow_oc_everywhere: that toggle is a
+        # GUI Settings checkbox ("Allow native models") any user of a pre-built app could flip,
+        # which is too broad for what this is meant for (exercising root-patch syntax inside a
+        # VMware VM, see host_is_vmware_vm in application_entry.py/constants.py). allow_vmware_root_patching
+        # has no GUI control at all and defaults to False - it only ever becomes True if someone
+        # hand-edits constants.py and runs from source, so it can't be abused by end users the way
+        # a GUI checkbox could. Scoped to host_is_vmware_vm specifically, so it can never unlock
+        # root patching for a hackintosh or any other unsupported real Mac.
+        if self.constants.host_is_vmware_vm is True and self.constants.allow_vmware_root_patching is True:
+            return True
+
+        return self.host_can_build()
 
 
     def host_is_non_metal(self, general_check: bool = False):

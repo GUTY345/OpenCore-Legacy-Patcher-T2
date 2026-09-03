@@ -158,12 +158,39 @@ class MainFrame(wx.Frame):
 
             if "OpenCore" in button_name or "EXPERIMENTAL" in button_name:
                 self.build_button = button
+                # NOTE: since the GUI redesign this entry point no longer builds or installs
+                # anything - it only OPENS gui_oc_settings.OCSettingsFrame. That frame already
+                # gates its own "Save OpenCore" / "Install OpenCore" buttons on host_can_build(),
+                # so nothing that touches a disk is reachable from here anyway, and disabling the
+                # way in was actively harmful:
+                #   (a) "Allow native models" (allow_oc_everywhere) - the one opt-in that makes
+                #       host_can_build() true on a Hackintosh/VM - is a checkbox INSIDE that very
+                #       frame (gui_oc_settings.py, "Allow native models"). Disabling the button
+                #       locked the only door to the switch that unlocks the button: an affected
+                #       host could never opt in at all;
+                #   (b) same for picking a real, supported Mac as the target model, which is the
+                #       other documented way host_can_build() flips to true on such a host (see
+                #       the custom_model branch in gui_support.CheckProperties.host_can_build());
+                #   (c) it also hid every OpenCore setting - including the read-only look at what
+                #       the current config would be - from anyone on a host that can't build,
+                #       e.g. a T2 Mac whose model isn't (or isn't yet) listed in SupportedSMBIOS.
+                # So: the entry point stays enabled for everyone, and the frame keeps deciding
+                # what may actually be written to disk. Keep self.build_button pointing at it,
+                # other frames still look this attribute up.
                 if not gui_support.CheckProperties(self.constants).host_can_build():
-                    button.Disable()
-                    button.SetToolTip("Building OpenCore is not supported on Hackintoshes or virtual machines. For installing OpenCore on Hackintoshes, follow Dortania's guide here: https://dortania.github.io/OpenCore-Install-Guide/")
-                # behebt eine Sicherheitslücke, die könnte einen Angreifer erlauben, das Build OpenCore-Button auch auf ecthe Macs zu deaktivieren, um DoS-Angriffe zu starten.
+                    button.SetToolTip(
+                        "Opens OpenCore settings.\n\n"
+                        "Building and installing OpenCore is not supported on this host, so "
+                        "\"Save OpenCore\" and \"Install OpenCore\" stay disabled inside. To unlock them, "
+                        "enable \"Allow native models\" in these settings, or pick a real, supported Mac "
+                        "as the target model.\n\n"
+                        "For installing OpenCore on Hackintoshes, follow Dortania's guide here: "
+                        "https://dortania.github.io/OpenCore-Install-Guide/"
+                    )
+                    logging.info("Host cannot build OpenCore: settings stay accessible, Save/Install stay disabled.")
                 else:
-                    logging.info("Building OpenCore is supported for real Macs.")
+                    button.SetToolTip("Opens OpenCore settings, where OpenCore can be built and installed")
+                    logging.info("Building OpenCore is supported on this host.")
 
             # Info / Details button right next to each entry
             if "info_tab" in button_function:
@@ -364,11 +391,11 @@ class MainFrame(wx.Frame):
         self.web_view.Bind(wx.html2.EVT_WEBVIEW_NEWWINDOW, self._onWebviewNav)
         self.web_view.EnableContextMenu(False)
         
-        self.close_button = wx.Button(panel, label="Dismiss")
+        self.close_button = wx.Button(panel, label="Update Later")
         self.close_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(wx.ID_CANCEL))
         self.view_button = wx.Button(panel, ID_GITHUB, label="View on GitHub")
         self.view_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(ID_GITHUB))
-        self.install_button = wx.Button(panel, label="Download and Install")
+        self.install_button = wx.Button(panel, label="Update Now")
         self.install_button.Bind(wx.EVT_BUTTON, lambda event: frame.EndModal(ID_UPDATE))
         self.install_button.SetDefault()
 

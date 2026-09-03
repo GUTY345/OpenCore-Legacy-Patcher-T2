@@ -1,4 +1,131 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.18002 - 4.0.0 alpha 18.2
+This release:
+- fixes a bug where upon clicking Save OpenCore and the EFI configuration has been saved successfully, it will show a crash log
+- fixes an issue where WiFi doesn't work on MacBook Air Mid 2013 and MacBook Air Early 2014 on macOS 26 Tahoe by adding dart=0 in the boot arguments
+- fixes a bug where the OpenCore button is greyed out on Hackintoshes, virtual machines and supported T2 Macs 
+- updates OpenCore to 2.0.3 (changelog here: https://github.com/albert-mueller/OpenCorePkg-add-T2-support/releases/tag/2.0.3 )
+- fixes the following vulnerabilities:
+application_entry.py:
+
+      # Generate binary data
+              launcher_script = None
+              launcher_binary = sys.executable
+              if "python" in launcher_binary:
+                  # We're running from source.
+                  # BUGFIX: __file__ here is this module's own path (application_entry.py),
+                  # which never contains "main.py", so the replace() below never fired -
+                  # launcher_script silently ended up pointing at application_entry.py
+                  # itself (a module with no __main__ guard, so re-executing it does
+                  # nothing). Resolve the real from-source entry point deterministically
+                  # instead of relying on a substring match against a path that can't
+                  # contain it.
+                  launcher_script = str(Path(__file__).resolve().parent.parent / "OpenCore-Patcher-GUI.command")
+              self.constants.launcher_binary = launcher_binary
+              self.constants.launcher_script = launcher_script
+      
+              # Initialize working directory after confirming payload integrity
+              # Note: Implement absolute hash checking within verify_payload_integrity
+              if hasattr(utilities, "verify_payload_integrity"):
+                  if not utilities.verify_payload_integrity(self.constants):
+                      raise SecurityError("Payload integrity verification failed. Execution halted.") # <- an attacker could wrap this security error inside try/except to bypass this error
+
+Impact: an attacker could bypass the Payload integrity verification failed error to gain unauthorized access to the computer. This is fixed by replacing the raise SecurityError with logging.error, immediately followed by sys.exit(3).
+
+        if utilities.check_cli_args() is None:
+                    self.constants.cli_mode = False
+                    return
+        # <- an attacker could delete the if utilities.check_cli_args() is None: to force the user into CLI mode
+                logging.info("Detected arguments, switching to CLI mode")
+                self.constants.cli_mode = True  
+                self.constants.gui_mode = False 
+        
+                ignore_args = ["--auto_patch", "--gui_patch", "--gui_unpatch", "--update_installed"]
+                
+                # If none of the specific arguments are in sys.argv
+                if not any(x in sys.argv for x in ignore_args):
+                    self.constants.current_path = Path.cwd()
+        
+                # Fix: Deterministic Thread Synchronization.
+                # Ensure arguments parsing never runs into race conditions regardless of flags if unpack state is required
+                if "--auto_patch" not in sys.argv:
+                    while self.constants.unpack_thread.is_alive():
+                        time.sleep(self.constants.thread_sleep_interval)
+
+Impact: an attacker who has gained unauthorized access to the computer could force the user into using the CLI mode. This is fixed by placing this under an else condition.
+
+## 4.0.0.18001 - 4.0.0 alpha 18.1
+This release is mostly a security and bug fix update and is recommended for all users.
+This release:
+- fixes a bug where when root patching, when clicking on Return to main menu, the app shows a blank screen
+- fixes a bug where the Build and Install OpenCore button in certain conditions may not work, thanks @Medelcartelinc 
+- deprecates Developer Mode from the GUI in favor of Experimental Features to reduce the attack surface as Developer Mode introduced social engineering attack surface, thanks @Medelcartelinc and @gandolf243 
+- fixes a vulnerability where the Priveleged Helper Tool was signed using make debug. An attacker could execute arbitary code using a malicious application to escalate root privileges. This is fixed by using a self signed certificate instead.
+- introducing the ability to automatically self sign the app for developers, provided they have a self signed certificate that is configured properly
+- fixes a few other vulnerabilities as well and are related to escalating root privileges inside the OpenCore Legacy Patcher T2 app:
+
+subprocess_wrapper.py:
+
+      if return_code not in [error_code.value for error_code in PrivilegedHelperErrorCodes]:
+              return None
+      
+          return PrivilegedHelperErrorCodes(return_code).name # <- an attacker could forcibly return an error to stop the Priveleged Helper Tool from executing anything, prompting the user for their password via osascript to execute arbitary code
+
+Impact: an attacker could force the Priveleged Helper Tool to return an error to fall back to osascript -a to bypass the Priveleged Helper Tool and execute arbitary code. This is fixed by placing return PrivilegedHelperErrorCodes under else condition.
+
+           if elevated_process.returncode == 0:
+                  logging.info("- Mounted (elevated)")
+                  return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=elevated_stdout)
+          
+              logging.info(f"- Elevated hdiutil attach failed: {elevated_stdout.decode(errors='replace').strip()}") # <- an attacker could force to show this error to escalate privileges and execute arbitary commands as root
+              return subprocess.CompletedProcess(args=cmd, returncode=elevated_process.returncode, stdout=elevated_stdout)
+
+Impact: an attacker could escalate root privileges by deleting the if elevated_process.returncode == 0: to escalate root privileges and execute arbitary code. This is fixed by placing this under else condition.
+
+      if process_result.returncode == 0:
+              return
+      
+          log(process_result)
+      
+          raise Exception(f"Process failed with exit code {process_result.returncode}")
+
+Here, there are 2 vulnerabilities fixed: the error isn't printed if the user is running the application via Terminal instead. And second, an attacker could delete the if process_result.returncode == 0: to launch ClickFix attacks.
+Impact: an attacker could delete the if condition to force to display the error Process failed with exit code to launch ClickFix attacks. This is fixed by placing this under an else condition.
+
+updates.py:
+- fixes a vulnerability where it may not always download and install the latest version. An attacker could abuse this to exploit vulnerabilities long after they're patched. Thanks @Medelcartelinc for helping me fix this vulnerability!
+
+## 4.0.0.18000.1 - 4.0.0 alpha 18.0.1
+This release fixes an issue where the Priveleged Helper Tool is not signed properly, causing the app to fall back to osascript.
+
+Diese Version behebt ein Problem, bei dem das Privileged Helper Tool nicht ordnungsgemäß signiert ist, was dazu führt, dass die App auf osascript zurückgreift.
+
+## 4.0.0.18000 - 4.0.0 alpha 18
+You'll need to follow the update instructions here to get successfully updated: https://github.com/albert-mueller/OpenCore-Legacy-Patcher-T2/issues/248
+This release:
+- renames the app from OpenCore-Patcher to OpenCore-Patcher-T2, the installer is renamed to OpenCore-Patcher-T2.pkg and AutoPkg-Assets-T2.pkg. However, for this release only, there are going to be 2 installers: OpenCore-Patcher.pkg and OpenCore-Patcher-T2.pkg, and the same goes for AutoPkg-Assets.pkg and the reason is on alpha 17 and older releases when updating, they won't recognie the OpenCore-Patcher-T2.pkg as a valid package to update from. And this app is renamed to fix a vulnerability where an attacker could trick a user to install OpenCore Legacy Patcher T2 disguised as OpenCore Legacy Patcher (the original project by Dortania) to impersonate Dortania and spread malware.
+- fixes a vulnerability where the user agent is OpenCore-Legacy-Patcher-T2. And the reason this is a vulnerability is that GitHub and many sites are unable to parse this user agent properly and inapropriately serve an older web page version. And also, an attacker could exploit exactly this to launch MitM attacks to launch a malicious update via a malicious DNS address. This vulnerability is fixed by changing the user agent to this: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/152.0.4191.53/OpenCoreLegacyPatcherT2 . As such, to most websites this looks like a modern browser while signalizing it's actually OpenCore Legacy Patcher T2 rather than a web browser.
+- increases speed of downloading updates,, kexts and other stuff from GitHub, thanks to changing the user agent
+- now support for macOS Catalina,, Mojave and High Sierra is back, now with all buttons working, however, no AI features will work inside the app - instead, when you click Ask Gemini, it will open Gemini inside your default web browser when you run one of these macOS versions. The reason is that Gemini on High Sierra, Mojave and Catalina inside Safari and WebKit doesn't even load properly:
+<img width="1600" height="900" alt="Bildschirmfoto 2026-09-01 um 09 50 00" src="https://github.com/user-attachments/assets/c3523fe0-f32d-4ced-9e58-617d6e899f70" />
+- also, when an error occurs and you click Ask Gemini, on these older versions, it will only open a browser window, it will not copy anything to the clipboard as it opens a web browser anyways.
+- And here's how the app looks like on High Sierra:
+<img width="1600" height="900" alt="Bildschirmfoto 2026-09-01 um 09 48 03" src="https://github.com/user-attachments/assets/6b203028-e2f3-432a-8855-a66b3e428a21" />
+<img width="1600" height="900" alt="Bildschirmfoto 2026-09-01 um 09 48 08" src="https://github.com/user-attachments/assets/95e01cba-b68f-47cb-9551-0a73afdd3c44" />
+<img width="1600" height="900" alt="Bildschirmfoto 2026-09-01 um 09 48 14" src="https://github.com/user-attachments/assets/25daca88-559c-4abd-9149-3ef898d1ad2f" />
+<img width="1600" height="900" alt="Bildschirmfoto 2026-09-01 um 09 48 19" src="https://github.com/user-attachments/assets/81576343-62ed-453b-a446-90476bf3e0e7" />
+<img width="1600" height="900" alt="Bildschirmfoto 2026-09-01 um 09 48 23" src="https://github.com/user-attachments/assets/1aae8b91-b5e1-41ff-a943-6a9c3ef4ce4b" />
+<img width="1600" height="900" alt="Bildschirmfoto 2026-09-01 um 09 48 28" src="https://github.com/user-attachments/assets/d5ec7ec8-1bc5-4d29-bc90-20d8f93ba24b" />
+<img width="1600" height="900" alt="Bildschirmfoto 2026-09-01 um 09 48 34" src="https://github.com/user-attachments/assets/ede85f1a-d890-460a-9b9f-7797d0970896" />
+
+- now the new, permanent minimum requirement is to have at least macOS 10.13.6 installed to run this app. Users with Macs that are incompatible with High Sierra and can officially run only El Capitan, you need to upgrade to macOS High Sierra using Dosdude1's High Sierra patcher called macOS High Sierra Patcher first or to build OpenCore using another computer.
+To make it run properly on macOS High Sierra, I also needed to redesign the error dialogs when an error occurs while building OpenCore to be able to display those on High Sierra, Mojave and Catalina too
+- now for those on Big Sur+, now if you have signed in to your Google Account in the window to ask Gemini, now your session will be remembered across the entire app, even if you decide to quit the application.
+- Now, Settings has its own icon instead of an emoji
+- fixes a bug where on supported T2 Macs; e.g 2020 4 thunderbolt 3 ports MacBook Pro, the remoted service was crashing while macOS has just been started up
+- releasing Developer Mode - this feature enables experimental/hidden features, experimental T1 support and nearly complete MacBookPro14,3 support, thx @albert-mueller, @Medelcartelinc, @gandolf243 .
+- fixes an issue where if the Priveleged Helper Tool fails to run, the process immediately crashes. To fix this, a fallback to osascript is added to fix this issue - securely, thanks @Medelcartelinc for implementing the feature and @albert-mueller for fixing the vulnerabilities the earlier implementation had. The earlier implementation by @Medelcartelinc had a vulnerability where an attacker could bypass the Priveleged Helper Tool and fall back to osascript to execute arbitary code as root. I fixed this by defining osascript in a seperate definition instead to call osascript safely and only when needed.
+
 ## 4.0.0.17002.3 - 4.0.0 alpha 17.2.3
 This release fixes a bug where on unsupported or spoofed T2 Macs when installing macOS 26 Tahoe may cause to throw an error after 29 minutes remaining because it was trying to fetch a UEFI update for a mismatched Mac computer, especially if the SMBIOS is spoofed. Also, it causes CPU throttling down to 800MHz under certain circumstances, making macOS 26 Tahoe absolutely unusable on T2 Macs. Furthermore, when checking for macOS updates, it bundled a mismatched UEFI update that could brick T2 Macs.
 There are no changes affecting non-T2 Macs between the previous version and this one.
@@ -70,16 +197,6 @@ This release:
               return True
 
 Impact: an attacker could abuse the bug where OpenCore Transfer complete is shown unconditionally and unconditionally returns true to place a malformed EFI to launch a DoS attack at the EFI level. This is fixed by adding a variable that is switched to True only if OpenCore is added successfully. If the variable isn't set to True, it will show an error instead to inform the user properly that their OpenCore EFI is not built at all instead.
-
-## 4.0.0.17001.1 - 4.0.0 alpha 17.1.1
-This release:
-
-Metal 3802 and non-Metal patches are not working and known very well to cause yellow screen and kernel panics on macOS 26. To prevent this, I'll put safety guards to prevent these patches from getting injected into macOS 26 while @gandolf243 is working on it to ifx these patches on Tahoe, while the already known to be working patches or ones that are going to be tested yet, only those are going to be injected.
-For unsupported T2 Macs, I found this bug: https://github.com/acidanthera/OpenCorePkg/pull/620 . I'm working closely with Accidanthera to get this OpenCorePkg bug fixed.
-Diese Version:
-
-Metal 3802 und Nicht-Metal-Patches funktionieren nicht und sind dafür bekannt, unter macOS 26 zu Yellow Screens und Kernel-Panics zu führen. Um dies zu verhindern, werden Sicherheitsvorkehrungen getroffen, damit diese Patches nicht in macOS 26 eingespielt werden, während @gandolf243 daran arbeitet, sie per ifx auf Tahoe zu integrieren. Nur bereits bekannte, funktionierende oder noch zu testende Patches werden eingespielt.
-Für nicht unterstützte T2-Macs habe ich diesen Bug gefunden: https://github.com/acidanthera/OpenCorePkg/pull/620. Ich arbeite eng mit Accidanthera zusammen, um diesen OpenCorePkg-Bug zu beheben.
 
 ## 4.0.0.17001.1 - 4.0.0 alpha 17.1.1
 This release:
