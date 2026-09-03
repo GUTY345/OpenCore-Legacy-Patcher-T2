@@ -94,6 +94,7 @@ class BuildMiscellaneous:
         self._debug_handling()
         self._cpu_friend_handling()
         self._general_oc_handling()
+        self._cpu_topology_handling()
         self._t1_handling()
         self._t2_handling()
 
@@ -452,17 +453,16 @@ class BuildMiscellaneous:
             logging.error("We have an issue to compare the bytes length.")
             sys.exit(3)
     
-    if self.model in ["MacBookAir8,1", "MacBookAir8,2", "MacBookPro11,1", "MacBookPro11,2", "MacBookPro11,3"]:
+    def _cpu_topology_handling(self) -> None:
+        """Apply CPU topology / thread pooling panic fixes on affected models."""
+        if self.model not in ["MacBookAir8,1", "MacBookAir8,2", "MacBookPro11,1", "MacBookPro11,2", "MacBookPro11,3"]:
+            return
+
+        self._cpu_topology_fix()
+
+    def _cpu_topology_fix(self) -> None:
         try:
-            cpu_topology_fix()
-        except Exception as e:
-            logging.error("The patches for the CPU topology are missing.")
-            logging.error("Stack Trace:")
-            sys.exit(3)
-    
-    def cpu_topology_fix():
-        try:
-            logging.info(f"Applying patches for {self.model} to fix CPU topology / thread pooling panic layouts")
+            logging.info(f"- Applying patches for {self.model} to fix CPU topology / thread pooling panic layouts")
             self.config["Kernel"]["Quirks"]["ProvideCurrentCpuInfo"] = True
         except Exception as e:
             logging.error("Applying patches to fix this specific kernel panic failed due to the following error:")
