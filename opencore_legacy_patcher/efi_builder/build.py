@@ -139,9 +139,9 @@ class BuildOpenCore:
                     "SyncRuntimePermissions": False,
                     "DevirtualiseMmio": False,
                 })
-                self.config.setdefault("PlatformInfo", {})["UpdateSMBIOSMode"] = "Custom"
+                self.config.setdefault("PlatformInfo", {})["UpdateSMBIOSMode"] = "Create"
                 self.config.setdefault("PlatformInfo", {}).setdefault("Generic", {})["SpoofVendor"] = False
-                self.config.setdefault("Kernel", {}).setdefault("Quirks", {})["CustomSMBIOSGuid"] = True
+                self.config.setdefault("Kernel", {}).setdefault("Quirks", {})["CustomSMBIOSGuid"] = False
                 self.config.setdefault("Misc", {}).setdefault("Security", {})["SecureBootModel"] = "Disabled"
             except Exception as e:
                 logging.error("Whoops, applying in-memory T2 booter and SMBIOS alignments failed because of the following error:")
