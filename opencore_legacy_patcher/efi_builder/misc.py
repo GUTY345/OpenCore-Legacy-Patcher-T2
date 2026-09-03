@@ -524,7 +524,7 @@ class BuildMiscellaneous:
                     logging.info("Please try again later.")
                     sys.exit(3)
                 
-                if self.model in ["MacBookAir8,1", "MacBookAir8,2"]:
+                if self.model in ["MacBookAir8,1", "MacBookAir8,2", "MacBookPro11,1", "MacBookPro11,2", "MacBookPro11,3"]:
                     try:
                         logging.info("Applying patches for MacBookAir8,1 or 8,2 to fix CPU topology / thread pooling panic layouts")
                         self.config["Kernel"]["Quirks"]["ProvideCurrentCpuInfo"] = True
