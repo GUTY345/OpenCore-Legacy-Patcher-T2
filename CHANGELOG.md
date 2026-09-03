@@ -1,4 +1,59 @@
 # OpenCore Legacy Patcher T2 changelog / OpenCore Legacy Patcher T2-Änderungsprotokoll
+## 4.0.0.18002 - 4.0.0 alpha 18.2
+This release:
+- fixes a bug where upon clicking Save OpenCore and the EFI configuration has been saved successfully, it will show a crash log
+- fixes an issue where WiFi doesn't work on MacBook Air Mid 2013 and MacBook Air Early 2014 on macOS 26 Tahoe by adding dart=0 in the boot arguments
+- fixes a bug where the OpenCore button is greyed out on Hackintoshes, virtual machines and supported T2 Macs 
+- updates OpenCore to 2.0.3 (changelog here: https://github.com/albert-mueller/OpenCorePkg-add-T2-support )
+- fixes the following vulnerabilities:
+application_entry.py:
+
+      # Generate binary data
+              launcher_script = None
+              launcher_binary = sys.executable
+              if "python" in launcher_binary:
+                  # We're running from source.
+                  # BUGFIX: __file__ here is this module's own path (application_entry.py),
+                  # which never contains "main.py", so the replace() below never fired -
+                  # launcher_script silently ended up pointing at application_entry.py
+                  # itself (a module with no __main__ guard, so re-executing it does
+                  # nothing). Resolve the real from-source entry point deterministically
+                  # instead of relying on a substring match against a path that can't
+                  # contain it.
+                  launcher_script = str(Path(__file__).resolve().parent.parent / "OpenCore-Patcher-GUI.command")
+              self.constants.launcher_binary = launcher_binary
+              self.constants.launcher_script = launcher_script
+      
+              # Initialize working directory after confirming payload integrity
+              # Note: Implement absolute hash checking within verify_payload_integrity
+              if hasattr(utilities, "verify_payload_integrity"):
+                  if not utilities.verify_payload_integrity(self.constants):
+                      raise SecurityError("Payload integrity verification failed. Execution halted.") # <- an attacker could wrap this security error inside try/except to bypass this error
+
+Impact: an attacker could bypass the Payload integrity verification failed error to gain unauthorized access to the computer. This is fixed by replacing the raise SecurityError with logging.error, immediately followed by sys.exit(3).
+
+        if utilities.check_cli_args() is None:
+                    self.constants.cli_mode = False
+                    return
+        # <- an attacker could delete the if utilities.check_cli_args() is None: to force the user into CLI mode
+                logging.info("Detected arguments, switching to CLI mode")
+                self.constants.cli_mode = True  
+                self.constants.gui_mode = False 
+        
+                ignore_args = ["--auto_patch", "--gui_patch", "--gui_unpatch", "--update_installed"]
+                
+                # If none of the specific arguments are in sys.argv
+                if not any(x in sys.argv for x in ignore_args):
+                    self.constants.current_path = Path.cwd()
+        
+                # Fix: Deterministic Thread Synchronization.
+                # Ensure arguments parsing never runs into race conditions regardless of flags if unpack state is required
+                if "--auto_patch" not in sys.argv:
+                    while self.constants.unpack_thread.is_alive():
+                        time.sleep(self.constants.thread_sleep_interval)
+
+Impact: an attacker who has gained unauthorized access to the computer could force the user into using the CLI mode. This is fixed by placing this under an else condition.
+
 ## 4.0.0.18001 - 4.0.0 alpha 18.1
 This release is mostly a security and bug fix update and is recommended for all users.
 This release:
