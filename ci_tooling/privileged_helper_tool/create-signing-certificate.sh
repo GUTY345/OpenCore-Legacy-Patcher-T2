@@ -149,7 +149,23 @@ openssl req -x509 -newkey rsa:2048 -nodes -days "${VALID_DAYS}" \
     -keyout "${WORKDIR}/key.pem" \
     -out "${WORKDIR}/cert.pem" 2>/dev/null
 
+# macOS (SecKeychainItemImport) versteht nur die alten PKCS#12-Algorithmen.
+# OpenSSL 3 nutzt standardmaessig AES-256 + SHA-256 und der Import scheitert
+# mit "MAC verification failed". Deshalb 3DES + SHA-1 erzwingen.
+#
+# macOS (SecKeychainItemImport) only understands the legacy PKCS#12 algorithms.
+# OpenSSL 3 defaults to AES-256 + SHA-256, which makes the import fail with
+# "MAC verification failed". Force 3DES + SHA-1 instead.
 openssl pkcs12 -export \
+    -inkey "${WORKDIR}/key.pem" \
+    -in "${WORKDIR}/cert.pem" \
+    -name "${CERT_NAME}" \
+    -out "${WORKDIR}/bundle.p12" \
+    -keypbe PBE-SHA1-3DES \
+    -certpbe PBE-SHA1-3DES \
+    -macalg sha1 \
+    -passout "pass:${P12_PASS}" 2>/dev/null \
+  || openssl pkcs12 -export \
     -inkey "${WORKDIR}/key.pem" \
     -in "${WORKDIR}/cert.pem" \
     -name "${CERT_NAME}" \
@@ -159,11 +175,38 @@ openssl pkcs12 -export \
 # ------------------------------------------------------- Import / Vertrauen --
 
 echo "--- Importiere in Anmeldeschluessel / importing into login keychain ---"
-security import "${WORKDIR}/bundle.p12" \
-    -k "${LOGIN_KEYCHAIN}" \
-    -P "${P12_PASS}" \
-    -T /usr/bin/codesign \
-    -T /usr/bin/security >/dev/null
+
+import_p12() {
+    security import "${WORKDIR}/bundle.p12" \
+        -k "${LOGIN_KEYCHAIN}" \
+        -P "${P12_PASS}" \
+        -T /usr/bin/codesign \
+        -T /usr/bin/security >/dev/null 2>&1
+}
+
+# Fallback: Schluessel und Zertifikat einzeln als PEM importieren.
+# Fallback: import key and certificate separately as PEM.
+import_pem() {
+    security import "${WORKDIR}/key.pem" \
+        -k "${LOGIN_KEYCHAIN}" \
+        -t priv -f openssl \
+        -T /usr/bin/codesign \
+        -T /usr/bin/security >/dev/null 2>&1 \
+    && security import "${WORKDIR}/cert.pem" \
+        -k "${LOGIN_KEYCHAIN}" \
+        -t cert -f openssl \
+        -T /usr/bin/codesign \
+        -T /usr/bin/security >/dev/null 2>&1
+}
+
+if ! import_p12; then
+    echo "    PKCS#12-Import fehlgeschlagen, versuche PEM-Import."
+    echo "    PKCS#12 import failed, trying PEM import."
+    if ! import_pem; then
+        echo "[!] Import fehlgeschlagen / import failed"
+        exit 1
+    fi
+fi
 
 echo "--- Setze Vertrauensstellung / setting trust (sudo) ---"
 sudo security add-trusted-cert -d -r trustRoot -p codeSign \
