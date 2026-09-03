@@ -226,7 +226,10 @@ class OpenCoreLegacyPatcher:
         # Note: Implement absolute hash checking within verify_payload_integrity
         if hasattr(utilities, "verify_payload_integrity"):
             if not utilities.verify_payload_integrity(self.constants):
-                raise SecurityError("Payload integrity verification failed. Execution halted.")
+                # behebt eine Sicherheitslücke, indem Angreifern raise SecurityError ins try/except setzen können, damit das Fehler nicht gedruckt wird, um trotz der Überprüfung der Nutzlastintegrität schlug fehl, um beliebiges Code weiterhin auszuführen. Diese Sicherheitslücke ist behoben, indem wir das Fehler nicht per raise SecurityError auslösen, sondern per logging.error und dann sys.exit(3). Jedoch soll bei eine fehlgeschlagenes Überprüfung der Nutzlastintegrität direkt der App schließen und nicht weiter Code auszuführen.
+                logging.error("Payload integrity verification failed. The app is likely tampered.")
+                logging.info("Exiting the app...")
+                sys.exit(3)
 
         self.constants.unpack_thread = threading.Thread(target=reroute_payloads.RoutePayloadDiskImage, args=(self.constants,))
         self.constants.unpack_thread.start()
@@ -255,27 +258,28 @@ class OpenCoreLegacyPatcher:
         if utilities.check_cli_args() is None:
             self.constants.cli_mode = False
             return
-
-        logging.info("Detected arguments, switching to CLI mode")
-        self.constants.cli_mode = True  
-        self.constants.gui_mode = False 
-
-        ignore_args = ["--auto_patch", "--gui_patch", "--gui_unpatch", "--update_installed"]
-        
-        # If none of the specific arguments are in sys.argv
-        if not any(x in sys.argv for x in ignore_args):
-            self.constants.current_path = Path.cwd()
-
-        # Fix: Deterministic Thread Synchronization.
-        # Ensure arguments parsing never runs into race conditions regardless of flags if unpack state is required
-        if "--auto_patch" not in sys.argv:
-            while self.constants.unpack_thread.is_alive():
-                time.sleep(self.constants.thread_sleep_interval)
+        # behebt eine Sicherheitslücke, indem einen Angreifer könnte der Benutzer daran zwingen, aufs CLI-Modus/Terminal zu wechseln
         else:
-            # Explicit guard or logging if auto_patch deliberately overrides synchronization safely
-            logging.info("Proceeding with auto_patch execution orchestration flow.")
-
-        arguments.arguments(self.constants)
+            logging.info("Detected arguments, switching to CLI mode")
+            self.constants.cli_mode = True  
+            self.constants.gui_mode = False 
+    
+            ignore_args = ["--auto_patch", "--gui_patch", "--gui_unpatch", "--update_installed"]
+            
+            # If none of the specific arguments are in sys.argv
+            if not any(x in sys.argv for x in ignore_args):
+                self.constants.current_path = Path.cwd()
+    
+            # Fix: Deterministic Thread Synchronization.
+            # Ensure arguments parsing never runs into race conditions regardless of flags if unpack state is required
+            if "--auto_patch" not in sys.argv:
+                while self.constants.unpack_thread.is_alive():
+                    time.sleep(self.constants.thread_sleep_interval)
+            else:
+                # Explicit guard or logging if auto_patch deliberately overrides synchronization safely
+                logging.info("Proceeding with auto_patch execution orchestration flow.")
+    
+            arguments.arguments(self.constants)
 
 
 class SecurityError(Exception):
