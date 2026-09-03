@@ -105,8 +105,19 @@ if [[ "${existing_count}" -gt 0 ]]; then
             || security delete-certificate -Z "${sha1}" "${LOGIN_KEYCHAIN}" \
                 >/dev/null 2>&1 \
             || break
-        echo "    ${sha1} entfernt / removed"
+        echo "    ${sha1} entfernt / removed (login)"
     done
+
+    # Kopien im System-Schluesselbund ebenfalls entfernen - sie fuehren sonst
+    # zu "ambiguous". / Also remove copies from the system keychain, they cause
+    # the same "ambiguous" error otherwise.
+    if security find-certificate -c "${CERT_NAME}" "${SYSTEM_KEYCHAIN}" \
+            >/dev/null 2>&1; then
+        echo "    Entferne Kopien im System-Schluesselbund (sudo)"
+        echo "    Removing copies from the system keychain (sudo)"
+        sudo security delete-certificate -c "${CERT_NAME}" "${SYSTEM_KEYCHAIN}" \
+            >/dev/null 2>&1 || true
+    fi
     echo
 fi
 
@@ -208,10 +219,6 @@ if ! import_p12; then
     fi
 fi
 
-echo "--- Setze Vertrauensstellung / setting trust (sudo) ---"
-sudo security add-trusted-cert -d -r trustRoot -p codeSign \
-    -k "${SYSTEM_KEYCHAIN}" "${WORKDIR}/cert.pem"
-
 echo "--- Erlaube Zugriff ohne Rueckfrage / allowing access without prompts ---"
 echo "    Anmeldepasswort / login password:"
 read -rs LOGIN_PASS
@@ -222,9 +229,31 @@ unset LOGIN_PASS
 
 # ----------------------------------------------------------- Pruefung / check --
 
+count_identities() {
+    security find-identity -v -p codesigning 2>/dev/null \
+        | grep -c "\"${CERT_NAME}\"" || true
+}
+
 echo
 echo "--- Pruefe Ergebnis / verifying ---"
-found=$(security find-identity -v -p codesigning | grep -c "\"${CERT_NAME}\"" || true)
+found=$(count_identities)
+
+# Nur falls das Zertifikat noch nicht als vertrauenswuerdig gilt, Vertrauen in
+# der BENUTZERDOMAENE setzen. Nicht "add-trusted-cert -d ... -k System.keychain"
+# verwenden: das legt eine zweite Kopie des Zertifikats im System-Schluesselbund
+# an und codesign meldet danach wieder "ambiguous".
+#
+# Only set trust if the certificate is not considered valid yet, and only in the
+# USER domain. Do not use "add-trusted-cert -d ... -k System.keychain": that puts
+# a second copy of the certificate into the system keychain, after which codesign
+# reports "ambiguous" again.
+if [[ "${found}" -eq 0 ]]; then
+    echo "    Setze Vertrauensstellung / setting trust"
+    security add-trusted-cert -r trustRoot -p codeSign \
+        -k "${LOGIN_KEYCHAIN}" "${WORKDIR}/cert.pem" >/dev/null 2>&1 \
+        || echo "    [!] Vertrauensstellung fehlgeschlagen / could not set trust"
+    found=$(count_identities)
+fi
 
 if [[ "${found}" -eq 1 ]]; then
     security find-identity -v -p codesigning | grep "\"${CERT_NAME}\""
@@ -237,4 +266,15 @@ fi
 
 echo "[!] Es wurden ${found} Identitaeten gefunden, erwartet war 1."
 echo "[!] Found ${found} identities, expected 1."
+
+if [[ "${found}" -gt 1 ]]; then
+    echo
+    echo "    Betroffene Schluesselbunde / affected keychains:"
+    security find-certificate -a -c "${CERT_NAME}" -Z 2>/dev/null \
+        | grep -E "keychain:|SHA-1 hash:" | sed 's/^/    /'
+    echo
+    echo "    Alle entfernen und neu erstellen / remove all and start over:"
+    echo "        $0 --force"
+fi
+
 exit 1
