@@ -421,10 +421,10 @@ class BuildOpenCore:
             
             # Tahoe Base Boot-args injection
             if self.constants.build_profile in ["standard", "test_c", "test_c_spoofed", "test_d"] or self.model == "MacBookPro14,3":
-                logging.info("Profile TEST: Injecting Tahoe boot-args (cryptex=0 cs_allow_invalid=1).")
-                current_boot_args = self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"]
+                logging.info("Profile TEST: Injecting Tahoe boot-args (cryptex=0).")
+                current_boot_args = self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"].get("boot-args", "")
                 if "cryptex=0" not in current_boot_args:
-                    self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] = f"{current_boot_args} cryptex=0 cs_allow_invalid=1".strip()
+                    self.config["NVRAM"]["Add"]["7C436110-AB2A-4BBB-A880-FE41995C9F82"]["boot-args"] = f"{current_boot_args} cryptex=0".strip()
 
             # TEST-D ALL-IN-ONE Boot-args and Kext injection
             if self.constants.build_profile == "test_d":
