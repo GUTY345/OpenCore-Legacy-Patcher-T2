@@ -58,3 +58,12 @@ clang -framework Foundation -framework Security -arch x86_64 \
 codesign -f -s "OCLP Self Signed" --timestamp=none com.dortania.opencore-legacy-patcher.privileged-helper
 
 sudo ./install.sh
+
+## If you encounter any issues with self signing the app afterwards, run this:
+
+chmod +x ci_tooling/create-signing-certificate.sh
+
+And then:
+
+create-signing-certificate.sh
+
