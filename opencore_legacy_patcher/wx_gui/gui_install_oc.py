@@ -53,10 +53,25 @@ class InstallOCFrame(wx.Frame):
 
         self.hyperlink_colour = (25, 179, 231)
 
+        # Every step of this frame (disk list, volume list, install log) is a
+        # wx.Dialog shown with ShowWindowModal(), i.e. an NSWindow sheet attached
+        # to this frame. Tracked here so quitting can end the session that's
+        # currently running instead of leaving it attached to a dying frame.
+        self.dialog: wx.Dialog = None
+        self.is_closing: bool = False
+
         self._generate_elements()
 
         if self.constants.update_stage != gui_support.AutoUpdateStages.INACTIVE:
             self.constants.update_stage = gui_support.AutoUpdateStages.INSTALLING
+
+        # Cmd+Q routes through GenerateMenubar's wx.ID_EXIT item, which calls
+        # Close() on this frame. Without this handler the frame gets torn down
+        # while its sheet is still in a modal session: macOS keeps the parent
+        # sheet-blocked, so the quit never completes (the app just hangs), and a
+        # second Cmd+Q re-enters Close() on a frame already queued for deletion,
+        # which takes the process down with it.
+        self.Bind(wx.EVT_CLOSE, self.on_close)
 
         self.Centre()
         self.Show()
@@ -128,7 +143,14 @@ class InstallOCFrame(wx.Frame):
 
         gui_support.wait_for_thread(thread)
 
-        self.progress_bar_animation.stop_pulse()
+        # Quitting while the disk scan runs is handled in on_close(), which already
+        # stopped the pulse and dropped the frame - nothing left to display here.
+        if self.is_closing:
+            return
+
+        if self.progress_bar_animation:
+            self.progress_bar_animation.stop_pulse()
+            self.progress_bar_animation = None
         self.progress_bar.Hide()
 
         # Create wxDialog for disk selection
@@ -199,7 +221,9 @@ class InstallOCFrame(wx.Frame):
         """
         List volumes on disk
         """
-        self.dialog.Close()
+        # End the previous sheet's session before attaching a new sheet to the same
+        # parent - a leftover session would keep this frame blocked for good.
+        self._dismiss_dialog()
 
         dialog = wx.Dialog(
             self,
@@ -240,7 +264,7 @@ class InstallOCFrame(wx.Frame):
         """
         Install OpenCore to disk
         """
-        self.dialog.Close()
+        self._dismiss_dialog()
 
         dialog = wx.Dialog(
             self,
@@ -267,6 +291,11 @@ class InstallOCFrame(wx.Frame):
         self.dialog = dialog
 
         self._invoke_install_oc(partition)
+
+        # wait_for_thread() pumps the event queue while the install runs, so a Cmd+Q
+        # in that window is processed here and takes the dialog with it.
+        if self.is_closing or not return_button:
+            return
         return_button.Enable()
 
 
@@ -279,6 +308,11 @@ class InstallOCFrame(wx.Frame):
 
         gui_support.wait_for_thread(thread)
 
+        # The user may have quit while the install was running (wait_for_thread()
+        # keeps processing events); don't put dialogs on a frame that's going away.
+        if self.is_closing:
+            return
+
         if self.result is True:
             if self.constants.update_stage != gui_support.AutoUpdateStages.INACTIVE and self.constants.detected_os >= os_data.os_data.big_sur:
                 self.constants.update_stage = gui_support.AutoUpdateStages.ROOT_PATCHING
@@ -287,16 +321,22 @@ class InstallOCFrame(wx.Frame):
                     f"OpenCore has finished installing to disk.\n\nWould you like to update your root patches next?", "Success",
                     wx.YES_NO | wx.YES_DEFAULT
                 )
-                popup_message.ShowModal()
-                if popup_message.GetReturnCode() == wx.ID_YES:
+                # wx.MessageDialog reports the pressed button through ShowModal()'s
+                # return value; GetReturnCode() is only set by EndModal(), so it stays
+                # 0 here and never matched wx.ID_YES - the prompt did nothing either way.
+                answer = popup_message.ShowModal()
+                popup_message.Destroy()
+                if answer == wx.ID_YES:
+                    screen_location = self.GetPosition()
+                    self._dismiss_dialog()
                     self.Hide()
                     gui_sys_patch_display.SysPatchDisplayFrame(
                         parent=None,
                         title=self.title,
                         global_constants=self.constants,
-                        screen_location=self.GetPosition()
+                        screen_location=screen_location
                     )
-                    self.Destroy()
+                    wx.CallAfter(self.Destroy)
                 return
 
             elif not self.constants.custom_model:
@@ -311,6 +351,7 @@ class InstallOCFrame(wx.Frame):
                     wx.OK
                 )
                 popup_message.ShowModal()
+                popup_message.Destroy()
         else:
             if self.constants.update_stage != gui_support.AutoUpdateStages.INACTIVE:
                 self.constants.update_stage = gui_support.AutoUpdateStages.FINISHED
@@ -437,23 +478,98 @@ class InstallOCFrame(wx.Frame):
             if my_handler in logger.handlers:
                 logger.removeHandler(my_handler)
 
+    @staticmethod
+    def _destroy_dialog(dialog: wx.Dialog) -> None:
+        """
+        Destroy a dialog, tolerating it already having been taken down by its
+        parent frame's own teardown in the meantime
+        """
+        try:
+            dialog.Destroy()
+        except RuntimeError:
+            pass
+
+
+    def _end_dialog_session(self) -> wx.Dialog:
+        """
+        End the modal session of the sheet currently attached to this frame and hide it,
+        without destroying it, and return it (None if there is none)
+
+        Close()/Hide()/Destroy() on their own do not end a ShowWindowModal() session:
+        the content goes away but macOS keeps the parent blocked by the sheet, which
+        is what makes both quitting and returning to the main menu fail from here.
+        """
+        dialog = self.dialog
+        self.dialog = None
+        if not dialog:
+            return None
+
+        gui_support.end_window_modal(dialog)
+        try:
+            dialog.Hide()
+        except RuntimeError:
+            return None
+
+        return dialog
+
+
+    def _dismiss_dialog(self) -> None:
+        """
+        End the current sheet's modal session and tear it down
+
+        The Destroy() is deferred: this is normally reached from a button that is
+        itself a child of the dialog being destroyed.
+        """
+        dialog = self._end_dialog_session()
+        if dialog:
+            wx.CallAfter(self._destroy_dialog, dialog)
+
+
+    def on_close(self, event: wx.Event = None) -> None:
+        """
+        Release the sheet before this frame is destroyed (Cmd+Q, window close)
+        """
+        self.is_closing = True
+
+        if self.progress_bar_animation:
+            self.progress_bar_animation.stop_pulse()
+            self.progress_bar_animation = None
+
+        # Only end the session here, no Destroy(): destroying this frame takes the
+        # sheet with it, and a deferred Destroy() would then fire on a dead object.
+        self._end_dialog_session()
+
+        if event:
+            event.Skip()
+        else:
+            self.Destroy()
+
+
     def on_reload_frame(self, event: wx.Event = None) -> None:
-        self.Destroy()
+        screen_location = self.GetScreenPosition()
+        self._dismiss_dialog()
+
         frame = InstallOCFrame(
             None,
             title=self.title,
             global_constants=self.constants,
-            screen_location=self.GetScreenPosition()
+            screen_location=screen_location
         )
         frame.Show()
+        # Deferred, so this frame outlives the button event handler running inside it
+        wx.CallAfter(self.Destroy)
 
 
     def on_return_to_main_menu(self, event: wx.Event = None) -> None:
+        screen_location = self.GetScreenPosition()
+        self._dismiss_dialog()
+
         main_menu_frame = gui_main_menu.MainFrame(
             None,
             title=self.title,
             global_constants=self.constants,
-            screen_location=self.GetScreenPosition()
+            screen_location=screen_location
         )
         main_menu_frame.Show()
-        self.Destroy()
+        # Deferred for the same reason as in on_reload_frame()
+        wx.CallAfter(self.Destroy)

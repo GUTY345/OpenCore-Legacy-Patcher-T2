@@ -49,10 +49,64 @@ class BuildFrame(wx.Frame):
             self.constants.update_stage = gui_support.AutoUpdateStages.BUILDING
 
         self.Centre()
+
+        # Cmd+Q calls Close() on this frame (see gui_support.GenerateMenubar). Without
+        # this handler the frame is torn down with its sheet session still running,
+        # which leaves macOS treating it as sheet-blocked - the quit then hangs and a
+        # second Cmd+Q re-enters Close() on a frame already queued for deletion.
+        self.Bind(wx.EVT_CLOSE, self.on_close)
+
         self.frame_modal.ShowWindowModal()
 
         if not self.constants.Experimental_Features:
             self._invoke_build()
+
+
+    def on_close(self, event: wx.Event = None) -> None:
+        """
+        Release the sheet before this frame is destroyed (Cmd+Q, window close)
+        """
+        if self.frame_modal:
+            # Session only, no Destroy(): destroying this frame takes the sheet with it
+            gui_support.end_window_modal(self.frame_modal)
+            self.frame_modal = None
+
+        if event:
+            event.Skip()
+        else:
+            self.Destroy()
+
+
+    def _dismiss_modal(self) -> None:
+        """
+        End this frame's sheet session and tear the sheet down
+
+        Hide()/Destroy() alone don't end a ShowWindowModal() session (see
+        gui_support.end_window_modal); leaving it running keeps macOS treating this
+        frame as sheet-blocked, which is what made a later Cmd+Q hang instead of
+        quitting. The Destroy() is deferred because callers are usually buttons
+        living on the dialog itself.
+        """
+        if not self.frame_modal:
+            return
+
+        modal = self.frame_modal
+        self.frame_modal = None
+
+        gui_support.end_window_modal(modal)
+        try:
+            modal.Hide()
+        except RuntimeError:
+            return
+        wx.CallAfter(self._destroy_modal, modal)
+
+
+    @staticmethod
+    def _destroy_modal(modal: wx.Dialog) -> None:
+        try:
+            modal.Destroy()
+        except RuntimeError:
+            pass
 
 
     def on_build_failure(self) -> None:
@@ -337,16 +391,18 @@ class BuildFrame(wx.Frame):
         """
         Return to main menu
         """
-        self.frame_modal.Close()
+        screen_location = self.GetScreenPosition()
+        self._dismiss_modal()
+
         main_menu_frame = gui_main_menu.MainFrame(
             None,
             title=self.title,
             global_constants=self.constants,
-            screen_location=self.GetScreenPosition(),
+            screen_location=screen_location,
         )
         main_menu_frame.Show()
-        self.frame_modal.Destroy()
-        self.Destroy()
+        # Deferred: this handler is running inside a button that lives on the frame
+        wx.CallAfter(self.Destroy)
     
     def on_install(self, event: wx.Event = None) -> None:
         """
@@ -358,16 +414,18 @@ class BuildFrame(wx.Frame):
             if isinstance(handler, gui_support.ThreadHandler):
                 logger.removeHandler(handler)
         
-        self.frame_modal.Hide() # Hide first to feel responsive
-        self.frame_modal.Destroy()
-        self.Destroy()
+        screen_location = self.GetScreenPosition()
+        self._dismiss_modal() # Hides first, so it feels responsive
+
         install_oc_frame = gui_install_oc.InstallOCFrame(
             None,
             title=self.title,
             global_constants=self.constants,
-            screen_location=self.GetScreenPosition(),
+            screen_location=screen_location,
         )
         install_oc_frame.Show()
+        # Deferred, so this frame outlives the button event handler running inside it
+        wx.CallAfter(self.Destroy)
 
     def on_build_click(self, event: wx.Event) -> None:
         self.build_button.Disable()
