@@ -4,7 +4,7 @@ This release:
 - fixes a bug where upon clicking Save OpenCore and the EFI configuration has been saved successfully, it will show a crash log
 - fixes an issue where WiFi doesn't work on MacBook Air Mid 2013 and MacBook Air Early 2014 on macOS 26 Tahoe by adding dart=0 in the boot arguments
 - fixes a bug where the OpenCore button is greyed out on Hackintoshes, virtual machines and supported T2 Macs 
-- updates OpenCore to 2.0.3 (changelog here: https://github.com/albert-mueller/OpenCorePkg-add-T2-support )
+- updates OpenCore to 2.0.3 (changelog here: https://github.com/albert-mueller/OpenCorePkg-add-T2-support/releases/tag/2.0.3 )
 - fixes the following vulnerabilities:
 application_entry.py:
 
