@@ -1277,10 +1277,16 @@ class OCSettingsFrame(wx.Frame):
 
     def on_build_and_install(self, event: wx.Event = None):
         try:
+            parent = self.parent
             self.frame_modal.Destroy()
-            self.parent.Hide()
+            parent.Hide()
             gui_build.BuildFrame(parent=None, title=self.title, global_constants=self.constants, screen_location=self.GetPosition(), install=True)
             wx.CallAfter(self.Destroy)
+            # The main menu behind this window was only hidden, never destroyed - and a
+            # hidden top-level window keeps wx's main loop running, so leaving it behind
+            # made a later Cmd+Q close the visible frame without ever quitting the app.
+            # on_save() already tears its parent down the same way.
+            wx.CallAfter(parent.Destroy)
         except Exception as e:
             logging.error(f"We failed to open up Build and Install OpenCore: {e}")
             logging.exception("Stack Trace:")

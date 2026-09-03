@@ -139,10 +139,71 @@ class GenerateMenubar:
 
         self.frame.Bind(wx.EVT_MENU, lambda event: gui_about.AboutFrame(self.constants), aboutItem)
         self.frame.Bind(wx.EVT_MENU, lambda event: subprocess.run(["/usr/bin/open", "--reveal", self.constants.log_filepath]), revealLogItem)
-        self.frame.Bind(wx.EVT_MENU, lambda event: self.frame.Close(), quitItem)
+        self.frame.Bind(wx.EVT_MENU, self.on_quit, quitItem)
+
+
+    def on_quit(self, event: wx.Event = None) -> None:
+        """
+        Quit the app itself, rather than just the frame that owns this menu bar
+        """
+        quit_app()
 
 
 _app_exiting: bool = False
+_app_quitting: bool = False
+
+
+def quit_app() -> None:
+    """
+    Quits the whole app.
+
+    Cmd+Q used to be wired to Close() on whichever frame owned the menu bar, which
+    is not the same thing as quitting: this app hands off between top-level frames
+    constantly and several of those handoffs only Hide() the frame they replace.
+    A hidden top-level window still keeps wx's main loop running, so closing just
+    the frontmost frame left the process alive with nothing on screen - the quit
+    looked like a hang - and a second Cmd+Q re-entered the same handler with an
+    already-destroyed frame, which took the process down with it.
+
+    So: tear down every top-level window, then leave the main loop. Re-entrant
+    calls (that second Cmd+Q) are ignored rather than run against a half-torn-down
+    window list.
+    """
+    global _app_quitting
+    if _app_quitting:
+        return
+    _app_quitting = True
+
+    logging.info("Quitting")
+
+    # Signal background threads before anything starts disappearing underneath them
+    mark_app_exiting()
+    stop_all_pulses()
+
+    windows = list(wx.GetTopLevelWindows())
+
+    # First end every running sheet session (see end_window_modal): destroying a
+    # frame while a sheet is still attached to it leaves macOS blocked on that sheet.
+    for window in windows:
+        if not isinstance(window, wx.Dialog):
+            continue
+        try:
+            end_window_modal(window)
+            window.Hide()
+        except RuntimeError:
+            continue
+
+    # Then tear the windows down. Destroying a parent takes its children with it,
+    # so windows later in the list may already be gone by the time we reach them.
+    for window in windows:
+        try:
+            window.Destroy()
+        except RuntimeError:
+            continue
+
+    app = wx.GetApp()
+    if app:
+        app.ExitMainLoop()
 
 
 def mark_app_exiting() -> None:
