@@ -140,7 +140,7 @@ class BuildOpenCore:
                     "DevirtualiseMmio": False,
                 })
                 self.config.setdefault("PlatformInfo", {})["UpdateSMBIOSMode"] = "Create"
-                self.config.setdefault("PlatformInfo", {}).setdefault("Generic", {})["SpoofVendor"] = False
+                ## self.config.setdefault("PlatformInfo", {}).setdefault("Generic", {})["SpoofVendor"] = False - das verursacht auch auf nicht unterstützte T2 Macs, keybag-Fehlern beim Formatieren von APFS-Partitionen, also hilft das nicht. Was ist getestet und geholfen hat, ist diese Konfiguration: https://github.com/user-attachments/files/31816988/Archiv.zip
                 self.config.setdefault("Kernel", {}).setdefault("Quirks", {})["CustomSMBIOSGuid"] = False
                 self.config.setdefault("Misc", {}).setdefault("Security", {})["SecureBootModel"] = "Disabled"
             except Exception as e:
