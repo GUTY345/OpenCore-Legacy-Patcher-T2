@@ -216,9 +216,12 @@ class BuildMiscellaneous:
         builder.enable_kext("IOFireWireSBP2.kext", self.constants.fw_kext, self.constants.fw_sbp2_path)
         builder.enable_kext("IOFireWireSerialBusProtocolTransport.kext", self.constants.fw_kext, self.constants.fw_bus_path)
         
-        fw_plugin = builder.get_kext_by_bundle_path("IOFireWireFamily.kext/Contents/PlugIns/AppleFWOHCI.kext")
-        if fw_plugin:
-            fw_plugin["Enabled"] = True
+        # get_kext_by_bundle_path() raises IndexError when the entry is absent, it never
+        # returns None - so a falsy check here would be dead code. Catch the exception instead.
+        try:
+            builder.get_kext_by_bundle_path("IOFireWireFamily.kext/Contents/PlugIns/AppleFWOHCI.kext")["Enabled"] = True
+        except IndexError:
+            logging.info("- AppleFWOHCI.kext plugin entry missing from config, skipping FireWire OHCI")
 
     def _topcase_handling(self) -> None:
         """USB/SPI Top Case Handler."""
