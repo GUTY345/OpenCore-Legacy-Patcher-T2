@@ -11,6 +11,8 @@ import webbrowser
 
 from .. import constants
 
+from ..datasets import os_data
+
 from ..efi_builder import build
 
 from ..wx_gui import (
