@@ -457,8 +457,8 @@ class BuildMiscellaneous:
         """Apply CPU topology / thread pooling panic fixes on affected models."""
         if self.model not in ["MacBookAir8,1", "MacBookAir8,2", "MacBookPro11,1", "MacBookPro11,2", "MacBookPro11,3"]:
             return
-
-        self._cpu_topology_fix()
+        else:
+            self._cpu_topology_fix() # <- behebt eine Sicherheitslücke, die erlaubt Angreifern, CPU-Topologie-Patches auf nicht unterstützte Hardware zu injizieren, um DoS-Angriffe zu startem
 
     def _cpu_topology_fix(self) -> None:
         try:
